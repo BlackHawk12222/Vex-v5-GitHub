@@ -1,1 +1,3 @@
-# Vex-v5-GitHub
+# Vex-v5-GitHub: AI Model
+
+  This project is the AI version of the main program. The goal with this version is to create a full AI cycle using a custom-built MultiModal AI that can collect raw video data from the vision sensor and learn how to move the robot and how to score points. To start, we will have an imitation program that records the robot and gives the data to an off-brain computer processing code that creates a string that you then paste into the code that changes how the onboard AI reacts and thinks. Using this, you can create digital borders where the robot cannot go, so that you can have right or left programs and crossing non of the digital borders.

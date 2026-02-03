@@ -9,7 +9,6 @@
 
 # Library imports
 from vex import *
-import time
 
 # Brain should be defined by default
 brain=Brain()

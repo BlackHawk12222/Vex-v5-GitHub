@@ -167,10 +167,11 @@ intake_speed = 0
 
 # ---------------------------------------------------------------------------- #
 #                                                                              #
-# 	Module:       main.py                                                      #
+# 	Module:       Logging.py                                                   #
 # 	Author:       Micah Bow                                                    #
-# 	Created:      1/27/2026, 12:41:53 PM                                       #
-# 	Description:  Universal Logging software V06                               #
+# 	Created:      1/27/2026, 12:42 PM                                          #
+#   Last Edited:  2/4/2026, 12:02 PM                                           #
+# 	Description:  Universal Logging software for Vex V5 Version 6              #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 controller_2=Controller(PARTNER)

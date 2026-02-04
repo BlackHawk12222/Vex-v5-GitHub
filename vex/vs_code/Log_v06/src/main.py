@@ -178,7 +178,7 @@ controller_2=Controller(PARTNER)
 # Timer for log time
 log_time= Timer()
 
-# snapshot for parts of robot
+# recoreding for controllers and variables
 class Record:
     def __init__(self):
         self.axis=""
@@ -187,7 +187,7 @@ class Record:
         self.index=0
         self.button=""
 
-    # snapshot of controller 1 axis
+    
     def controller_1_axis(self, axis):
         self.axis=axis
         if brain.sdcard.is_inserted():
@@ -219,8 +219,7 @@ class Record:
                 print(", %s [%s] Controller_1_Axis4: %s"%(self.index, log_time, self.value))
         self.index+=1
         brain.sdcard.savefile("index.txt", bytearray("%d"%(self.index), "utf-8"))
-    
-    # snapshot of controller 1 button
+
     def controller_1_button(self, button):
         self.button=button
         if brain.sdcard.is_inserted():
@@ -301,7 +300,6 @@ class Record:
         self.index+=1
         brain.sdcard.savefile("index.txt", bytearray("%d"%(self.index), "utf-8"))
 
-    # snapshot of controller 2 axis
     def controller_2_axis(self, axis):
         self.axis=axis
         if brain.sdcard.is_inserted():
@@ -334,7 +332,6 @@ class Record:
         self.index+=1
         brain.sdcard.savefile("index.txt", bytearray("%d"%(self.index), "utf-8"))
     
-    # snapshot of controller 2 button
     def controller_2_button(self, button):
         self.button=button
         if brain.sdcard.is_inserted():
@@ -415,7 +412,6 @@ class Record:
         self.index+=1
         brain.sdcard.savefile("index.txt", bytearray("%d"%(self.index), "utf-8"))
 
-    #snapshot of variable
     def Variable(self, name, value):
         self.name=name
         self.value=value
@@ -431,7 +427,7 @@ class Record:
     def Add_function(self, name, print_out):
         pass
 
-# Reading Log
+
 class Read:
     def console(self):
         if brain.sdcard.is_inserted():
@@ -440,12 +436,11 @@ class Read:
         else:
             print("No SD Card Inserted Cannot Read Log")
 
-# Drivetrain monitoring
+# Drivetrain recording
 class Drivetrain:
     def __init__(self):
         pass
     
-    # two motor drivetrain Logging
     def two_motor(self, left_motor, right_motor):
         self.drivetrin_temp_monitoring=0
         self.drivetrain_power_monitoring=0
@@ -467,7 +462,6 @@ class Drivetrain:
         elif right_motor.power(PowerUnits.WATT)<=30 and left_motor.power(PowerUnits.WATT)<=30 and (self.drivetrain_power_monitoring==1 or self.drivetrain_power_monitoring==2):
             self.drivetrain_power_monitoring=0            
 
-    #four motor drivetrain Logging
     def four_motor(self, front_left_motor, front_right_motor, back_left_motor, back_right_motor):
         self.temp_monitoring=0
         self.drivetrain_power_monitoring=0
@@ -490,7 +484,6 @@ class Drivetrain:
         elif front_left_motor.power(PowerUnits.WATT)<=30 and front_right_motor.power(PowerUnits.WATT)<=30 and back_left_motor.power(PowerUnits.WATT)<=30 and back_right_motor.power(PowerUnits.WATT)<=30 and (self.drivetrain_power_monitoring==1 or self.drivetrain_power_monitoring==2):
             self.drivetrain_power_monitoring=0
     
-    # Six motor drivetrain Logging
     def six_motor(self, front_left_motor, front_right_motor, middle_left_motor, middle_right_motor, back_left_motor, back_right_motor):
         self.drivetrain_temp_monitoring=0
         self.drivetrain_power_monitoring=0
@@ -515,13 +508,12 @@ class Drivetrain:
         else:
             pass
 
+# logging for the log class
 class Logging:
 
-    # Drivetrain object for drivetrain monitoring
     def __init__(self):
         self.drivetrain=Drivetrain()
     
-    # Logging Motor
     def motor(self, motor):
         self.temp_monitoring=0
         self.power_monitoring=0
@@ -545,7 +537,6 @@ class Logging:
         elif motor.power(PowerUnits.WATT)<=30 and (self.power_monitoring==1 or self.power_monitoring==2):
             self.power_monitoring=0
     
-    # Logging Motor Group
     def motor_group(self, motor_group):
         self.temp_monitoring=0
     
@@ -571,7 +562,6 @@ class Logging:
             elif motor.power(PowerUnits.WATT)<=30 and (self.power_monitoring==1 or self.power_monitoring==2):
                 self.power_monitoring=0
 
-    # Logging Battery
     def Battery(self):
         self.battery_voltage_monitoring=0
         self.battery_capacity_monitoring=0
@@ -603,7 +593,6 @@ class Logging:
             self.battery_current_monitoring=0
         
     
-    # Logging Controller 1
     def Controller_1(self):
         self.Controller_1_button_pressing=0
 
@@ -655,7 +644,6 @@ class Logging:
         if not(controller_1.buttonA.pressing() or controller_1.buttonB.pressing() or controller_1.buttonX.pressing() or controller_1.buttonY.pressing() or controller_1.buttonUp.pressing() or controller_1.buttonDown.pressing() or controller_1.buttonLeft.pressing() or controller_1.buttonRight.pressing() or controller_1.buttonL1.pressing() or controller_1.buttonL2.pressing() or controller_1.buttonR1.pressing() or controller_1.buttonR2.pressing()):
             self.Controller_1_button_pressing=0
     
-    # Logging Controller 2
     def Controller_2(self):
         self.Controller_2_button_pressing=0
 
@@ -706,7 +694,6 @@ class Logging:
         if not(controller_2.buttonA.pressing() or controller_2.buttonB.pressing() or controller_2.buttonX.pressing() or controller_2.buttonY.pressing() or controller_2.buttonUp.pressing() or controller_2.buttonDown.pressing() or controller_2.buttonLeft.pressing() or controller_2.buttonRight.pressing() or controller_2.buttonL1.pressing() or controller_2.buttonL2.pressing() or controller_2.buttonR1.pressing() or controller_2.buttonR2.pressing()):
             self.Controller_2_button_pressing=0
         
-    # Logging Variables
     def variable(self, name, value):
         log.record.Variable(name, value)
 
@@ -777,7 +764,6 @@ class Log:
         else:
             self.index=0
 
-    # Adding log entry
     def add(self, add_code, add_details):
         if brain.sdcard.is_inserted():
             index_content=brain.sdcard.loadfile("index.txt")
@@ -787,18 +773,17 @@ class Log:
             brain.sdcard.savefile("index.txt", bytearray("%d"%(self.index), "utf-8"))
         else:
             print(", %s [%s] %s %s"%(self.index, log_time, self.codes.get(add_code), add_details))
-    # Adding custom log codes
+    
     def add_codes(self, code_add, Decoded_text):
         self.codes.update({code_add : "%s"%(Decoded_text)})
 
-    # Removing log codes
     def remove_codes(self, code_remove):
         if code_remove in self.codes:
             self.codes.pop(code_remove)
         else:
             print("Code Not Found In Log Codes")
     
-    # Editing existing log codes
+
     def edit_codes(self, code_edit, new_decoded_text):
         if code_edit in self.codes:
             self.codes.update({code_edit : "%s"%( new_decoded_text)})
@@ -816,7 +801,6 @@ class Log:
         print(self.codes)
 
 
-# defining Log object
 log=Log()  
 
 # funtions for threading
@@ -870,7 +854,9 @@ def controller_log():
         except Exception as e:
             log.add("EE3", "Controller Logging Thread: %s"%(e))
         wait(50, MSEC)
-# Starting Logging
+
+
+# Logging
 log.add("DS0",0)
 Thread(log_setup)
 Thread(battery_log)

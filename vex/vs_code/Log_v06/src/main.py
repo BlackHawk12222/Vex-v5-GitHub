@@ -445,7 +445,7 @@ class Drivetrain:
     def two_motor(self, left_motor, right_motor):
         self.drivetrin_temp_monitoring=0
         self.drivetrain_power_monitoring=0
-        self.drivetrain_voltage_monitoring=False    
+
         if (right_motor.temperature()>70 or left_motor.temperature()>70) and (self.drivetrin_temp_monitoring==0 or self.drivetrin_temp_monitoring==2):
             log.add("ED1", "Temp: %s"%(max(right_motor.temperature(), left_motor.temperature())))
             self.drivetrin_temp_monitoring=1
@@ -464,18 +464,17 @@ class Drivetrain:
             self.drivetrain_power_monitoring=0            
 
     def four_motor(self, front_left_motor, front_right_motor, back_left_motor, back_right_motor):
-        self.temp_monitoring=0
+        self.drivetrain_temp_monitoring=0
         self.drivetrain_power_monitoring=0
-        self.drivetrain_voltage_monitoring=False
         
-        if (front_left_motor.temperature()>70 or front_right_motor.temperature()>70 or back_left_motor.temperature()>70 or back_right_motor.temperature()>70) and (self.temp_monitoring==0 or self.temp_monitoring==2):
+        if (front_left_motor.temperature()>70 or front_right_motor.temperature()>70 or back_left_motor.temperature()>70 or back_right_motor.temperature()>70) and (self.drivetrain_temp_monitoring==0 or self.drivetrain_temp_monitoring==2):
             log.add("ED1", "Temp: %s"%(max(front_left_motor.temperature(), front_right_motor.temperature(), back_left_motor.temperature(), back_right_motor.temperature())))
-            self.temp_monitoring=1
-        elif (front_left_motor.temperature()>50 or front_right_motor.temperature()>50 or back_left_motor.temperature()>50 or back_right_motor.temperature()>50) and (self.temp_monitoring==0 or self.temp_monitoring==1):
+            self.drivetrain_temp_monitoring=1
+        elif (front_left_motor.temperature()>50 or front_right_motor.temperature()>50 or back_left_motor.temperature()>50 or back_right_motor.temperature()>50) and (self.drivetrain_temp_monitoring==0 or self.drivetrain_temp_monitoring==1):
             log.add("WD0", "Temp: %s"%(max(front_left_motor.temperature(), front_right_motor.temperature(), back_left_motor.temperature(), back_right_motor.temperature())))
-            self.temp_monitoring=2
-        elif (front_left_motor.temperature()<=50 and front_right_motor.temperature()<=50 and back_left_motor.temperature()<=50 and back_right_motor.temperature()<=50) and (self.temp_monitoring==1 or self.temp_monitoring==2):
-            self.temp_monitoring=0
+            self.drivetrain_temp_monitoring=2
+        elif (front_left_motor.temperature()<=50 and front_right_motor.temperature()<=50 and back_left_motor.temperature()<=50 and back_right_motor.temperature()<=50) and (self.drivetrain_temp_monitoring==1 or self.drivetrain_temp_monitoring==2):
+            self.drivetrain_temp_monitoring=0
         if front_left_motor.power(PowerUnits.WATT)>40 or front_right_motor.power(PowerUnits.WATT)>40 or back_left_motor.power(PowerUnits.WATT)>40 or back_right_motor.power(PowerUnits.WATT)>40 and (self.drivetrain_power_monitoring==0 or self.drivetrain_power_monitoring==2):
             log.add("ED3", "Power: %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring=1
@@ -488,7 +487,6 @@ class Drivetrain:
     def six_motor(self, front_left_motor, front_right_motor, middle_left_motor, middle_right_motor, back_left_motor, back_right_motor):
         self.drivetrain_temp_monitoring=0
         self.drivetrain_power_monitoring=0
-        self.drivetrain_voltage_monitoring=False
         
         if (front_left_motor.temperature(PERCENT)>70 or front_right_motor.temperature(PERCENT)>70 or middle_left_motor.temperature(PERCENT)>70 or middle_right_motor.temperature(PERCENT)>70 or back_left_motor.temperature(PERCENT)>70 or back_right_motor.temperature(PERCENT)>70) and (self.drivetrain_temp_monitoring==0 or self.drivetrain_temp_monitoring==2):
             log.add("ED1", "Temp: %s"%(max(front_left_motor.temperature(PERCENT), front_right_motor.temperature(PERCENT), middle_left_motor.temperature(PERCENT), middle_right_motor.temperature(PERCENT), back_left_motor.temperature(PERCENT), back_right_motor.temperature(PERCENT))))
@@ -518,8 +516,6 @@ class Logging:
     def motor(self, motor):
         self.temp_monitoring=0
         self.power_monitoring=0
-        self.voltage_monitoring=False
-        self.capacity_monitoring=0
 
         if motor.temperature()>70 and (self.temp_monitoring==0 or self.temp_monitoring==2):
             log.add("EM0", "%s Name: %s"%(motor.temperature(), motor()))
@@ -540,6 +536,7 @@ class Logging:
     
     def motor_group(self, motor_group):
         self.temp_monitoring=0
+        self.power_monitoring=0
     
         max_temp=0
         for motor in motor_group:

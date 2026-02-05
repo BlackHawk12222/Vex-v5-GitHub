@@ -425,8 +425,65 @@ class Record:
         self.index+=1
         brain.sdcard.savefile("index.txt", bytearray("%d"%(self.index), "utf-8"))
 
-    def Add_function(self, name, print_out):
+    def battery(self, code):
+        if brain.sdcard.is_inserted():
+            if code == "EB0":
+                log.add("EB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
+            elif code == "EB1":
+                log.add("EB1", "%s"%(brain.battery.current(CurrentUnits.AMP)))
+            elif code == "EB2":
+                log.add("EB2", "%s"%(brain.battery.temperature(PERCENT)))
+            elif code == "WB0":
+                log.add("WB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
+            elif code == "WB1":
+                log.add("WB1", "%s"%(brain.battery.current(CurrentUnits.AMP)))
+            elif code == "WB2":
+                log.add("WB2", "%s"%(brain.battery.temperature(PERCENT)))
+            else:
+                pass
+        else:
+            if code == "EB0":
+                print("Battery ERROR: Critically low Voltage. Voltage: %s V"%(brain.battery.voltage(VoltageUnits.VOLT)))
+            elif code == "EB2":
+                print("Battery ERROR: Critically High Current. Current: %s A"%(brain.battery.current(CurrentUnits.AMP)))
+            elif code == "EB1":
+                print("Battery ERROR: Critically Low Capacity. Capacity: %s %%"%(brain.battery.capacity()))
+            elif code == "WB0":
+                print("Battery WARNING: Low Voltage. Voltage: %s V"%(brain.battery.voltage(VoltageUnits.VOLT)))
+            elif code == "WB1":
+                print("Battery WARNING: Low Battery. capacity: %s %%"%(brain.battery.capacity()))
+            else:
+                pass
+    
+    def motor(self, motor, code):
+        if brain.sdcard.is_inserted():
+            if code == "EM0":
+                log.add("EM0", "Motor %s Temp: %s"%(motor, motor.temperature(PERCENT)))
+            elif code == "EM1":
+                log.add("EM1", "Motor %s Power: %s"%(motor, motor.power(PowerUnits.WATT)))
+            elif code == "WM0":
+                log.add("WM0", "Motor %s Temp: %s"%(motor, motor.temperature(PERCENT)))
+            elif code == "WM1":
+                log.add("WM1", "Motor %s Power: %s"%(motor, motor.power(PowerUnits.WATT)))
+            elif code == "WM2":
+                log.add("WM2", "Motor %s Stalled: %s"%(motor, motor.is_stalled()))
+            else:
+                pass
+        else:
+            if code == "EM0":
+                print("Motor %s ERROR: Critically High Temperature. Temp: %s %%"%(motor, motor.temperature(PERCENT)))
+            elif code == "EM1":
+                print("Motor %s ERROR: Critically High Power. Power: %s W"%(motor, motor.power(PowerUnits.WATT)))
+            elif code == "WM0":
+                print("Motor %s WARNING: High Temperature. Temp: %s %%"%(motor, motor.temperature(PERCENT)))
+            elif code == "WM1":
+                print("Motor %s WARNING: High Power. Power: %s W"%(motor, motor.power(PowerUnits.WATT)))
+            else:
+                pass
+    
+    def drivetrain(self, drivetrain, code):
         pass
+
 
 
 class Read:
@@ -445,6 +502,7 @@ class Drivetrain:
     def two_motor(self, left_motor, right_motor):
         self.drivetrin_temp_monitoring=0
         self.drivetrain_power_monitoring=0
+        self.drivetrain_disconnected=0
 
         if (right_motor.temperature()>70 or left_motor.temperature()>70) and (self.drivetrin_temp_monitoring==0 or self.drivetrin_temp_monitoring==2):
             log.add("ED1", "Temp: %s"%(max(right_motor.temperature(), left_motor.temperature())))
@@ -461,8 +519,16 @@ class Drivetrain:
             log.add("WD3", "Power: %s"%(max(right_motor.power(PowerUnits.WATT), left_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring=2
         elif right_motor.power(PowerUnits.WATT)<=30 and left_motor.power(PowerUnits.WATT)<=30 and (self.drivetrain_power_monitoring==1 or self.drivetrain_power_monitoring==2):
-            self.drivetrain_power_monitoring=0            
-
+            self.drivetrain_power_monitoring=0
+        if right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+            log.add("ED3", "Right Motor")
+            self.drivetrain_disconnected=1
+        if left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+            log.add("ED3", "Left Motor")            
+            self.drivetrain_disconnected=1
+        if right_motor.temperature(PERCENT)!=2 and left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected==1:
+            self.drivetrain_disconnected=0
+        
     def four_motor(self, front_left_motor, front_right_motor, back_left_motor, back_right_motor):
         self.drivetrain_temp_monitoring=0
         self.drivetrain_power_monitoring=0
@@ -483,6 +549,20 @@ class Drivetrain:
             self.drivetrain_power_monitoring=2
         elif front_left_motor.power(PowerUnits.WATT)<=30 and front_right_motor.power(PowerUnits.WATT)<=30 and back_left_motor.power(PowerUnits.WATT)<=30 and back_right_motor.power(PowerUnits.WATT)<=30 and (self.drivetrain_power_monitoring==1 or self.drivetrain_power_monitoring==2):
             self.drivetrain_power_monitoring=0
+        if front_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+            log.add("ED3", "Front Right Motor")
+            self.drivetrain_disconnected=1
+        if front_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+            log.add("ED3", "Front Left Motor")            
+            self.drivetrain_disconnected=1
+        if back_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+            log.add("ED3", "Back Right Motor")
+            self.drivetrain_disconnected=1
+        if back_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+            log.add("ED3", "Back Left Motor")            
+            self.drivetrain_disconnected=1
+        if front_right_motor.temperature(PERCENT)!=2 and front_left_motor.temperature(PERCENT)!=2 and back_right_motor.temperature(PERCENT)!=2 and back_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected==1:
+            self.drivetrain_disconnected=0
     
     def six_motor(self, front_left_motor, front_right_motor, middle_left_motor, middle_right_motor, back_left_motor, back_right_motor):
         self.drivetrain_temp_monitoring=0
@@ -506,6 +586,26 @@ class Drivetrain:
             self.drivetrain_power_monitoring=0
         else:
             pass
+        if front_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+            log.add("ED3", "Front Right Motor")
+            self.drivetrain_disconnected=1
+        if front_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+            log.add("ED3", "FrontLeft Motor")            
+            self.drivetrain_disconnected=1
+        if middle_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+            log.add("ED3", "Middle Right Motor")
+            self.drivetrain_disconnected=1
+        if middle_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+            log.add("ED3", "Middle Left Motor")            
+            self.drivetrain_disconnected=1
+        if back_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+            log.add("ED3", "Back Right Motor")
+            self.drivetrain_disconnected=1
+        if back_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+            log.add("ED3", "Back Left Motor")        
+            self.drivetrain_disconnected=1
+        if front_right_motor.temperature(PERCENT)!=2 and front_left_motor.temperature(PERCENT)!=2 and middle_right_motor.temperature(PERCENT)!=2 and middle_left_motor.temperature(PERCENT)!=2 and back_right_motor.temperature(PERCENT)!=2 and back_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected==1:
+            self.drivetrain_disconnected=0
 
 # logging for the log class
 class Logging:
@@ -516,6 +616,7 @@ class Logging:
     def motor(self, motor):
         self.temp_monitoring=0
         self.power_monitoring=0
+        self.disconnected=0
 
         if motor.temperature()>70 and (self.temp_monitoring==0 or self.temp_monitoring==2):
             log.add("EM0", "%s Name: %s"%(motor.temperature(), motor()))
@@ -526,13 +627,21 @@ class Logging:
         elif motor.temperature()<=50 and (self.temp_monitoring==2 or self.temp_monitoring==1):
             self.temp_monitoring=0
         if motor.power(PowerUnits.WATT)>40 and (self.power_monitoring==0 or self.power_monitoring==2):
-            log.add("EM1", "%s Name: %s"%(motor.power(PowerUnits.WATT), motor()))
+            log.add("EM2", "%s Name: %s"%(motor.power(PowerUnits.WATT), motor()))
             self.power_monitoring=1
         elif motor.power(PowerUnits.WATT)>30 and (self.power_monitoring==0 or self.power_monitoring==1):
             log.add("WM1", "%s Name: %s"%(motor.power(PowerUnits.WATT), motor()))
             self.power_monitoring=2
         elif motor.power(PowerUnits.WATT)<=30 and (self.power_monitoring==1 or self.power_monitoring==2):
             self.power_monitoring=0
+        if motor.temperature(PERCENT)==2 and self.disconnected==0:
+            log.add("EM2", "%s"%(motor()))
+            self.disconnected=1
+        if motor.temperature(PERCENT)!=2 and self.disconnected==1:
+            log.add("EM2", "%s"%(motor()))
+            self.disconnected=1
+        if motor.temperature(PERCENT)!=2 and self.disconnected==1:
+            self.disconnected=0
     
     def motor_group(self, motor_group):
         self.temp_monitoring=0
@@ -705,6 +814,7 @@ class Log:
                     "ED0": "Drivetrain ERROR: No response from drivetrain.",
                     "ED1": "Drivetrain ERROR: Motor(s) Criticaly Hot. Temp: ",
                     "ED2": "Drivetrain ERROR: Motor(s) Very High Power. Power: ",
+                    "ED3": "Drivetrain ERROR: Motor(s) Disconnected. Name: ",
                     "WD0": "Drivetrain WARNING: Motor(s) Hot. Temp: ",
                     "WD1": "Drivetrain WARNING: High Current Draw. Current: ",
                     "WD2": "Drivetrain WARNING: Low Voltage. Voltage: ",
@@ -746,7 +856,10 @@ class Log:
                     "DS1": "System DATA: Driver Init setup complete.",
                     "DS2": "System DATA: Aton Init setup complete.",
                     "EM0": "Motor ERROR: Motor Criticaly Hot. Temp: ",
+                    "EM1": "Motor ERROR: Motor Disconnected. Name: ",
+                    "EM2": "Motor ERROR: Motor Very High Power. Power: ",
                     "WM0": "Motor WARNING: Motor Hot. Temp: ",
+                    "WM1": "Motor WARNING: Motor High Power. Power: ",
                     "EE0": "Exeption ERROR: Type Error. Problem in: ",
                     "EE1": "Exeption ERROR: Value Error. Problem in: ",
                     "EE2": "Exeption ERROR: Name Error. Problem in: ",

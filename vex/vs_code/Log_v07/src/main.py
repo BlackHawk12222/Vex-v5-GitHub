@@ -425,65 +425,6 @@ class Record:
         self.index+=1
         brain.sdcard.savefile("index.txt", bytearray("%d"%(self.index), "utf-8"))
 
-    def battery(self, code):
-        if brain.sdcard.is_inserted():
-            if code == "EB0":
-                log.add("EB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
-            elif code == "EB1":
-                log.add("EB1", "%s"%(brain.battery.current(CurrentUnits.AMP)))
-            elif code == "EB2":
-                log.add("EB2", "%s"%(brain.battery.temperature(PERCENT)))
-            elif code == "WB0":
-                log.add("WB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
-            elif code == "WB1":
-                log.add("WB1", "%s"%(brain.battery.current(CurrentUnits.AMP)))
-            elif code == "WB2":
-                log.add("WB2", "%s"%(brain.battery.temperature(PERCENT)))
-            else:
-                pass
-        else:
-            if code == "EB0":
-                print("Battery ERROR: Critically low Voltage. Voltage: %s V"%(brain.battery.voltage(VoltageUnits.VOLT)))
-            elif code == "EB2":
-                print("Battery ERROR: Critically High Current. Current: %s A"%(brain.battery.current(CurrentUnits.AMP)))
-            elif code == "EB1":
-                print("Battery ERROR: Critically Low Capacity. Capacity: %s %%"%(brain.battery.capacity()))
-            elif code == "WB0":
-                print("Battery WARNING: Low Voltage. Voltage: %s V"%(brain.battery.voltage(VoltageUnits.VOLT)))
-            elif code == "WB1":
-                print("Battery WARNING: Low Battery. capacity: %s %%"%(brain.battery.capacity()))
-            else:
-                pass
-    
-    def motor(self, motor, code):
-        if brain.sdcard.is_inserted():
-            if code == "EM0":
-                log.add("EM0", "Motor %s Temp: %s"%(motor, motor.temperature(PERCENT)))
-            elif code == "EM1":
-                log.add("EM1", "Motor %s Power: %s"%(motor, motor.power(PowerUnits.WATT)))
-            elif code == "WM0":
-                log.add("WM0", "Motor %s Temp: %s"%(motor, motor.temperature(PERCENT)))
-            elif code == "WM1":
-                log.add("WM1", "Motor %s Power: %s"%(motor, motor.power(PowerUnits.WATT)))
-            elif code == "WM2":
-                log.add("WM2", "Motor %s Stalled: %s"%(motor, motor.is_stalled()))
-            else:
-                pass
-        else:
-            if code == "EM0":
-                print("Motor %s ERROR: Critically High Temperature. Temp: %s %%"%(motor, motor.temperature(PERCENT)))
-            elif code == "EM1":
-                print("Motor %s ERROR: Critically High Power. Power: %s W"%(motor, motor.power(PowerUnits.WATT)))
-            elif code == "WM0":
-                print("Motor %s WARNING: High Temperature. Temp: %s %%"%(motor, motor.temperature(PERCENT)))
-            elif code == "WM1":
-                print("Motor %s WARNING: High Power. Power: %s W"%(motor, motor.power(PowerUnits.WATT)))
-            else:
-                pass
-    
-    def drivetrain(self, drivetrain, code):
-        pass
-
 
 
 class Read:
@@ -620,26 +561,26 @@ class Logging:
         self.disconnected=0
 
         if motor.temperature()>70 and (self.temp_monitoring==0 or self.temp_monitoring==2):
-            log.record.motor(motor, "EM0")
+            log.add("EM0", "Motor %s Temp: %s"%(motor, motor.temperature(PERCENT)))
             self.temp_monitoring=1
         elif motor.temperature()>50 and (self.temp_monitoring==0 or self.temp_monitoring==1):
-            log.record.motor(motor, "WM0")
+            log.add("WM0", "Motor %s Temp: %s"%(motor, motor.temperature(PERCENT)))
             self.temp_monitoring=2
         elif motor.temperature()<=50 and (self.temp_monitoring==2 or self.temp_monitoring==1):
             self.temp_monitoring=0
         if motor.power(PowerUnits.WATT)>40 and (self.power_monitoring==0 or self.power_monitoring==2):
-            log.record.motor(motor, "EM2")
+            log.add("EM2", "Motor %s Power: %s"%(motor, motor.power(PowerUnits.WATT)))
             self.power_monitoring=1
         elif motor.power(PowerUnits.WATT)>30 and (self.power_monitoring==0 or self.power_monitoring==1):
-            log.record.motor(motor, "WM1")
+            log.add("WM1", "Motor %s Power: %s"%(motor, motor.power(PowerUnits.WATT)))
             self.power_monitoring=2
         elif motor.power(PowerUnits.WATT)<=30 and (self.power_monitoring==1 or self.power_monitoring==2):
             self.power_monitoring=0
         if motor.temperature(PERCENT)==2 and self.disconnected==0:
-            log.record.motor(motor, "EM2")
+            log.add("EM2", "Motor %s Disconnected"%(motor))
             self.disconnected=1
         if motor.temperature(PERCENT)==2 and self.disconnected==0:
-            log.record.motor(motor, "EM2")
+            log.add("EM2", "Motor %s Disconnected"%(motor))
             self.disconnected=1
         if motor.temperature(PERCENT)!=2 and self.disconnected==1:
             self.disconnected=0
@@ -676,26 +617,26 @@ class Logging:
         self.battery_current_monitoring=0
 
         if brain.battery.voltage(VoltageUnits.VOLT)<11 and (self.battery_voltage_monitoring==0 or self.battery_voltage_monitoring==2):
-            log.record.battery("EB0")
+            log.add("EB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
             self.battery_voltage_monitoring=1
         elif brain.battery.voltage(VoltageUnits.VOLT)<12 and (self.battery_voltage_monitoring==0 or self.battery_voltage_monitoring==1):
-            log.record.battery("WB0")
+            log.add("WB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
             self.battery_voltage_monitoring=2
         elif brain.battery.voltage(VoltageUnits.VOLT)>=12 and (self.battery_voltage_monitoring==1 or self.battery_voltage_monitoring==2):
             self.battery_voltage_monitoring=0
         if brain.battery.capacity()<25 and (self.battery_capacity_monitoring==0 or self.battery_capacity_monitoring==2):
-            log.record.battery("EB1")
+            log.add("EB1", "%s"%(brain.battery.capacity()))
             self.battery_capacity_monitoring=1
         elif brain.battery.capacity()<50 and (self.battery_capacity_monitoring==0 or self.battery_capacity_monitoring==1):
-            log.record.battery("WB1")
+            log.add("WB1", "%s"%(brain.battery.capacity()))
             self.battery_capacity_monitoring=2
         elif brain.battery.capacity()>=50 and (self.battery_capacity_monitoring==1 or self.battery_capacity_monitoring==2):
             self.battery_capacity_monitoring=0
         if brain.battery.current(CurrentUnits.AMP)>15 and (self.battery_current_monitoring==0 or self.battery_current_monitoring==2):
-            log.record.battery("EB2")
+            log.add("EB2", "%s"%(brain.battery.current(CurrentUnits.AMP)))
             self.battery_current_monitoring=1
         elif brain.battery.current(CurrentUnits.AMP)>10 and (self.battery_current_monitoring==0 or self.battery_current_monitoring==1):
-            log.record.battery("WB2")
+            log.add("WB2", "%s"%(brain.battery.current(CurrentUnits.AMP)))
             self.battery_current_monitoring=2
         elif brain.battery.current(CurrentUnits.AMP)<=5 and (self.battery_current_monitoring==1 or self.battery_current_monitoring==2):
             self.battery_current_monitoring=0
@@ -924,15 +865,15 @@ def log_setup():
             log.logging.motor(TopMotor)
             log.logging.motor(colorsorting)
         except AttributeError:
-            log.add("EE4", "Logging Thread")
+            log.add("EE4", "Motor Logging Thread")
         except NameError:
-            log.add("EE2", "Logging Thread")
+            log.add("EE2", "Motor Logging Thread")
         except ValueError:
-            log.add("EE1", "Logging Thread")
+            log.add("EE1", "Motor Logging Thread")
         except TypeError:
-            log.add("EE0", "Logging Thread")
+            log.add("EE0", "Motor Logging Thread")
         except Exception as e:
-            log.add("EE3", "Logging Thread: %s"%(e))
+            log.add("EE3", "Motor Logging Thread: %s"%(e))
         wait(50, MSEC)
 
 def battery_log():

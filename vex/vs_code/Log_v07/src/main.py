@@ -171,7 +171,7 @@ intake_speed = 0
 # 	Author:       Micah Bow                                                    #
 # 	Created:      1/27/2026, 12:42 PM                                          #
 #   Last Edited:  2/4/2026, 12:02 PM                                           #
-# 	Description:  Universal Logging software for Vex V5 Version 6              #
+# 	Description:  Universal Logging software for Vex V5 Version 7              #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 controller_2=Controller(PARTNER)
@@ -438,12 +438,11 @@ class Read:
 # Drivetrain recording
 class Drivetrain:
     def __init__(self):
-        pass
-    
-    def two_motor(self, left_motor, right_motor):
-        self.drivetrin_temp_monitoring=0
+        self.drivetrain_temp_monitoring=0
         self.drivetrain_power_monitoring=0
         self.drivetrain_disconnected=0
+    
+    def two_motor(self, left_motor, right_motor):
 
         if (right_motor.temperature()>70 or left_motor.temperature()>70) and (self.drivetrin_temp_monitoring==0 or self.drivetrin_temp_monitoring==2):
             log.add("ED1", "Temp: %s"%(max(right_motor.temperature(), left_motor.temperature())))
@@ -471,8 +470,6 @@ class Drivetrain:
             self.drivetrain_disconnected=0
         
     def four_motor(self, front_left_motor, front_right_motor, back_left_motor, back_right_motor):
-        self.drivetrain_temp_monitoring=0
-        self.drivetrain_power_monitoring=0
         
         if (front_left_motor.temperature()>70 or front_right_motor.temperature()>70 or back_left_motor.temperature()>70 or back_right_motor.temperature()>70) and (self.drivetrain_temp_monitoring==0 or self.drivetrain_temp_monitoring==2):
             log.add("ED1", "Temp: %s"%(max(front_left_motor.temperature(), front_right_motor.temperature(), back_left_motor.temperature(), back_right_motor.temperature())))
@@ -506,8 +503,7 @@ class Drivetrain:
             self.drivetrain_disconnected=0
     
     def six_motor(self, front_left_motor, front_right_motor, middle_left_motor, middle_right_motor, back_left_motor, back_right_motor):
-        self.drivetrain_temp_monitoring=0
-        self.drivetrain_power_monitoring=0
+        
         
         if (front_left_motor.temperature(PERCENT)>70 or front_right_motor.temperature(PERCENT)>70 or middle_left_motor.temperature(PERCENT)>70 or middle_right_motor.temperature(PERCENT)>70 or back_left_motor.temperature(PERCENT)>70 or back_right_motor.temperature(PERCENT)>70) and (self.drivetrain_temp_monitoring==0 or self.drivetrain_temp_monitoring==2):
             log.add("ED1", "Temp: %s"%(max(front_left_motor.temperature(PERCENT), front_right_motor.temperature(PERCENT), middle_left_motor.temperature(PERCENT), middle_right_motor.temperature(PERCENT), back_left_motor.temperature(PERCENT), back_right_motor.temperature(PERCENT))))
@@ -554,11 +550,16 @@ class Logging:
     def __init__(self):
         self.drivetrain=Drivetrain()
         self.record=Record()
-    
-    def motor(self, motor):
         self.temp_monitoring=0
         self.power_monitoring=0
         self.disconnected=0
+        self.battery_voltage_monitoring=0
+        self.battery_capacity_monitoring=0
+        self.battery_current_monitoring=0
+        self.Controller_1_button_pressing=0
+    
+    def motor(self, motor):
+        
 
         if motor.temperature()>70 and (self.temp_monitoring==0 or self.temp_monitoring==2):
             log.add("EM0", "Motor %s Temp: %s"%(motor, motor.temperature(PERCENT)))
@@ -577,17 +578,15 @@ class Logging:
         elif motor.power(PowerUnits.WATT)<=30 and (self.power_monitoring==1 or self.power_monitoring==2):
             self.power_monitoring=0
         if motor.temperature(PERCENT)==2 and self.disconnected==0:
-            log.add("EM2", "Motor %s Disconnected"%(motor))
+            log.add("EM1", "Motor %s Disconnected"%(motor))
             self.disconnected=1
         if motor.temperature(PERCENT)==2 and self.disconnected==0:
-            log.add("EM2", "Motor %s Disconnected"%(motor))
+            log.add("EM1", "Motor %s Disconnected"%(motor))
             self.disconnected=1
         if motor.temperature(PERCENT)!=2 and self.disconnected==1:
             self.disconnected=0
     
     def motor_group(self, motor_group):
-        self.temp_monitoring=0
-        self.power_monitoring=0
     
         max_temp=0
         for motor in motor_group:
@@ -612,9 +611,6 @@ class Logging:
                 self.power_monitoring=0
 
     def Battery(self):
-        self.battery_voltage_monitoring=0
-        self.battery_capacity_monitoring=0
-        self.battery_current_monitoring=0
 
         if brain.battery.voltage(VoltageUnits.VOLT)<11 and (self.battery_voltage_monitoring==0 or self.battery_voltage_monitoring==2):
             log.add("EB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
@@ -643,55 +639,60 @@ class Logging:
         
     
     def Controller_1(self):
-        self.Controller_1_button_pressing=0
+        if controller_1.axis1.position()!=0 or controller_1.axis2.position()!=0 or controller_1.axis3.position()!=0 or controller_1.axis4.position()!=0:
+            self.axis_1=controller_1.axis1.position()
+            self.axis_2=controller_1.axis2.position()
+            self.axis_3=controller_1.axis3.position()
+            self.axis_4=controller_1.axis4.position()
+            wait(50, MSEC)
 
-        if controller_1.axis1.position()!=0 :
-            log.record.controller_1_axis("1")
-        if controller_1.axis2.position()!=0:
-            log.record.controller_1_axis("2")
-        if controller_1.axis3.position()!=0:
-            log.record.controller_1_axis("3")
-        if controller_1.axis4.position()!=0:
-            log.record.controller_1_axis("4")
-        if controller_1.buttonA.pressing() and (self.Controller_1_button_pressing==0 or self.Controller_1_button_pressing>=2):
-            log.record.controller_1_button("A")
-            self.Controller_1_button_pressing=1
-        if controller_1.buttonB.pressing() and (self.Controller_1_button_pressing<=1 or self.Controller_1_button_pressing>=3):
-            log.record.controller_1_button("B")
-            self.Controller_1_button_pressing=2
-        if controller_1.buttonX.pressing() and (self.Controller_1_button_pressing<=2 or self.Controller_1_button_pressing>=4):
-            log.record.controller_1_button("X")
-            self.Controller_1_button_pressing=3
-        if controller_1.buttonY.pressing() and (self.Controller_1_button_pressing<=3 or self.Controller_1_button_pressing>=5):
-            log.record.controller_1_button("Y")
-            self.Controller_1_button_pressing=4
-        if controller_1.buttonUp.pressing() and (self.Controller_1_button_pressing<=4 or self.Controller_1_button_pressing>=6):
-            log.record.controller_1_button("UP")
-            self.Controller_1_button_pressing=5
-        if controller_1.buttonDown.pressing() and (self.Controller_1_button_pressing<=5 or self.Controller_1_button_pressing>=7):
-            log.record.controller_1_button("DOWN")
-            self.Controller_1_button_pressing=6
-        if controller_1.buttonLeft.pressing() and (self.Controller_1_button_pressing<=6 or self.Controller_1_button_pressing>=8):
-            log.record.controller_1_button("LEFT")
-            self.Controller_1_button_pressing=7
-        if controller_1.buttonRight.pressing() and (self.Controller_1_button_pressing<=7 or self.Controller_1_button_pressing>=9):
-            log.record.controller_1_button("RIGHT")
-            self.Controller_1_button_pressing=8
-        if controller_1.buttonL1.pressing() and (self.Controller_1_button_pressing<=8 or self.Controller_1_button_pressing>=10):
-            log.record.controller_1_button("L1")
-            self.Controller_1_button_pressing=9
-        if controller_1.buttonL2.pressing() and (self.Controller_1_button_pressing<=9 or self.Controller_1_button_pressing>=11):
-            log.record.controller_1_button("L2")
-            self.Controller_1_button_pressing=10
-        if controller_1.buttonR1.pressing() and (self.Controller_1_button_pressing<=10 or self.Controller_1_button_pressing==12):
-            log.record.controller_1_button("R1")
-            self.Controller_1_button_pressing=11
-        if controller_1.buttonR2.pressing() and (self.Controller_1_button_pressing<=11):
-            log.record.controller_1_button("R2")
-            self.Controller_1_button_pressing=12
-       
-        if not(controller_1.buttonA.pressing() or controller_1.buttonB.pressing() or controller_1.buttonX.pressing() or controller_1.buttonY.pressing() or controller_1.buttonUp.pressing() or controller_1.buttonDown.pressing() or controller_1.buttonLeft.pressing() or controller_1.buttonRight.pressing() or controller_1.buttonL1.pressing() or controller_1.buttonL2.pressing() or controller_1.buttonR1.pressing() or controller_1.buttonR2.pressing()):
-            self.Controller_1_button_pressing=0
+            if controller_1.axis1.position()!=0 and self.axis_1!=controller_1.axis1.position():
+                log.record.controller_1_axis("1")
+            if controller_1.axis2.position()!=0 and self.axis_2!=controller_1.axis2.position():
+                log.record.controller_1_axis("2")
+            if controller_1.axis3.position()!=0 and self.axis_3!=controller_1.axis3.position():
+                log.record.controller_1_axis("3")
+            if controller_1.axis4.position()!=0 and self.axis_4!=controller_1.axis4.position():
+                log.record.controller_1_axis("4")
+        if controller_1.buttonA.pressing() or controller_1.buttonB.pressing() or controller_1.buttonX.pressing() or controller_1.buttonY.pressing() or controller_1.buttonUp.pressing() or controller_1.buttonDown.pressing() or controller_1.buttonLeft.pressing() or controller_1.buttonRight.pressing() or controller_1.buttonL1.pressing() or controller_1.buttonL2.pressing() or controller_1.buttonR1.pressing() or controller_1.buttonR2.pressing():
+            if controller_1.buttonA.pressing() and (self.Controller_1_button_pressing==0 or self.Controller_1_button_pressing>=2):
+                log.record.controller_1_button("A")
+                self.Controller_1_button_pressing=1
+            if controller_1.buttonB.pressing() and (self.Controller_1_button_pressing<=1 or self.Controller_1_button_pressing>=3):
+                log.record.controller_1_button("B")
+                self.Controller_1_button_pressing=2
+            if controller_1.buttonX.pressing() and (self.Controller_1_button_pressing<=2 or self.Controller_1_button_pressing>=4):
+                log.record.controller_1_button("X")
+                self.Controller_1_button_pressing=3
+            if controller_1.buttonY.pressing() and (self.Controller_1_button_pressing<=3 or self.Controller_1_button_pressing>=5):
+                log.record.controller_1_button("Y")
+                self.Controller_1_button_pressing=4
+            if controller_1.buttonUp.pressing() and (self.Controller_1_button_pressing<=4 or self.Controller_1_button_pressing>=6):
+                log.record.controller_1_button("UP")
+                self.Controller_1_button_pressing=5
+            if controller_1.buttonDown.pressing() and (self.Controller_1_button_pressing<=5 or self.Controller_1_button_pressing>=7):
+                log.record.controller_1_button("DOWN")
+                self.Controller_1_button_pressing=6
+            if controller_1.buttonLeft.pressing() and (self.Controller_1_button_pressing<=6 or self.Controller_1_button_pressing>=8):
+                log.record.controller_1_button("LEFT")
+                self.Controller_1_button_pressing=7
+            if controller_1.buttonRight.pressing() and (self.Controller_1_button_pressing<=7 or self.Controller_1_button_pressing>=9):
+                log.record.controller_1_button("RIGHT")
+                self.Controller_1_button_pressing=8
+            if controller_1.buttonL1.pressing() and (self.Controller_1_button_pressing<=8 or self.Controller_1_button_pressing>=10):
+                log.record.controller_1_button("L1")
+                self.Controller_1_button_pressing=9
+            if controller_1.buttonL2.pressing() and (self.Controller_1_button_pressing<=9 or self.Controller_1_button_pressing>=11):
+                log.record.controller_1_button("L2")
+                self.Controller_1_button_pressing=10
+            if controller_1.buttonR1.pressing() and (self.Controller_1_button_pressing<=10 or self.Controller_1_button_pressing==12):
+                log.record.controller_1_button("R1")
+                self.Controller_1_button_pressing=11
+            if controller_1.buttonR2.pressing() and (self.Controller_1_button_pressing<=11):
+                log.record.controller_1_button("R2")
+                self.Controller_1_button_pressing=12
+            if not(controller_1.buttonA.pressing() or controller_1.buttonB.pressing() or controller_1.buttonX.pressing() or controller_1.buttonY.pressing() or controller_1.buttonUp.pressing() or controller_1.buttonDown.pressing() or controller_1.buttonLeft.pressing() or controller_1.buttonRight.pressing() or controller_1.buttonL1.pressing() or controller_1.buttonL2.pressing() or controller_1.buttonR1.pressing() or controller_1.buttonR2.pressing()):
+                self.Controller_1_button_pressing=0
     
     def Controller_2(self):
         self.Controller_2_button_pressing=0
@@ -751,6 +752,7 @@ class Log:
         self.record=Record()
         self.read=Read()
         self.logging=Logging()
+        self.index=0
         # Predefined Log Codes dictionary
         self.codes={
                     "ED0": "Drivetrain ERROR: No response from drivetrain.",
@@ -826,6 +828,7 @@ class Log:
             brain.sdcard.savefile("index.txt", bytearray("%d"%(self.index), "utf-8"))
         else:
             print(", %s [%s] %s %s"%(self.index, log_time, self.codes.get(add_code), add_details))
+            self.index+=1
     
     def add_codes(self, code_add, Decoded_text):
         self.codes.update({code_add : "%s"%(Decoded_text)})
@@ -857,8 +860,7 @@ class Log:
 log=Log()  
 
 # funtions for threading
-def log_setup(): 
-    while True: 
+def motor_log(): 
         try:
             log.logging.drivetrain.six_motor(left1, Right1, left2, Right2, left3, Right3)
             log.logging.motor(Intake)
@@ -877,7 +879,6 @@ def log_setup():
         wait(50, MSEC)
 
 def battery_log():
-    while True:
         try:
             log.logging.Battery()
         except AttributeError:
@@ -893,7 +894,6 @@ def battery_log():
         wait(50, MSEC)
 
 def controller_log():
-    while True:
         try:
             log.logging.Controller_1()
         except AttributeError:
@@ -906,11 +906,13 @@ def controller_log():
             log.add("EE0", "Controller Logging Thread")
         except Exception as e:
             log.add("EE3", "Controller Logging Thread: %s"%(e))
-        wait(50, MSEC)
+        wait(30, MSEC)
 
+def logging_setup():
+    while True:
+        motor_log()
+        battery_log()
+        controller_log()
 
-# Logging
 log.add("DS0",0)
-Thread(log_setup)
-Thread(battery_log)
-Thread(controller_log)
+Thread(logging_setup)

@@ -69,126 +69,189 @@ controller_2=Controller(PARTNER)
 # Drivetrain recording
 class Drivetrain:
     def __init__(self):
-        self.drivetrain_temp_monitoring=0
-        self.drivetrain_power_monitoring=0
-        self.drivetrain_disconnected=0
+        self.drivetrain_temp_monitoring={}  # Track per motor
+        self.drivetrain_power_monitoring={}  # Track per motor
+        self.drivetrain_disconnected={}  # Track per motor
     
     def two_motor(self, left_motor, right_motor):
-
-        if (right_motor.temperature()>70 or left_motor.temperature()>70) and (self.drivetrain_temp_monitoring==0 or self.drivetrain_temp_monitoring==2):
+        left_id = id(left_motor)
+        right_id = id(right_motor)
+        
+        # Initialize tracking
+        for motor_id in [left_id, right_id]:
+            if motor_id not in self.drivetrain_temp_monitoring:
+                self.drivetrain_temp_monitoring[motor_id] = 0
+            if motor_id not in self.drivetrain_power_monitoring:
+                self.drivetrain_power_monitoring[motor_id] = 0
+            if motor_id not in self.drivetrain_disconnected:
+                self.drivetrain_disconnected[motor_id] = 0
+        
+        temp_state = self.drivetrain_temp_monitoring.get('pair', 0)
+        power_state = self.drivetrain_power_monitoring.get('pair', 0)
+        
+        if (right_motor.temperature()>70 or left_motor.temperature()>70) and (temp_state==0 or temp_state==2):
             log.add("ED1", "Temp: %s"%(max(right_motor.temperature(), left_motor.temperature())))
-            self.drivetrain_temp_monitoring=1
-        elif (right_motor.temperature()>50 or left_motor.temperature()>50) and (self.drivetrain_temp_monitoring==0 or self.drivetrain_temp_monitoring==1):
+            self.drivetrain_temp_monitoring['pair'] = 1
+        elif (right_motor.temperature()>50 or left_motor.temperature()>50) and (temp_state==0 or temp_state==1):
             log.add("WD0", "Temp: %s"%(max(right_motor.temperature(), left_motor.temperature())))
-            self.drivetrain_temp_monitoring=2
-        elif right_motor.temperature()<=50 and left_motor.temperature()<=50 and (self.drivetrain_temp_monitoring==1 or self.drivetrain_temp_monitoring==2):
-            self.drivetrain_temp_monitoring=0
+            self.drivetrain_temp_monitoring['pair'] = 2
+        elif right_motor.temperature()<=50 and left_motor.temperature()<=50 and (temp_state==1 or temp_state==2):
+            self.drivetrain_temp_monitoring['pair'] = 0
         
-        if right_motor.power(PowerUnits.WATT)>40 or left_motor.power(PowerUnits.WATT)>40 and (self.drivetrain_power_monitoring==0 or self.drivetrain_power_monitoring==2):
+        if right_motor.power(PowerUnits.WATT)>40 or left_motor.power(PowerUnits.WATT)>40 and (power_state==0 or power_state==2):
             log.add("ED3", "Power: %s"%(max(right_motor.power(PowerUnits.WATT), left_motor.power(PowerUnits.WATT))))
-            self.drivetrain_power_monitoring=1
-        elif right_motor.power(PowerUnits.WATT)>30 or left_motor.power(PowerUnits.WATT)>30 and (self.drivetrain_power_monitoring==0 or self.drivetrain_power_monitoring==1):
+            self.drivetrain_power_monitoring['pair'] = 1
+        elif right_motor.power(PowerUnits.WATT)>30 or left_motor.power(PowerUnits.WATT)>30 and (power_state==0 or power_state==1):
             log.add("WD3", "Power: %s"%(max(right_motor.power(PowerUnits.WATT), left_motor.power(PowerUnits.WATT))))
-            self.drivetrain_power_monitoring=2
-        elif right_motor.power(PowerUnits.WATT)<=30 and left_motor.power(PowerUnits.WATT)<=30 and (self.drivetrain_power_monitoring==1 or self.drivetrain_power_monitoring==2):
-            self.drivetrain_power_monitoring=0
+            self.drivetrain_power_monitoring['pair'] = 2
+        elif right_motor.power(PowerUnits.WATT)<=30 and left_motor.power(PowerUnits.WATT)<=30 and (power_state==1 or power_state==2):
+            self.drivetrain_power_monitoring['pair'] = 0
         
-        if right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+        if right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[right_id]==0:
             log.add("ED3", "Right Motor")
-            self.drivetrain_disconnected=1
+            self.drivetrain_disconnected[right_id]=1
+        elif right_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[right_id]==1:
+            self.drivetrain_disconnected[right_id]=0
 
-        if left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+        if left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[left_id]==0:
             log.add("ED3", "Left Motor")            
-            self.drivetrain_disconnected=1
-        
-        if right_motor.temperature(PERCENT)!=2 and left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected==1:
-            self.drivetrain_disconnected=0
+            self.drivetrain_disconnected[left_id]=1
+        elif left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[left_id]==1:
+            self.drivetrain_disconnected[left_id]=0
         
     def four_motor(self, front_left_motor, front_right_motor, back_left_motor, back_right_motor):
+        fl_id = id(front_left_motor)
+        fr_id = id(front_right_motor)
+        bl_id = id(back_left_motor)
+        br_id = id(back_right_motor)
         
-        if (front_left_motor.temperature()>70 or front_right_motor.temperature()>70 or back_left_motor.temperature()>70 or back_right_motor.temperature()>70) and (self.drivetrain_temp_monitoring==0 or self.drivetrain_temp_monitoring==2):
+        # Initialize tracking
+        for motor_id in [fl_id, fr_id, bl_id, br_id]:
+            if motor_id not in self.drivetrain_temp_monitoring:
+                self.drivetrain_temp_monitoring[motor_id] = 0
+            if motor_id not in self.drivetrain_power_monitoring:
+                self.drivetrain_power_monitoring[motor_id] = 0
+            if motor_id not in self.drivetrain_disconnected:
+                self.drivetrain_disconnected[motor_id] = 0
+        
+        temp_state = self.drivetrain_temp_monitoring.get('four_motor', 0)
+        power_state = self.drivetrain_power_monitoring.get('four_motor', 0)
+        
+        if (front_left_motor.temperature()>70 or front_right_motor.temperature()>70 or back_left_motor.temperature()>70 or back_right_motor.temperature()>70) and (temp_state==0 or temp_state==2):
             log.add("ED1", "Temp: %s"%(max(front_left_motor.temperature(), front_right_motor.temperature(), back_left_motor.temperature(), back_right_motor.temperature())))
-            self.drivetrain_temp_monitoring=1
-        elif (front_left_motor.temperature()>50 or front_right_motor.temperature()>50 or back_left_motor.temperature()>50 or back_right_motor.temperature()>50) and (self.drivetrain_temp_monitoring==0 or self.drivetrain_temp_monitoring==1):
+            self.drivetrain_temp_monitoring['four_motor']=1
+        elif (front_left_motor.temperature()>50 or front_right_motor.temperature()>50 or back_left_motor.temperature()>50 or back_right_motor.temperature()>50) and (temp_state==0 or temp_state==1):
             log.add("WD0", "Temp: %s"%(max(front_left_motor.temperature(), front_right_motor.temperature(), back_left_motor.temperature(), back_right_motor.temperature())))
-            self.drivetrain_temp_monitoring=2
-        elif (front_left_motor.temperature()<=50 and front_right_motor.temperature()<=50 and back_left_motor.temperature()<=50 and back_right_motor.temperature()<=50) and (self.drivetrain_temp_monitoring==1 or self.drivetrain_temp_monitoring==2):
-            self.drivetrain_temp_monitoring=0
+            self.drivetrain_temp_monitoring['four_motor']=2
+        elif (front_left_motor.temperature()<=50 and front_right_motor.temperature()<=50 and back_left_motor.temperature()<=50 and back_right_motor.temperature()<=50) and (temp_state==1 or temp_state==2):
+            self.drivetrain_temp_monitoring['four_motor']=0
         
-        if front_left_motor.power(PowerUnits.WATT)>40 or front_right_motor.power(PowerUnits.WATT)>40 or back_left_motor.power(PowerUnits.WATT)>40 or back_right_motor.power(PowerUnits.WATT)>40 and (self.drivetrain_power_monitoring==0 or self.drivetrain_power_monitoring==2):
+        if front_left_motor.power(PowerUnits.WATT)>40 or front_right_motor.power(PowerUnits.WATT)>40 or back_left_motor.power(PowerUnits.WATT)>40 or back_right_motor.power(PowerUnits.WATT)>40 and (power_state==0 or power_state==2):
             log.add("ED3", "Power: %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
-            self.drivetrain_power_monitoring=1
-        elif front_left_motor.power(PowerUnits.WATT)>30 or front_right_motor.power(PowerUnits.WATT)>30 or back_left_motor.power(PowerUnits.WATT)>30 or back_right_motor.power(PowerUnits.WATT)>30 and (self.drivetrain_power_monitoring==0 or self.drivetrain_power_monitoring==1):  
+            self.drivetrain_power_monitoring['four_motor']=1
+        elif front_left_motor.power(PowerUnits.WATT)>30 or front_right_motor.power(PowerUnits.WATT)>30 or back_left_motor.power(PowerUnits.WATT)>30 or back_right_motor.power(PowerUnits.WATT)>30 and (power_state==0 or power_state==1):  
             log.add("WD3", "Power: %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
-            self.drivetrain_power_monitoring=2
-        elif front_left_motor.power(PowerUnits.WATT)<=30 and front_right_motor.power(PowerUnits.WATT)<=30 and back_left_motor.power(PowerUnits.WATT)<=30 and back_right_motor.power(PowerUnits.WATT)<=30 and (self.drivetrain_power_monitoring==1 or self.drivetrain_power_monitoring==2):
-            self.drivetrain_power_monitoring=0
+            self.drivetrain_power_monitoring['four_motor']=2
+        elif front_left_motor.power(PowerUnits.WATT)<=30 and front_right_motor.power(PowerUnits.WATT)<=30 and back_left_motor.power(PowerUnits.WATT)<=30 and back_right_motor.power(PowerUnits.WATT)<=30 and (power_state==1 or power_state==2):
+            self.drivetrain_power_monitoring['four_motor']=0
         
-        if front_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+        if front_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[fr_id]==0:
             log.add("ED3", "Front Right Motor")
-            self.drivetrain_disconnected=1
+            self.drivetrain_disconnected[fr_id]=1
+        elif front_right_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[fr_id]==1:
+            self.drivetrain_disconnected[fr_id]=0
         
-        if front_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+        if front_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[fl_id]==0:
             log.add("ED3", "Front Left Motor")            
-            self.drivetrain_disconnected=1
+            self.drivetrain_disconnected[fl_id]=1
+        elif front_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[fl_id]==1:
+            self.drivetrain_disconnected[fl_id]=0
         
-        if back_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+        if back_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[br_id]==0:
             log.add("ED3", "Back Right Motor")
-            self.drivetrain_disconnected=1
+            self.drivetrain_disconnected[br_id]=1
+        elif back_right_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[br_id]==1:
+            self.drivetrain_disconnected[br_id]=0
         
-        if back_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+        if back_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[bl_id]==0:
             log.add("ED3", "Back Left Motor")            
-            self.drivetrain_disconnected=1
-        
-        if front_right_motor.temperature(PERCENT)!=2 and front_left_motor.temperature(PERCENT)!=2 and back_right_motor.temperature(PERCENT)!=2 and back_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected==1:
-            self.drivetrain_disconnected=0
+            self.drivetrain_disconnected[bl_id]=1
+        elif back_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[bl_id]==1:
+            self.drivetrain_disconnected[bl_id]=0
     
     def six_motor(self, front_left_motor, front_right_motor, middle_left_motor, middle_right_motor, back_left_motor, back_right_motor):
+        fl_id = id(front_left_motor)
+        fr_id = id(front_right_motor)
+        ml_id = id(middle_left_motor)
+        mr_id = id(middle_right_motor)
+        bl_id = id(back_left_motor)
+        br_id = id(back_right_motor)
         
-        if (front_left_motor.temperature(PERCENT)>70 or front_right_motor.temperature(PERCENT)>70 or middle_left_motor.temperature(PERCENT)>70 or middle_right_motor.temperature(PERCENT)>70 or back_left_motor.temperature(PERCENT)>70 or back_right_motor.temperature(PERCENT)>70) and (self.drivetrain_temp_monitoring==0 or self.drivetrain_temp_monitoring==2):
+        # Initialize tracking
+        for motor_id in [fl_id, fr_id, ml_id, mr_id, bl_id, br_id]:
+            if motor_id not in self.drivetrain_temp_monitoring:
+                self.drivetrain_temp_monitoring[motor_id] = 0
+            if motor_id not in self.drivetrain_power_monitoring:
+                self.drivetrain_power_monitoring[motor_id] = 0
+            if motor_id not in self.drivetrain_disconnected:
+                self.drivetrain_disconnected[motor_id] = 0
+        
+        temp_state = self.drivetrain_temp_monitoring.get('six_motor', 0)
+        power_state = self.drivetrain_power_monitoring.get('six_motor', 0)
+        
+        if (front_left_motor.temperature(PERCENT)>70 or front_right_motor.temperature(PERCENT)>70 or middle_left_motor.temperature(PERCENT)>70 or middle_right_motor.temperature(PERCENT)>70 or back_left_motor.temperature(PERCENT)>70 or back_right_motor.temperature(PERCENT)>70) and (temp_state==0 or temp_state==2):
             log.add("ED1", "Temp: %s"%(max(front_left_motor.temperature(PERCENT), front_right_motor.temperature(PERCENT), middle_left_motor.temperature(PERCENT), middle_right_motor.temperature(PERCENT), back_left_motor.temperature(PERCENT), back_right_motor.temperature(PERCENT))))
-            self.drivetrain_temp_monitoring=1
-        elif (front_left_motor.temperature(PERCENT)>50 or front_right_motor.temperature(PERCENT)>50 or middle_left_motor.temperature(PERCENT)>50 or middle_right_motor.temperature(PERCENT)>50 or back_left_motor.temperature(PERCENT)>50 or back_right_motor.temperature(PERCENT)>50) and (self.drivetrain_temp_monitoring==0 or self.drivetrain_temp_monitoring==1):
+            self.drivetrain_temp_monitoring['six_motor']=1
+        elif (front_left_motor.temperature(PERCENT)>50 or front_right_motor.temperature(PERCENT)>50 or middle_left_motor.temperature(PERCENT)>50 or middle_right_motor.temperature(PERCENT)>50 or back_left_motor.temperature(PERCENT)>50 or back_right_motor.temperature(PERCENT)>50) and (temp_state==0 or temp_state==1):
             log.add("WD0", "Temp: %s"%(max(front_left_motor.temperature(PERCENT), front_right_motor.temperature(PERCENT), middle_left_motor.temperature(PERCENT), middle_right_motor.temperature(PERCENT), back_left_motor.temperature(PERCENT), back_right_motor.temperature(PERCENT))))
-            self.drivetrain_temp_monitoring=2
-        elif (front_left_motor.temperature(PERCENT)<=50 and front_right_motor.temperature(PERCENT)<=50 and middle_left_motor.temperature(PERCENT)<=50 and middle_right_motor.temperature(PERCENT)<=50 and back_left_motor.temperature(PERCENT)<=50 and back_right_motor.temperature(PERCENT)<=50) and (self.drivetrain_temp_monitoring==1 or self.drivetrain_temp_monitoring==2):
-            self.drivetrain_temp_monitoring=0
+            self.drivetrain_temp_monitoring['six_motor']=2
+        elif (front_left_motor.temperature(PERCENT)<=50 and front_right_motor.temperature(PERCENT)<=50 and middle_left_motor.temperature(PERCENT)<=50 and middle_right_motor.temperature(PERCENT)<=50 and back_left_motor.temperature(PERCENT)<=50 and back_right_motor.temperature(PERCENT)<=50) and (temp_state==1 or temp_state==2):
+            self.drivetrain_temp_monitoring['six_motor']=0
         
-        if front_left_motor.power(PowerUnits.WATT)>40 or front_right_motor.power(PowerUnits.WATT)>40 or middle_left_motor.power(PowerUnits.WATT)>40 or middle_right_motor.power(PowerUnits.WATT)>40 or back_left_motor.power(PowerUnits.WATT)>40 or back_right_motor.power(PowerUnits.WATT)>40 and (self.drivetrain_power_monitoring==0 or self.drivetrain_power_monitoring==2):
+        if front_left_motor.power(PowerUnits.WATT)>40 or front_right_motor.power(PowerUnits.WATT)>40 or middle_left_motor.power(PowerUnits.WATT)>40 or middle_right_motor.power(PowerUnits.WATT)>40 or back_left_motor.power(PowerUnits.WATT)>40 or back_right_motor.power(PowerUnits.WATT)>40 and (power_state==0 or power_state==2):
             log.add("ED3", "Power: %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), middle_left_motor.power(PowerUnits.WATT), middle_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
-            self.drivetrain_power_monitoring=1
-        elif front_left_motor.power(PowerUnits.WATT)>30 or front_right_motor.power(PowerUnits.WATT)>30 or middle_left_motor.power(PowerUnits.WATT)>30 or middle_right_motor.power(PowerUnits.WATT)>30 or back_left_motor.power(PowerUnits.WATT)>30 or back_right_motor.power(PowerUnits.WATT)>30 and (self.drivetrain_power_monitoring==0 or self.drivetrain_power_monitoring==1):  
+            self.drivetrain_power_monitoring['six_motor']=1
+        elif front_left_motor.power(PowerUnits.WATT)>30 or front_right_motor.power(PowerUnits.WATT)>30 or middle_left_motor.power(PowerUnits.WATT)>30 or middle_right_motor.power(PowerUnits.WATT)>30 or back_left_motor.power(PowerUnits.WATT)>30 or back_right_motor.power(PowerUnits.WATT)>30 and (power_state==0 or power_state==1):  
             log.add("WD3", "Power: %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), middle_left_motor.power(PowerUnits.WATT), middle_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
-            self.drivetrain_power_monitoring=2
-        elif front_left_motor.power(PowerUnits.WATT)<=30 and front_right_motor.power(PowerUnits.WATT)<=30 and middle_left_motor.power(PowerUnits.WATT)<=30 and middle_right_motor.power(PowerUnits.WATT)<=30 and back_left_motor.power(PowerUnits.WATT)<=30 and back_right_motor.power(PowerUnits.WATT)<=30 and (self.drivetrain_power_monitoring==1 or self.drivetrain_power_monitoring==2):
-            self.drivetrain_power_monitoring=0
+            self.drivetrain_power_monitoring['six_motor']=2
+        elif front_left_motor.power(PowerUnits.WATT)<=30 and front_right_motor.power(PowerUnits.WATT)<=30 and middle_left_motor.power(PowerUnits.WATT)<=30 and middle_right_motor.power(PowerUnits.WATT)<=30 and back_left_motor.power(PowerUnits.WATT)<=30 and back_right_motor.power(PowerUnits.WATT)<=30 and (power_state==1 or power_state==2):
+            self.drivetrain_power_monitoring['six_motor']=0
 
-        if front_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+        if front_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[fr_id]==0:
             log.add("ED3", "Front Right Motor")
-            self.drivetrain_disconnected=1
+            self.drivetrain_disconnected[fr_id]=1
+        elif front_right_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[fr_id]==1:
+            self.drivetrain_disconnected[fr_id]=0
         
-        if front_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+        if front_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[fl_id]==0:
             log.add("ED3", "FrontLeft Motor")            
-            self.drivetrain_disconnected=1
+            self.drivetrain_disconnected[fl_id]=1
+        elif front_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[fl_id]==1:
+            self.drivetrain_disconnected[fl_id]=0
         
-        if middle_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+        if middle_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[mr_id]==0:
             log.add("ED3", "Middle Right Motor")
-            self.drivetrain_disconnected=1
+            self.drivetrain_disconnected[mr_id]=1
+        elif middle_right_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[mr_id]==1:
+            self.drivetrain_disconnected[mr_id]=0
         
-        if middle_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+        if middle_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[ml_id]==0:
             log.add("ED3", "Middle Left Motor")            
-            self.drivetrain_disconnected=1
+            self.drivetrain_disconnected[ml_id]=1
+        elif middle_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[ml_id]==1:
+            self.drivetrain_disconnected[ml_id]=0
         
-        if back_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+        if back_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[br_id]==0:
             log.add("ED3", "Back Right Motor")
-            self.drivetrain_disconnected=1
+            self.drivetrain_disconnected[br_id]=1
+        elif back_right_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[br_id]==1:
+            self.drivetrain_disconnected[br_id]=0
         
-        if back_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected==0:
+        if back_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[bl_id]==0:
             log.add("ED3", "Back Left Motor")        
-            self.drivetrain_disconnected=1
-        
-        if front_right_motor.temperature(PERCENT)!=2 and front_left_motor.temperature(PERCENT)!=2 and middle_right_motor.temperature(PERCENT)!=2 and middle_left_motor.temperature(PERCENT)!=2 and back_right_motor.temperature(PERCENT)!=2 and back_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected==1:
-            self.drivetrain_disconnected=0
+            self.drivetrain_disconnected[bl_id]=1
+        elif back_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[bl_id]==1:
+            self.drivetrain_disconnected[bl_id]=0
 
 
 # logging for the log class
@@ -196,9 +259,9 @@ class Logging:
 
     def __init__(self):
         self.drivetrain=Drivetrain()
-        self.temp_monitoring=0
-        self.power_monitoring=0
-        self.disconnected=0
+        self.motor_temp_monitoring={} 
+        self.motor_power_monitoring={}  
+        self.motor_disconnected={}  
         self.battery_voltage_monitoring=0
         self.battery_capacity_monitoring=0
         self.battery_current_monitoring=0
@@ -216,35 +279,40 @@ class Logging:
         self.button_R2=True
     
     def motor(self, motor):
+        motor_id = id(motor) 
         
-        if motor.temperature()>70 and (self.temp_monitoring==0 or self.temp_monitoring==2):
+        # Initialize tracking
+        if motor_id not in self.motor_temp_monitoring:
+            self.motor_temp_monitoring[motor_id] = 0
+        if motor_id not in self.motor_power_monitoring:
+            self.motor_power_monitoring[motor_id] = 0
+        if motor_id not in self.motor_disconnected:
+            self.motor_disconnected[motor_id] = 0
+        
+        if motor.temperature()>70 and (self.motor_temp_monitoring[motor_id]==0 or self.motor_temp_monitoring[motor_id]==2):
             log.add("EM0", "Motor %s Temp: %s"%(motor, motor.temperature(PERCENT)))
-            self.temp_monitoring=1
-        elif motor.temperature()>50 and (self.temp_monitoring==0 or self.temp_monitoring==1):
+            self.motor_temp_monitoring[motor_id]=1
+        elif motor.temperature()>50 and (self.motor_temp_monitoring[motor_id]==0 or self.motor_temp_monitoring[motor_id]==1):
             log.add("WM0", "Motor %s Temp: %s"%(motor, motor.temperature(PERCENT)))
-            self.temp_monitoring=2
-        elif motor.temperature()<=50 and (self.temp_monitoring==2 or self.temp_monitoring==1):
-            self.temp_monitoring=0
+            self.motor_temp_monitoring[motor_id]=2
+        elif motor.temperature()<=50 and (self.motor_temp_monitoring[motor_id]==2 or self.motor_temp_monitoring[motor_id]==1):
+            self.motor_temp_monitoring[motor_id]=0
         
-        if motor.power(PowerUnits.WATT)>40 and (self.power_monitoring==0 or self.power_monitoring==2):
+        if motor.power(PowerUnits.WATT)>40 and (self.motor_power_monitoring[motor_id]==0 or self.motor_power_monitoring[motor_id]==2):
             log.add("EM2", "Motor %s Power: %s"%(motor, motor.power(PowerUnits.WATT)))
-            self.power_monitoring=1
-        elif motor.power(PowerUnits.WATT)>30 and (self.power_monitoring==0 or self.power_monitoring==1):
+            self.motor_power_monitoring[motor_id]=1
+        elif motor.power(PowerUnits.WATT)>30 and (self.motor_power_monitoring[motor_id]==0 or self.motor_power_monitoring[motor_id]==1):
             log.add("WM1", "Motor %s Power: %s"%(motor, motor.power(PowerUnits.WATT)))
-            self.power_monitoring=2
-        elif motor.power(PowerUnits.WATT)<=30 and (self.power_monitoring==1 or self.power_monitoring==2):
-            self.power_monitoring=0
+            self.motor_power_monitoring[motor_id]=2
+        elif motor.power(PowerUnits.WATT)<=30 and (self.motor_power_monitoring[motor_id]==1 or self.motor_power_monitoring[motor_id]==2):
+            self.motor_power_monitoring[motor_id]=0
         
-        if motor.temperature(PERCENT)==2 and self.disconnected==0:
+        if motor.temperature(PERCENT)==2 and self.motor_disconnected[motor_id]==0:
             log.add("EM1", "Motor %s Disconnected"%(motor))
-            self.disconnected=1
+            self.motor_disconnected[motor_id]=1
         
-        if motor.temperature(PERCENT)==2 and self.disconnected==0:
-            log.add("EM1", "Motor %s Disconnected"%(motor))
-            self.disconnected=1
-        
-        if motor.temperature(PERCENT)!=2 and self.disconnected==1:
-            self.disconnected=0
+        if motor.temperature(PERCENT)!=2 and self.motor_disconnected[motor_id]==1:
+            self.motor_disconnected[motor_id]=0
 
     def Battery(self):
 
@@ -529,5 +597,4 @@ def logging_setup():
         wait(100, MSEC)
 
 log.add("DS0",0)
-print("Logging System Setup Complete")
 Thread(logging_setup)

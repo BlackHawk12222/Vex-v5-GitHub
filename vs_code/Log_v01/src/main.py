@@ -11,10 +11,16 @@
 from vex import *
 
 # Brain should be defined by default
+# ---------------------------------------------------------------------------- #
+# Section: Hardware / Devices
+# ---------------------------------------------------------------------------- #
 brain=Brain()
 
 controller_1=Controller(PRIMARY)
 controller_2=Controller(PARTNER)
+# ---------------------------------------------------------------------------- #
+# Section: Classes
+# ---------------------------------------------------------------------------- #
 
 class record:
     def record(self):

@@ -75,6 +75,10 @@ print("\033[2J")
 
 #endregion VEXcode Generated Robot Configuration
 
+
+# ---------------------------------------------------------------------------- #
+# Section: Globals / State
+# ---------------------------------------------------------------------------- #
 screen_precision = 0
 console_precision = 0
 controller_1_precision = 0

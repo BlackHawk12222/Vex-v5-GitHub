@@ -11,6 +11,9 @@
 from vex import *
 
 # Brain should be defined by default
+# ---------------------------------------------------------------------------- #
+# Section: Hardware / Devices
+# ---------------------------------------------------------------------------- #
 brain=Brain()
 
 #Robot configureation code

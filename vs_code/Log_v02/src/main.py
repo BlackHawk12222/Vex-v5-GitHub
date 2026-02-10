@@ -12,11 +12,17 @@ from vex import *
 import time
 
 # Brain should be defined by default
+# ---------------------------------------------------------------------------- #
+# Section: Hardware / Devices
+# ---------------------------------------------------------------------------- #
 brain=Brain()
 
 controller_1=Controller(PRIMARY)
 controller_2=Controller(PARTNER)
 log_time= Timer()
+# ---------------------------------------------------------------------------- #
+# Section: Classes
+# ---------------------------------------------------------------------------- #
 
 class Record:
     def record(self):

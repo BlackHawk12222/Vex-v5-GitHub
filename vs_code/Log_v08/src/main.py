@@ -20,6 +20,7 @@ frontPiston = DigitalOut(brain.three_wire_port.a)
 inertial_for_auton = Inertial(Ports.PORT6)
 DeScorer = DigitalOut(brain.three_wire_port.b)
 Intake = Motor(Ports.PORT14, GearSetting.RATIO_6_1, True)
+Pusher=0
 
 
 # wait for rotation sensor to fully initialize
@@ -47,6 +48,10 @@ wait(200, MSEC)
 print("\033[2J")
 
 #endregion VEXcode Generated Robot Configuration
+
+# ---------------------------------------------------------------------------- #
+# Section: Globals / State
+# ---------------------------------------------------------------------------- #
 screen_precision = 0
 console_precision = 0
 
@@ -67,6 +72,9 @@ controller_2=Controller(PARTNER)
 
 
 # Drivetrain recording
+# ---------------------------------------------------------------------------- #
+# Section: Classes
+# ---------------------------------------------------------------------------- #
 class Drivetrain:
     def __init__(self):
         self.drivetrain_temp_monitoring={}  # Track per motor
@@ -277,6 +285,7 @@ class Logging:
         self.button_L2=True
         self.button_R1=True
         self.button_R2=True
+        self.value_history=-1
     
     def motor(self, motor):
         motor_id = id(motor) 
@@ -453,7 +462,9 @@ class Logging:
             self.button_R2=True
         
     def variable(self, name, value):
-        log.add("DV0", "Variable %s Value: %s"%(name, value))
+        if value != self.value_history:
+            log.add("DV0", "Variable %s Value: %s"%(name, value))
+            self.value_history = value
 
 
 class Log:
@@ -532,13 +543,12 @@ class Log:
             self.index=0
 
     def add(self, add_code, add_details):
+        print(", %s [%s] %s %s"%(self.index, log_time, self.codes.get(add_code), add_details))
         if brain.sdcard.is_inserted():
             brain.sdcard.appendfile("Log.csv", bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), "utf-8"))
             brain.sdcard.savefile("index.txt", bytearray("%d"%(self.index), "utf-8"))
-            self.index+=1
-        else:
-            print(", %s [%s] %s %s"%(self.index, log_time, self.codes.get(add_code), add_details))
-            self.index+=1
+        self.index+=1
+        
     
     def add_codes(self, code_add, Decoded_text):
         self.codes.update({code_add : "%s"%(Decoded_text)})
@@ -594,6 +604,11 @@ def logging_setup():
             log.logging.controller(1)
         except Exception as e:
             log.add("EE3", "Controller Logging Thread: %s"%(e))
+        
+        try:
+            log.logging.variable("Pusher", Pusher)
+        except Exception as e:
+                log.add("EE3", "Variable Logging Thread: %s"%(e))
         wait(100, MSEC)
 
 log.add("DS0",0)

@@ -107,6 +107,10 @@ rc_auto_loop_thread_controller_1 = Thread(rc_auto_loop_function_controller_1)
 
 #endregion VEXcode Generated Robot Configuration
 
+
+# ---------------------------------------------------------------------------- #
+# Section: Globals / State
+# ---------------------------------------------------------------------------- #
 screen_precision = 0
 console_precision = 0
 ai_vision_2_index = 0
@@ -180,6 +184,9 @@ controller_2=Controller(PARTNER)
 log_time= Timer()
 
 # recoreding for controllers and variables
+# ---------------------------------------------------------------------------- #
+# Section: Classes
+# ---------------------------------------------------------------------------- #
 class Record:
     def __init__(self):
         self.axis=""

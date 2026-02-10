@@ -11,6 +11,9 @@
 from vex import *
 
 # Brain should be defined by default
+# ---------------------------------------------------------------------------- #
+# Section: Hardware / Devices
+# ---------------------------------------------------------------------------- #
 brain=Brain()
 
 controller_1=Controller(PRIMARY)
@@ -31,6 +34,9 @@ log_time= Timer()
 example_variable=0
 
 # snapshot for parts of robot
+# ---------------------------------------------------------------------------- #
+# Section: Classes
+# ---------------------------------------------------------------------------- #
 class Record:
     def __init__(self):
         self.axis=""

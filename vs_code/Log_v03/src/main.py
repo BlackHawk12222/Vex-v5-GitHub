@@ -11,6 +11,9 @@
 from vex import *
 
 # Brain should be defined by default
+# ---------------------------------------------------------------------------- #
+# Section: Hardware / Devices
+# ---------------------------------------------------------------------------- #
 brain=Brain()
 
 controller_1=Controller(PRIMARY)
@@ -25,6 +28,9 @@ Intake_Motor=Motor(Ports.PORT14, GearSetting.RATIO_6_1, False)
 TopMotor=Motor(Ports.PORT1, GearSetting.RATIO_6_1, False)
 colorsorting=Motor(Ports.PORT15, GearSetting.RATIO_6_1, False)
 log_time= Timer()
+# ---------------------------------------------------------------------------- #
+# Section: Classes
+# ---------------------------------------------------------------------------- #
 
 class Record:
     def __init__(self):

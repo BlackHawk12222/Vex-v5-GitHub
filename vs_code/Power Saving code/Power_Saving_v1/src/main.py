@@ -33,18 +33,14 @@ class Power:
         self.Sleep={}
     
     def sleep(self, motor):
-        if self.Sleep.get(motor, False):
-            motor.stop(COAST)
-            motor.set_velocity(0, PERCENT)
-            motor.set_torque(0, CurrentUnits.AMP)
-            self.Sleep[motor] = True
+        motor.stop(COAST)
+        motor.set_velocity(0, PERCENT)
+        motor.set_max_torque(0, PERCENT)
     
     def wake(self, motor):
-        if self.Sleep.get(motor, True):
-            motor.set_velocity(100, PERCENT)
-            motor.set_torque(100, CurrentUnits.AMP)
-            motor.set_stopping(BRAKE)
-            self.Sleep[motor] = False
+        motor.set_velocity(100, PERCENT)
+        motor.set_stopping(BRAKE)
+        motor.set_max_torque(100, PERCENT)
 
 power = Power()
 
@@ -77,24 +73,32 @@ def waking():
     controller_1.screen.print("Motors are now waking.")
 
 def left_drive():
-    left=controller_1.axis3.position()/ 12.88
-    left1.spin(FORWARD, left, VOLT)
-    left2.spin(FORWARD, left, VOLT)
-    left3.spin(FORWARD, left, VOLT)
-    wait(5, MSEC)
+    while True:
+        left=controller_1.axis3.position()/ 8.33
+        left1.spin(FORWARD, left, VOLT)
+        left2.spin(FORWARD, left, VOLT)
+        left3.spin(FORWARD, left, VOLT)
+        wait(5, MSEC)
 
 def right_drive():
-    right=controller_1.axis2.position()/ 12.88
-    right1.spin(FORWARD, right, VOLT)
-    right2.spin(FORWARD, right, VOLT)
-    right3.spin(FORWARD, right, VOLT)
-    wait(5, MSEC)
+    while True:
+        right=controller_1.axis2.position()/ 8.33
+        right1.spin(FORWARD, right, VOLT)
+        right2.spin(FORWARD, right, VOLT)
+        right3.spin(FORWARD, right, VOLT)
+        wait(5, MSEC)
 
 def intake_up():
     motor_1.spin(FORWARD, 100, PERCENT)
+    while controller_1.buttonR1.pressing():
+        wait(5, MSEC)
+    motor_1.stop(COAST)
 
 def intake_down():
     motor_1.spin(REVERSE, 100, PERCENT)
+    while controller_1.buttonR2.pressing():
+        wait(5, MSEC)
+    motor_1.stop(COAST)
 
 def sleep_timer():
     while True:
@@ -107,8 +111,7 @@ def sleep_timer():
 
 controller_1.buttonA.pressed(sleeping)
 controller_1.buttonB.pressed(waking)
-controller_1.buttonL1.pressed(intake_up)
-controller_1.buttonL2.pressed(intake_down)
+controller_1.buttonR1.pressed(intake_up)
+controller_1.buttonR2.pressed(intake_down)
 Thread(left_drive)
 Thread(right_drive)
-Thread(sleep_timer)

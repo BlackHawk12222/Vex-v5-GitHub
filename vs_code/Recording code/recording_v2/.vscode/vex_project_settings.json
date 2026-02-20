@@ -1,0 +1,18 @@
+{
+	"extension": {
+		"version": "0.8.2026020401",
+		"json": 2
+	},
+	"project": {
+		"name": "recording_v2",
+		"description": "recoreding for robot(probley for next year)",
+		"creationDate": "2/17/2026, 3:19:46 PM",
+		"platform": "V5",
+		"language": "python",
+		"slot": 1,
+		"sdkVersion": "V5_1_0_1_25",
+		"python": {
+			"main": "src/main.py"
+		}
+	}
+}

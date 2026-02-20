@@ -36,10 +36,17 @@ right=0
 left=0
 timehistory=0
 waittime=0
+tolrance=3
+timemax1=0
+timemax2=0
 preleftrecordingfile=""
 prerightrecordingfile=""
 preleftrecordinglist=[]
 prerightrecordinglist=[]
+preleftlist1=[]
+preleftlist2=[]
+prosesingrecording=[]
+
 
 def rightside():
     right=controller_1.axis3.position()/8.33
@@ -188,74 +195,44 @@ def encode():
     prerightrecordinglist=prerightrecordingfile.splitlines()
 
     for i in range(len(preleftrecordinglist)):
-        preleftlist=preleftrecordinglist[i].split(',')
-        if preleftlist[0]=="Left Joystick:":
-            waittime=float(preleftlist[5].strip())-float(timehistory)
-            brain.sdcard.appendfile("Left Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), leftmove(" + preleftlist[1].strip() + ", " + preleftlist[3].strip() + "), ", "utf-8"))
-            timehistory=preleftlist[5].strip()
-        elif preleftlist[0]=="Right Joystick:":
-            waittime=float(preleftlist[5].strip())-float(timehistory)
-            brain.sdcard.appendfile("Left Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), rightmove(" + preleftlist[1].strip() + ", " + preleftlist[3].strip() + "), ", "utf-8"))
-            timehistory=preleftlist[5].strip()
-        elif preleftlist[0]=="Pusher: True":
-            waittime=float(preleftlist[1].strip())-float(timehistory)
-            brain.sdcard.appendfile("Left Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), pusher.set(True), ", "utf-8"))
-            timehistory=preleftlist[1].strip()
-        elif preleftlist[0]=="Pusher: False":
-            waittime=float(preleftlist[1].strip())-float(timehistory)
-            brain.sdcard.appendfile("Left Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), pusher.set(False), ", "utf-8"))
-            timehistory=preleftlist[1].strip()
-        elif preleftlist[0]=="Loader: True":
-            waittime=float(preleftlist[1].strip())-float(timehistory)
-            brain.sdcard.appendfile("Left Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), loader.set(True), ", "utf-8"))
-            timehistory=preleftlist[1].strip()
-        elif preleftlist[0]=="Loader: False":
-            waittime=float(preleftlist[1].strip())-float(timehistory)
-            brain.sdcard.appendfile("Left Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), loader.set(False), ", "utf-8"))
-            timehistory=preleftlist[1].strip()
-        elif preleftlist[0]=="Intake: Up":
-            waittime=float(preleftlist[1].strip())-float(timehistory)
-            brain.sdcard.appendfile("Left Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), intakeup(), ", "utf-8"))
-            timehistory=preleftlist[1].strip()
-        elif preleftlist[0]=="Intake: Down":
-            waittime=float(preleftlist[1].strip())-float(timehistory)
-            brain.sdcard.appendfile("Left Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), intakedown(), ", "utf-8"))
-            timehistory=preleftlist[1].strip()
+        preleftlist1=preleftrecordinglist[i].split(',')
+        preleftlist2=preleftrecordinglist[i+1].split(',')
+        if preleftlist1[0] == "Left Joystick:":
 
-    for i in range(len(prerightrecordinglist)):
-        prerightlist=prerightrecordinglist[i].split(',')
-        if prerightlist[0]=="Left Joystick:":
-            waittime=float(prerightlist[5].strip())-float(timehistory)
-            brain.sdcard.appendfile("Right Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), leftmove(" + prerightlist[1].strip() + ", " + prerightlist[3].strip() + "), ", "utf-8"))
-            timehistory=prerightlist[5].strip()
-        elif prerightlist[0]=="Right Joystick:":
-            waittime=float(prerightlist[5].strip())-float(timehistory)
-            brain.sdcard.appendfile("Right Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), rightmove(" + prerightlist[1].strip() + ", " + prerightlist[3].strip() + "), ", "utf-8"))
-            timehistory=prerightlist[5].strip()
-        elif prerightlist[0]=="Pusher: True":
-            waittime=float(prerightlist[1].strip())-float(timehistory)
-            brain.sdcard.appendfile("Right Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), pusher.set(True), ", "utf-8"))
-            timehistory=prerightlist[1].strip()
-        elif prerightlist[0]=="Pusher: False":
-            waittime=float(prerightlist[1].strip())-float(timehistory)
-            brain.sdcard.appendfile("Right Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), pusher.set(False), ", "utf-8"))
-            timehistory=prerightlist[1].strip()
-        elif prerightlist[0]=="Loader: True":
-            waittime=float(prerightlist[1].strip())-float(timehistory)
-            brain.sdcard.appendfile("Right Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), loader.set(True), ", "utf-8"))
-            timehistory=prerightlist[1].strip()
-        elif prerightlist[0]=="Loader: False":
-            waittime=float(prerightlist[1].strip())-float(timehistory)
-            brain.sdcard.appendfile("Right Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), loader.set(False), ", "utf-8"))
-            timehistory=prerightlist[1].strip()
-        elif preleftlist[0]=="Intake: Up":
-            waittime=float(preleftlist[1].strip())-float(timehistory)
-            brain.sdcard.appendfile("Right Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), intakeup(), ", "utf-8"))
-            timehistory=preleftlist[1].strip()
-        elif preleftlist[0]=="Intake: Down":
-            waittime=float(preleftlist[1].strip())-float(timehistory)
-            brain.sdcard.appendfile("Right Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), intakedown(), ", "utf-8"))
-            timehistory=preleftlist[1].strip()
+            if preleftlist2[0] == "Left Joystick:":
+
+                if math.isclose(int(preleftlist1[1]), int(preleftlist2[1]), abs_tol=tolrance):
+                    timemax1=int(preleftlist1[5])
+                    timemax2=int(preleftlist2[5])
+                    preleftrecordinglist[i+1]="Left Joystick:, " + str(int(preleftlist1[1]) + int(preleftlist2[1])/2) + ", left side degrees moved:, " + str(int(preleftlist1[3]) + int(preleftlist2[3])) + ", time:, " + str(max(timemax1, timemax2)) + "\n"
+                    preleftrecordinglist[i]=""
+                    continue
+            elif preleftlist2[0]== "Right Joystick":
+                timemax1=int(preleftlist1[5])
+                timemax2=int(preleftlist2[5])
+                preleftrecordinglist[i+1]="Forward:, Left:, " + str(preleftlist1[1]) + ", Right:, " + str(preleftlist2[1]) + ", left side degrees moved:, " + str(preleftlist1[3]) + "right side degrees moved:, " + str(preleftlist2[3]) + ", time:, " + str(max(timemax1, timemax2)) + "\n"
+                preleftrecordinglist[i]=""
+                continue
+
+        if preleftlist1[0] == "Right Joystick:":
+
+            if preleftlist2[0] == "Right Joystick:":
+
+                if math.isclose(int(preleftlist1[1]), int(preleftlist2[1]), abs_tol=tolrance):
+                    timemax1=int(preleftlist1[5])
+                    timemax2=int(preleftlist2[5])
+                    preleftrecordinglist[i+1]="Right Joystick:, " + str(int(preleftlist1[1]) + int(preleftlist2[1])/2) + ", Right side degrees moved:, " + str(int(preleftlist1[3]) + int(preleftlist2[3])) + ", time:, " + str(max(timemax1, timemax2)) + "\n"
+                    preleftrecordinglist[i]=""
+                    continue
+            elif preleftlist2[0]== "Left Joystick":
+                timemax1=int(preleftlist1[5])
+                timemax2=int(preleftlist2[5])
+                preleftrecordinglist[i+1]="Forward:, Left:, " + str(preleftlist2[1]) + ", Right:, " + str(preleftlist1[1]) + ", left side degrees moved:, " + str(preleftlist2[3]) + "right side degrees moved:, " + str(preleftlist1[3]) + ", time:, " + str(max(timemax1, timemax2)) + "\n"
+                preleftrecordinglist[i]=""
+                continue
+        
+
+                
 
 def driver():
     pass

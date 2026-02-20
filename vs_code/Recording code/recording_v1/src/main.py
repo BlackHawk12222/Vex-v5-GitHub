@@ -17,10 +17,10 @@ controller_1=Controller(PRIMARY)
 intake=Motor(Ports.PORT14, GearSetting.RATIO_6_1, False)
 topmotor=Motor(Ports.PORT1, GearSetting.RATIO_6_1, False)
 colorsorting=Motor(Ports.PORT15, GearSetting.RATIO_6_1, False)
-right1=Motor(Ports.PORT11, GearSetting.RATIO_6_1, True)
+right1=Motor(Ports.PORT11, GearSetting.RATIO_6_1, False)
 right2=Motor(Ports.PORT13, GearSetting.RATIO_6_1, False)
 right3=Motor(Ports.PORT12, GearSetting.RATIO_6_1, True)
-left1=Motor(Ports.PORT19, GearSetting.RATIO_6_1, False)
+left1=Motor(Ports.PORT19, GearSetting.RATIO_6_1, True)
 left2=Motor(Ports.PORT20, GearSetting.RATIO_6_1, True)
 left3=Motor(Ports.PORT18, GearSetting.RATIO_6_1, False)
 pusher=DigitalOut(brain.three_wire_port.b)
@@ -56,20 +56,41 @@ def leftside():
 def intakeup():
     intake.spin(FORWARD, 12, VOLT)
     brain.sdcard.appendfile("prerightrecording.txt", bytearray("Intake: Up" + str(timer.time()) + "\n","utf-8"))
+    while controller_1.buttonR1.pressing():
+        wait(5, MSEC)
+    intake.stop()
+    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Intake: Stop" + str(timer.time()) + "\n","utf-8"))
+
 
 def intakedown():
     intake.spin(REVERSE, 12, VOLT)
     brain.sdcard.appendfile("prerightrecording.txt", bytearray("Intake: Down" + str(timer.time()) + "\n","utf-8"))
+    while controller_1.buttonR2.pressing:
+        wait(5, MSEC)
+    intake.stop()
+    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Intake: Stop" + str(timer.time()) + "\n","utf-8"))
 
 def scoreup():
     topmotor.spin(FORWARD, 12, VOLT)
     intake.spin(FORWARD, 12, VOLT)
     brain.sdcard.appendfile("prerightrecording.txt", bytearray("Score: Up" + str(timer.time()) + "\n","utf-8"))
+    while controller_1.buttonL1.pressing:
+        wait(5,MSEC)
+    topmotor.stop()
+    intake.stop()
+    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Score: Stop" + str(timer.time()) + "\n","utf-8"))
 
 def scoredown():
     topmotor.spin(FORWARD, 12, VOLT)
     intake.spin(REVERSE, 12, VOLT)
     brain.sdcard.appendfile("prerightrecording.txt", bytearray("Score: Down" + str(timer.time()) + "\n","utf-8"))
+    while controller_1.buttonL2.pressing:
+        wait(5, MSEC)
+    topmotor.stop()
+    intake.stop()
+    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Score: Stop" + str(timer.time()) + "\n","utf-8"))
+
+
 
 def pushertoggle():
     global pusher_state
@@ -248,14 +269,26 @@ def encode():
             waittime=float(prerightlist[1].strip())-float(timehistory)
             brain.sdcard.appendfile("Right Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), loader.set(False), ", "utf-8"))
             timehistory=prerightlist[1].strip()
-        elif preleftlist[0]=="Intake: Up":
-            waittime=float(preleftlist[1].strip())-float(timehistory)
-            brain.sdcard.appendfile("Right Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), intakeup(), ", "utf-8"))
-            timehistory=preleftlist[1].strip()
-        elif preleftlist[0]=="Intake: Down":
-            waittime=float(preleftlist[1].strip())-float(timehistory)
-            brain.sdcard.appendfile("Right Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), intakedown(), ", "utf-8"))
-            timehistory=preleftlist[1].strip()
+        elif prerightlist[0]=="Intake: Up":
+            waittime=float(prerightlist[1].strip())-float(timehistory)
+            brain.sdcard.appendfile("Right Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), intake.spin(REVERSE), ", "utf-8"))
+            timehistory=prerightlist[1].strip()
+        elif prerightlist[0]=="Intake: Down":
+            waittime=float(prerightlist[1].strip())-float(timehistory)
+            brain.sdcard.appendfile("Right Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), intake.spin(FORWARD), ", "utf-8"))
+            timehistory=prerightlist[1].strip()
+        elif prerightlist[0]=="Intake: Stop":
+            waittime=float(prerightlist[1].strip())-float(timehistory)
+            brain.sdcard.appendfile("Right Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), intake.stop(), ", "utf-8"))
+            timehistory=prerightlist[1].strip()
+        elif prerightlist[0]=="Score: Up":
+            waittime=float(prerightlist[1].strip())-float(timehistory)
+            brain.sdcard.appendfile("Right Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), intake.spin(FORWARD), topmotor.spin(FORWARD), ", "utf-8"))
+            timehistory=prerightlist[1].strip()
+        elif prerightlist[0]=="Score: Down":
+            waittime=float(prerightlist[1].strip())-float(timehistory)
+            brain.sdcard.appendfile("Right Aton.txt", bytearray("wait(" + str(waittime) + ", MSEC), intake.spin(REVERSE), topmotor.spin(FORWARD), ", "utf-8"))
+            timehistory=prerightlist[1].strip()
 
 def driver():
     pass

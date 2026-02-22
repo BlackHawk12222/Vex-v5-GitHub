@@ -20,8 +20,6 @@ frontPiston = DigitalOut(brain.three_wire_port.a)
 inertial_for_auton = Inertial(Ports.PORT6)
 DeScorer = DigitalOut(brain.three_wire_port.b)
 Intake = Motor(Ports.PORT14, GearSetting.RATIO_6_1, True)
-Pusher=0
-
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
@@ -37,8 +35,6 @@ def initializeRandomSeed():
 initializeRandomSeed()
 
 def play_vexcode_sound(sound_name):
-    # Helper to make playing sounds from the V5 in VEXcode easier and
-    # keeps the code cleaner by making it clear what is happening.
     print("VEXPlaySound:" + sound_name)
     wait(5, MSEC)
 
@@ -48,10 +44,6 @@ wait(200, MSEC)
 print("\033[2J")
 
 #endregion VEXcode Generated Robot Configuration
-
-# ---------------------------------------------------------------------------- #
-# Section: Globals / State
-# ---------------------------------------------------------------------------- #
 screen_precision = 0
 console_precision = 0
 
@@ -68,13 +60,14 @@ console_precision = 0
 
 # Timer for log time
 log_time= Timer()
+timer=Timer()
 controller_2=Controller(PARTNER)
+pusher_state = 0
+loader_state = 0
+record = 0
+controlleraxis2positionhistory = 0
+controlleraxis3positionhistory = 0
 
-
-# Drivetrain recording
-# ---------------------------------------------------------------------------- #
-# Section: Classes
-# ---------------------------------------------------------------------------- #
 class Drivetrain:
     def __init__(self):
         self.drivetrain_temp_monitoring={}  # Track per motor
@@ -286,6 +279,12 @@ class Logging:
         self.button_R1=True
         self.button_R2=True
         self.value_history=-1
+        self.axis1=0
+        self.axis2=0
+        self.axis3=0
+        self.axis4=0
+        self.tolrance=3
+        self.variables={}
     
     def motor(self, motor):
         motor_id = id(motor) 
@@ -359,117 +358,160 @@ class Logging:
         elif controller==2:
             Controller=controller_2
 
-        axis_1=Controller.axis1.position()
-        axis_2=Controller.axis2.position()
-        axis_3=Controller.axis3.position()
-        axis_4=Controller.axis4.position()
-        wait(50, MSEC)
-
-        if Controller.axis1.position()!=0 and axis_1!=Controller.axis1.position():
+        if Controller.axis1.position()!=0 and self.axis1 != Controller.axis1.position():
             log.add("DC1", "Controller_%d_Axis1: %d"%(controller, Controller.axis1.position()))
+            self.axis1=Controller.axis1.position()
+        elif 0 == Controller.axis1.position() and self.axis1!=0:
+            log.add("DC1", "Controller_%d_Axis4: %d"%(controller, Controller.axis1.position()))
+            self.axis1=0
 
-        if Controller.axis2.position()!=0 and axis_2!=Controller.axis2.position():
+        if Controller.axis2.position()!=0 and self.axis2 != Controller.axis2.position():
             log.add("DC1", "Controller_%d_Axis2: %d"%(controller, Controller.axis2.position()))
+            self.axis2=Controller.axis2.position()
+        elif 0 == Controller.axis2.position() and self.axis2!=0:
+            log.add("DC1", "Controller_%d_Axis4: %d"%(controller, Controller.axis2.position()))
+            self.axis2=0
 
-        if Controller.axis3.position()!=0 and axis_3!=Controller.axis3.position():
+        if Controller.axis3.position()!=0 and self.axis3 != Controller.axis3.position():
             log.add("DC1", "Controller_%d_Axis3: %d"%(controller, Controller.axis3.position()))
+            self.axis3=Controller.axis3.position()
+        elif 0 == Controller.axis3.position() and self.axis3!=0:
+            log.add("DC1", "Controller_%d_Axis4: %d"%(controller, Controller.axis3.position()))
+            self.axis3=0
 
-        if Controller.axis4.position()!=0 and axis_4!=Controller.axis4.position():
+        if Controller.axis4.position()!=0 and self.axis4 != Controller.axis4.position():
             log.add("DC1", "Controller_%d_Axis4: %d"%(controller, Controller.axis4.position()))
+            self.axis4=Controller.axis4.position()
+        elif 0 == Controller.axis4.position() and self.axis4!=0:
+            log.add("DC1", "Controller_%d_Axis4: %d"%(controller, Controller.axis4.position()))
+            self.axis4=0
 
         if Controller.buttonA.pressing() and self.button_a==True:
             log.add("DC0", "Controller_%d_Button A Pressed"%(controller))
             self.button_a=False
+        elif Controller.buttonA.pressing()==False and self.button_a==False:
+            log.add("DC0", "Controller_%d_Button A Released"%(controller))
+            self.button_a=True
+
 
         if Controller.buttonB.pressing() and self.button_b==True:
             log.add("DC0", "Controller_%d_Button B Pressed"%(controller))
             self.button_b=False
+        elif Controller.buttonB.pressing()==False and self.button_b==False:
+            log.add("DC0", "Controller_%d_Button B Released"%(controller))
+            self.button_b=True
 
         if Controller.buttonX.pressing() and self.button_x==True:
             log.add("DC0", "Controller_%d_Button X Pressed"%(controller))
             self.button_x=False
+        elif Controller.buttonX.pressing()==False and self.button_x==False:
+            log.add("DC0", "Controller_%d_Button X Released"%(controller))
+            self.button_x=True
 
         if Controller.buttonY.pressing() and self.button_y==True:
             log.add("DC0", "Controller_%d_Button Y Pressed"%(controller))
             self.button_y=False
+        elif Controller.buttonY.pressing()==False and self.button_y==False:
+            log.add("DC0", "Controller_%d_Button Y Released"%(controller))
+            self.button_y=True
 
         if Controller.buttonUp.pressing() and self.button_up==True:
             log.add("DC0", "Controller_%d_Button UP Pressed"%(controller))
             self.button_up=False
+        elif Controller.buttonUp.pressing()==False and self.button_up==False:
+            log.add("DC0", "Controller_%d_Button UP Released"%(controller))
+            self.button_up=True
 
         if Controller.buttonDown.pressing() and self.button_down==True:
             log.add("DC0", "Controller_%d_Button DOWN Pressed"%(controller))
             self.button_down=False
+        elif Controller.buttonDown.pressing()==False and self.button_down==False:
+            log.add("DC0", "Controller_%d_Button DOWN Released"%(controller))
+            self.button_down=True
 
         if Controller.buttonLeft.pressing() and self.button_left==True:
             log.add("DC0", "Controller_%d_Button LEFT Pressed"%(controller))
             self.button_left=False
+        elif Controller.buttonLeft.pressing()==False and self.button_left==False:
+            log.add("DC0", "Controller_%d_Button LEFT Released"%(controller))
+            self.button_left=True
 
         if Controller.buttonRight.pressing() and self.button_right==True:
             log.add("DC0", "Controller_%d_Button RIGHT Pressed"%(controller))
             self.button_right=False
+        elif Controller.buttonRight.pressing()==False and self.button_right==False:
+            log.add("DC0", "Controller_%d_Button RIGHT Released"%(controller))
+            self.button_right=True
 
         if Controller.buttonL1.pressing() and self.button_L1==True:
             log.add("DC0", "Controller_%d_Button L1 Pressed"%(controller))
             self.button_L1=False
+        elif Controller.buttonL1.pressing()==False and self.button_L1==False:
+            log.add("DC0", "Controller_%d_Button L1 Released"%(controller))
+            self.button_L1=True
 
         if Controller.buttonL2.pressing() and self.button_L2==True:
             log.add("DC0", "Controller_%d_Button L2 Pressed"%(controller))
             self.button_L2=False
+        elif Controller.buttonL2.pressing()==False and self.button_L2==False:
+            log.add("DC0", "Controller_%d_Button L2 Released"%(controller))
+            self.button_L2=True
 
         if Controller.buttonR1.pressing() and self.button_R1==True:
             log.add("DC0", "Controller_%d_Button R1 Pressed"%(controller))
             self.button_R1=False
+        elif Controller.buttonR1.pressing()==False and self.button_R1==False:
+            log.add("DC0", "Controller_%d_Button R1 Released"%(controller))
+            self.button_R1=True
 
         if Controller.buttonR2.pressing() and self.button_R2==True:
             log.add("DC0", "Controller_%d_Button R2 Pressed"%(controller))
             self.button_R2=False
-
-        if not Controller.buttonA.pressing():
-            self.button_a=True
-
-        if not Controller.buttonB.pressing():
-            self.button_b=True
-
-        if not Controller.buttonX.pressing():
-            self.button_x=True
-
-        if not Controller.buttonY.pressing():
-            self.button_y=True
-
-        if not Controller.buttonUp.pressing():
-            self.button_up=True
-
-        if not Controller.buttonDown.pressing():
-            self.button_down=True
-
-        if not Controller.buttonLeft.pressing():
-            self.button_left=True
-
-        if not Controller.buttonRight.pressing():
-            self.button_right=True
-
-        if not Controller.buttonL1.pressing():
-            self.button_L1=True
-
-        if not Controller.buttonL2.pressing():
-            self.button_L2=True
-
-        if not Controller.buttonR1.pressing():
-            self.button_R1=True
-
-        if not Controller.buttonR2.pressing():
+        elif Controller.buttonR2.pressing()==False and self.button_R2==False:
+            log.add("DC0", "Controller_%d_Button R2 Released"%(controller))
             self.button_R2=True
         
     def variable(self, name, value):
-        if value != self.value_history:
+        valueid=id(name)
+        if valueid not in self.variables:
+            self.variables[valueid]=0
+        if value != self.variables[valueid]:
             log.add("DV0", "Variable %s Value: %s"%(name, value))
-            self.value_history = value
+            self.variables[valueid] = value
 
+class Recording:
+    def __init__(self):
+        self.record=True
+
+
+    def start(self, Aton):
+        if self.record == False:
+            self.record=True
+            brain.sdcard.savefile(Aton + "_pre.txt")
+        else:
+            print("Cant start recording because recording is on.")
+
+        while self.record == True:
+            pass
+
+    def stop(self, Aton):
+        self.record=False
+
+    def encode(self, Aton):
+        self.record=False
+        brain.sdcard.savefile(Aton + ".txt", bytearray(", ", "utf-8"))
+        prelist=[]
+        preatonfile=brain.sdcard.loadfile(Aton + "_pre.txt")
+        preatonlist=preatonfile.decode("utf-8").splitlines()
+    
+    def run(self, Aton):
+        Atonfile=brain.sdcard.loadfile(Aton + ".txt")
+        exec(Atonfile.decode("utf-8"))
 
 class Log:
     def __init__(self):
         self.logging=Logging()
+        self.recording=Recording()
         self.index=0
         # Predefined Log Codes dictionary
         self.codes={
@@ -584,8 +626,8 @@ class Log:
 
 
 log=Log()
-log.add_codes("DC0", "Colorsort DATA: detected red.")
-log.add_codes("DC1", "Colorsort DATA: detected blue.")
+log.add_codes("DZ0", "Colorsort DATA: detected red.")
+log.add_codes("DZ1", "Colorsort DATA: detected blue.")
 
 def logging_setup():
     while True:
@@ -608,7 +650,8 @@ def logging_setup():
             log.add("EE3", "Controller Logging Thread: %s"%(e))
         
         try:
-            log.logging.variable("Pusher", Pusher)
+            log.logging.variable("Pusher", pusher_state)
+            log.logging.variable("Loader", loader_state)
         except Exception as e:
                 log.add("EE3", "Variable Logging Thread: %s"%(e))
         
@@ -616,7 +659,108 @@ def logging_setup():
             log.add("DC1", 0)
         elif 240 < optical_9.hue() < 260:
             log.add("DC0", 0)
-        wait(100, MSEC)
+        wait(50, MSEC)
 
 log.add("DS0",0)
 Thread(logging_setup)
+
+def rightside():
+    right = controller_1.axis3.position() / 8.33
+    Right1.spin(FORWARD, right, VOLT)
+    Right2.spin(FORWARD, right, VOLT)
+    Right3.spin(FORWARD, right, VOLT)
+
+def leftside():
+    left=controller_1.axis2.position()/8.33
+    left1.spin(FORWARD, left, VOLT)
+    left2.spin(FORWARD, left, VOLT)
+    left3.spin(FORWARD, left, VOLT)
+
+def intakeup():
+    Intake.spin(FORWARD, 12, VOLT)
+    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Intake: Up" + str(timer.time()) + "\n","utf-8"))
+    while controller_1.buttonR1.pressing():
+        wait(5, MSEC)
+    Intake.stop()
+    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Intake: Stop" + str(timer.time()) + "\n","utf-8"))
+
+def intakedown():
+    Intake.spin(REVERSE, 12, VOLT)
+    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Intake: Down" + str(timer.time()) + "\n","utf-8"))
+    while controller_1.buttonR2.pressing():
+        wait(5, MSEC)
+    Intake.stop()
+    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Intake: Stop" + str(timer.time()) + "\n","utf-8"))
+
+def scoreup():
+    TopMotor.spin(FORWARD, 12, VOLT)
+    Intake.spin(FORWARD, 12, VOLT)
+    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Score: Up" + str(timer.time()) + "\n","utf-8"))
+    while controller_1.buttonL1.pressing():
+        wait(5,MSEC)
+    TopMotor.stop()
+    Intake.stop()
+    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Score: Stop" + str(timer.time()) + "\n","utf-8"))
+
+def scoredown():
+    TopMotor.spin(FORWARD, 12, VOLT)
+    Intake.spin(REVERSE, 12, VOLT)
+    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Score: Down" + str(timer.time()) + "\n","utf-8"))
+    while controller_1.buttonL2.pressing():
+        wait(5, MSEC)
+    TopMotor.stop()
+    Intake.stop()
+    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Score: Stop" + str(timer.time()) + "\n","utf-8"))
+
+
+
+def pushertoggle():
+    global pusher_state, Pusher
+    if pusher_state==0:
+        DeScorer.set(True)
+        pusher_state=1
+        Pusher=1
+        brain.sdcard.appendfile("prerightrecording.txt", bytearray("Pusher: " + "True, " + str(timer.time()) + "\n", "utf-8"))
+    else:
+        DeScorer.set(False)
+        pusher_state=0
+        Pusher=0
+        brain.sdcard.appendfile("prerightrecording.txt", bytearray("Pusher: " + "False, " + str(timer.time()) + "\n", "utf-8"))
+
+def loadertoggle():
+    global loader_state
+    if loader_state==0:
+        frontPiston.set(True)
+        loader_state=1
+        brain.sdcard.appendfile("prerightrecording.txt", bytearray("Loader: " + "True, " + str(timer.time()) + "\n", "utf-8"))
+    else:
+        frontPiston.set(False)
+        loader_state=0
+        brain.sdcard.appendfile("prerightrecording.txt", bytearray("Loader: " + "False, " + str(timer.time()) + "\n", "utf-8"))
+
+
+def leftmove(leftspeed, degrees):
+    left1.set_velocity(leftspeed, PERCENT)
+    left1.spin_for(FORWARD, degrees, DEGREES)
+    left2.set_velocity(leftspeed, PERCENT)
+    left2.spin_for(FORWARD, degrees, DEGREES)
+    left3.set_velocity(leftspeed, PERCENT)
+    left3.spin_for(FORWARD, degrees, DEGREES)
+
+def rightmove(rightspeed, degrees):
+    Right1.set_velocity(rightspeed, PERCENT)
+    Right1.spin_for(FORWARD, degrees, DEGREES)
+    Right2.set_velocity(rightspeed, PERCENT)
+    Right2.spin_for(FORWARD, degrees, DEGREES)
+    Right3.set_velocity(rightspeed, PERCENT)
+    Right3.spin_for(FORWARD, degrees, DEGREES)
+
+
+controller_1.axis2.changed(rightside)
+controller_1.axis3.changed(leftside)
+controller_1.buttonR1.pressed(intakeup)
+controller_1.buttonR2.pressed(intakedown)
+controller_1.buttonL1.pressed(scoreup)
+controller_1.buttonL2.pressed(scoredown)
+controller_1.buttonDown.pressed(pushertoggle)
+controller_1.buttonB.pressed(loadertoggle)

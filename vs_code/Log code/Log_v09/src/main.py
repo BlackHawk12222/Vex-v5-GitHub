@@ -481,7 +481,7 @@ class Logging:
 
 class Recording:
     def __init__(self):
-        self.record=True
+        self.record=False
         self.timerecord=0
         self.posttimerecord=0
         self.Aton=""
@@ -490,18 +490,24 @@ class Recording:
 
 
     def start(self, Aton):
+        filename=str(Aton) + "_pre.txt"
         if self.record == False:
             self.record=True
-            brain.sdcard.savefile(Aton + "_pre.txt", bytearray("\n", "utf-8"))
+            brain.sdcard.savefile(filename, bytearray("\n", "utf-8"))
             self.Aton=Aton + "_pre.txt"
         else:
             print("Cant start recording because recording is on.")
 
     def stop(self, Aton):
+        filename=str(Aton) + "_pre.txt"
+        preatonfile=""
         self.record=False
-        self.File=brain.sdcard.loadfile(str(Aton) + "_pre.txt")
-        preatonlist=[]
-        preatonlist=self.File.decode("utf-8").splitlines()
+        try:
+            preatonfile=brain.sdcard.loadfile(filename).decode("utf-8")
+            preatonlist=preatonfile.splitlines()
+        except AttributeError:
+            preatonlist=["1 [200] controller", "1 [200] Variable", "1 [200] tomato"]
+            log.add("EE4", 0)
         for i in range(len(preatonlist)):
             prelist=preatonlist[i].split(" ")
             if prelist[2] == "controller":
@@ -509,7 +515,7 @@ class Recording:
             elif prelist[2] == "Variable":
                 self.postlist.append(str(prelist))
         
-        brain.sdcard.savefile(Aton + "_pre.txt", bytearray(str(self.postlist), "utf-8"))
+        brain.sdcard.savefile(filename, bytearray(str(self.postlist), "utf-8"))
 
     def encode(self, Aton):
         self.record=False
@@ -522,11 +528,35 @@ class Recording:
         Atonfile=brain.sdcard.loadfile(Aton + ".txt")
         exec(Atonfile.decode("utf-8"))
 
+class Archive:
+    def __init__(self):
+        self.format="utf-8"
+        self.logfile=""
+        self.loglist=[]
+        if not brain.sdcard.exists("loghistory.txt"):
+            brain.sdcard.savefile("loghistory.txt")
+    
+    def log(self):
+        try:
+            log.adding=False
+            reversecodes={value: key for key, value in log.codes.items()}
+            self.logfile=brain.sdcard.loadfile("Log.csv").decode(self.format)
+            self.loglist=self.logfile.splitlines()
+            for i in range(len(self.loglist)):
+                logline=self.loglist[i].split(':')
+                loglines= str(logline[0]) + str(logline[1])
+                brain.sdcard.savefile("loghistory.txt", bytearray(str(reversecodes.get(loglines)) + str(logline[2]), self.format))
+            log.adding=True
+        except AttributeError:
+            log.add("EE4", "Archive.log")
+
 class Log:
     def __init__(self):
         self.logging=Logging()
         self.recording=Recording()
+        self.archive=Archive()
         self.index=0
+        self.adding=True
         # Predefined Log Codes dictionary
         self.codes={
                     "ED1": "Drivetrain ERROR: Motor(s) Criticaly Hot. Temp: ",
@@ -599,12 +629,13 @@ class Log:
             self.index=0
 
     def add(self, add_code, add_details):
-        print(", %s [%s] %s %s"%(self.index, log_time, self.codes.get(add_code), add_details))
-        if brain.sdcard.is_inserted():
-            brain.sdcard.appendfile("Log.csv", bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), "utf-8"))
-            brain.sdcard.savefile("index.txt", bytearray("%d"%(self.index), "utf-8"))
-            if record:
-                brain.sdcard.appendfile(self.recording.Aton, bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), "utf-8"))
+        if self.adding==True:
+            print(", %s [%s] %s %s"%(self.index, log_time, self.codes.get(add_code), add_details))
+            if brain.sdcard.is_inserted():
+                brain.sdcard.appendfile("Log.csv", bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), "utf-8"))
+                brain.sdcard.savefile("index.txt", bytearray("%d"%(self.index), "utf-8"))
+                if record:
+                    brain.sdcard.appendfile(self.recording.Aton, bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), "utf-8"))
             
                 
         self.index+=1
@@ -678,6 +709,8 @@ def logging_setup():
         elif 240 < optical_9.hue() < 260:
             log.add("DC0", 0)
         wait(50, MSEC)
+
+log.archive.log()
 
 log.add("DS0",0)
 Thread(logging_setup)

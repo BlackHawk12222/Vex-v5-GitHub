@@ -337,7 +337,7 @@ class Logging:
             log.add("EB1", "%s"%(brain.battery.capacity()))
             self.battery_capacity_monitoring=1
         
-        elif brain.battery.capacity()<50 and (self.battery_capacity_monitoring==0 or self.battery_capacity_monitoring==1):
+        elif brain.battery.capacity()<50 and (self.battery_capacity_monitoring==0):
             log.add("WB1", "%s"%(brain.battery.capacity()))
             self.battery_capacity_monitoring=2
         elif brain.battery.capacity()>=50 and (self.battery_capacity_monitoring==1 or self.battery_capacity_monitoring==2):
@@ -484,25 +484,32 @@ class Recording:
         self.record=True
         self.timerecord=0
         self.posttimerecord=0
-        self.Aton
+        self.Aton=""
+        self.postlist=[]
+        self.File=""
 
 
     def start(self, Aton):
         if self.record == False:
             self.record=True
-            brain.sdcard.savefile(Aton + "_pre.txt")
+            brain.sdcard.savefile(Aton + "_pre.txt", bytearray("\n", "utf-8"))
             self.Aton=Aton + "_pre.txt"
         else:
             print("Cant start recording because recording is on.")
 
     def stop(self, Aton):
         self.record=False
-        File=brain.sdcard.loadfile(Aton + "_pre.txt")
-        preatonlist=File.decode("utf-8").splitlines()
+        self.File=brain.sdcard.loadfile(str(Aton) + "_pre.txt")
+        preatonlist=[]
+        preatonlist=self.File.decode("utf-8").splitlines()
         for i in range(len(preatonlist)):
             prelist=preatonlist[i].split(" ")
-            if prelist[2] == "":
-                pass
+            if prelist[2] == "controller":
+                self.postlist.append(str(prelist))
+            elif prelist[2] == "Variable":
+                self.postlist.append(str(prelist))
+        
+        brain.sdcard.savefile(Aton + "_pre.txt", bytearray(str(self.postlist), "utf-8"))
 
     def encode(self, Aton):
         self.record=False
@@ -675,6 +682,8 @@ def logging_setup():
 log.add("DS0",0)
 Thread(logging_setup)
 
+log.recording.start("Left")
+
 def rightside():
     right = controller_1.axis3.position() / 8.33
     Right1.spin(FORWARD, right, VOLT)
@@ -775,3 +784,6 @@ controller_1.buttonL1.pressed(scoreup)
 controller_1.buttonL2.pressed(scoredown)
 controller_1.buttonDown.pressed(pushertoggle)
 controller_1.buttonB.pressed(loadertoggle)
+
+wait(10, SECONDS)
+log.recording.stop("Left")

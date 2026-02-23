@@ -482,20 +482,27 @@ class Logging:
 class Recording:
     def __init__(self):
         self.record=True
+        self.timerecord=0
+        self.posttimerecord=0
+        self.Aton
 
 
     def start(self, Aton):
         if self.record == False:
             self.record=True
             brain.sdcard.savefile(Aton + "_pre.txt")
+            self.Aton=Aton + "_pre.txt"
         else:
             print("Cant start recording because recording is on.")
 
-        while self.record == True:
-            pass
-
     def stop(self, Aton):
         self.record=False
+        File=brain.sdcard.loadfile(Aton + "_pre.txt")
+        preatonlist=File.decode("utf-8").splitlines()
+        for i in range(len(preatonlist)):
+            prelist=preatonlist[i].split(" ")
+            if prelist[2] == "":
+                pass
 
     def encode(self, Aton):
         self.record=False
@@ -589,6 +596,10 @@ class Log:
         if brain.sdcard.is_inserted():
             brain.sdcard.appendfile("Log.csv", bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), "utf-8"))
             brain.sdcard.savefile("index.txt", bytearray("%d"%(self.index), "utf-8"))
+            if record:
+                brain.sdcard.appendfile(self.recording.Aton, bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), "utf-8"))
+            
+                
         self.index+=1
         
     

@@ -524,21 +524,54 @@ class Recording:
             print("Put in sdcard.")
 
     def encode(self, Aton, Forward, right, left, other1, other1button, other2, other2button, other3, other3button, other4, other4button, other5, other5button, other6, other6button):
-        filename=Aton + ".txt"
-        self.record=False
-        brain.sdcard.savefile(filename, bytearray(", ", log.format))
-        prelist=[]
-        preatonfile=brain.sdcard.loadfile(Aton + "_pre.txt")
-        preatonlist=preatonfile.decode(log.format).split("\n")
-        for i in range(len(preatonlist)):
-            prelist=preatonlist[i].split(',')
-            print(prelist)
-            if prelist[4] == "Controller":
-                if prelist[6] == "Axis":
-                    if prelist[10] == "Controller_1_Axis3":
-                        brain.sdcard.appendfile(filename, bytearray(str(right) + str(prelist[11]), log.format))
-                    elif prelist[10] == "Controller_1_Axis2":
-                        brain.sdcard.appendfile(filename, bytearray(str(left) + str(prelist[11]), log.format))
+        if brain.sdcard.is_inserted:
+            filename=Aton + ".txt"
+            self.record=False
+            brain.sdcard.savefile(filename, bytearray(", ", log.format))
+            prelist=[]
+            preatonfile=brain.sdcard.loadfile(Aton + "_pre.txt")
+            preatonlist=preatonfile.decode(log.format).split("\n")
+            if other1 == None:
+                other1="None"
+            if other2 == None:
+                other2="None"
+            if other3 == None:
+                other3="None"
+            if other4 == None:
+                other4="None"
+            if other5 == None:
+                other5="None"
+            if other6 == None:
+                other6="None"
+            if other1button == None:
+                other1button="None"
+            if other2button == None:
+                other2button="None"
+            if other3button == None:
+                other3button="None"
+            if other4button == None:
+                other4button="None"
+            if other5button == None:
+                other5button="None"
+            if other6button == None:
+                other6button="None"
+
+            for i in range(len(preatonlist)):
+                prelist=preatonlist[i].split(',')
+                print(prelist)
+                if prelist[4] == "Controller":
+                    if prelist[6] == "Axis":
+                        if prelist[10] == "Controller_1_Axis3":
+                            brain.sdcard.appendfile(filename, bytearray(str(right) + str(prelist[11]), log.format))
+                        elif prelist[10] == "Controller_1_Axis2":
+                            brain.sdcard.appendfile(filename, bytearray(str(left) + str(prelist[11]), log.format))
+                    elif prelist[6] == "Button":
+                        if prelist[11] == "Pressed":
+                            pass
+                        elif prelist[11] == "Released":
+                            pass
+        else:
+            print("Put in sdcard.")
 
     
     def run(self, Aton):
@@ -583,8 +616,58 @@ class Archive:
             else:
                 print("Put in the sdcard.")
         log.clear()
-
-
+    
+    def recording(self, name):
+        try:
+            if brain.sdcard.is_inserted():
+                archname=(name - ".txt") + "history.txt"
+                reversecodes={value: key for key, value in log.codes.items()}
+                self.file=brain.sdcard.loadfile(name).decode(log.format)
+                self.list=self.file.split("\n")
+                for i in range(len(self.list)):
+                    line=self.list[i].split(':')
+                    if len(line)>=3:
+                        lines= ":" + str(line[1]) + ":" + str(line[2]) + ": "
+                        brain.sdcard.appendfile(archname, bytearray(str(reversecodes.get(lines)) + str(line[0]), log.format))
+                self.logfile=""
+                brain.sdcard.savefile(name)
+            else:
+                print("Put in the sdcard.")
+        except MemoryError:
+            self.file=""
+            if brain.sdcard.is_inserted():
+                archname=(name - ".txt") + "history.txt"
+                reversecodes={value: key for key, value in log.codes.items()}
+                with open(name, 'r') as self.file:
+                    for line in self.file:
+                        logline=line.split(':')
+                        loglines= str(logline[1]) + str(logline[2])
+                        brain.sdcard.appendfile(archname, bytearray(str(reversecodes.get(loglines)) + str(logline[0]), log.format))
+                brain.sdcard.savefile(name)
+            else:
+                print("Put in the sdcard.")
+    
+    def recall(self, name):
+        filename=name - "history"
+        try:
+            file=brain.sdcard.loadfile(name).decode(log.format)
+            brain.sdcard.savefile(filename)
+            filelist=file.split(',')
+            for i in range(len(filelist)):
+                prelist=filelist[i].split(' ')
+                prelist2=filelist[i+1].split(' ')
+                if len(prelist) >= 2 and len(prelist2) >=1:
+                    brain.sdcard.appendfile(filename, bytearray(str(prelist2[0]) + str(prelist2[1]) + str(log.codes.get(prelist[2])), log.format))
+        except MemoryError:
+            with open(name, 'r') as file:
+                for line in file:
+                    prelist=line.split(' ')
+                    try:
+                        prelist2=next(file).split(' ')
+                    except StopIteration:
+                        pass
+                    if len(prelist) >= 2 and len(prelist2) >=1:
+                        brain.sdcard.appendfile(filename, bytearray(str(prelist2[0]) + str(prelist2[1]) + str(log.codes.get(prelist[2])), log.format))
 
 class Log:
     def __init__(self):

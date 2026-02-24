@@ -487,35 +487,41 @@ class Recording:
         self.Aton=""
         self.postlist=[]
         self.File=""
+        self.poststring=""
 
 
     def start(self, Aton):
         filename=str(Aton) + "_pre.txt"
         if self.record == False:
-            self.record=True
-            brain.sdcard.savefile(filename, bytearray("\n", "utf-8"))
-            self.Aton=Aton + "_pre.txt"
+            if brain.sdcard.is_inserted():
+                self.record=True
+                brain.sdcard.savefile(filename, bytearray("\n", "utf-8"))
+                self.Aton=Aton + "_pre.txt"
+            else:
+                print("Put in sdcard")
         else:
             print("Cant start recording because recording is on.")
 
     def stop(self, Aton):
-        filename=str(Aton) + "_pre.txt"
-        preatonfile=""
-        self.record=False
-        try:
+        if brain.sdcard.is_inserted():
+            filename=str(Aton) + "_pre.txt"
+            preatonfile=""
+            self.record=False
             preatonfile=brain.sdcard.loadfile(filename).decode("utf-8")
-            preatonlist=preatonfile.splitlines()
-        except AttributeError:
-            preatonlist=["1 [200] controller", "1 [200] Variable", "1 [200] tomato"]
-            log.add("EE4", 0)
-        for i in range(len(preatonlist)):
-            prelist=preatonlist[i].split(" ")
-            if prelist[2] == "controller":
-                self.postlist.append(str(prelist))
-            elif prelist[2] == "Variable":
-                self.postlist.append(str(prelist))
-        
-        brain.sdcard.savefile(filename, bytearray(str(self.postlist), "utf-8"))
+            preatonlist=preatonfile.split("\n")
+            for i in range(len(preatonlist)):
+                prelist=preatonlist[i].split(' ')
+                print(prelist)
+                if len(prelist) >= 3:
+                    if prelist[3] == ":Controller":
+                        self.postlist.append(str(prelist) + "\n")
+                    elif prelist[3] == ":Variable":
+                        self.postlist.append(str(prelist) + "\n")
+            for i in range(len(self.postlist)):
+                self.poststring= self.poststring + str(self.postlist[i])
+            brain.sdcard.savefile(filename, bytearray(str(self.poststring), "utf-8"))
+        else:
+            print("Put in sdcard.")
 
     def encode(self, Aton):
         self.record=False
@@ -538,17 +544,36 @@ class Archive:
     
     def log(self):
         try:
-            log.adding=False
-            reversecodes={value: key for key, value in log.codes.items()}
-            self.logfile=brain.sdcard.loadfile("Log.csv").decode(self.format)
-            self.loglist=self.logfile.splitlines()
-            for i in range(len(self.loglist)):
-                logline=self.loglist[i].split(':')
-                loglines= str(logline[0]) + str(logline[1])
-                brain.sdcard.savefile("loghistory.txt", bytearray(str(reversecodes.get(loglines)) + str(logline[2]), self.format))
-            log.adding=True
-        except AttributeError:
-            log.add("EE4", "Archive.log")
+            if brain.sdcard.is_inserted():
+                log.adding=False
+                reversecodes={value: key for key, value in log.codes.items()}
+                self.logfile=brain.sdcard.loadfile("Log.csv").decode(self.format)
+                self.loglist=self.logfile.split("\n")
+                for i in range(len(self.loglist)):
+                    logline=self.loglist[i].split(':')
+                    if len(logline)>=3:
+                        loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
+                        brain.sdcard.appendfile("loghistory.txt", bytearray(str(reversecodes.get(loglines)) + str(logline[0]), self.format))
+                self.logfile=""
+                log.adding=True
+            else:
+                print("Put in the sdcard.")
+        except MemoryError:
+            if brain.sdcard.is_inserted():
+                self.logfile=""
+                log.adding=False
+                reversecodes={value: key for key, value in log.codes.items()}
+                with open("Log.csv", 'r') as self.logfile:
+                    for line in self.logfile:
+                        logline=line.split(':')
+                        loglines= str(logline[1]) + str(logline[2])
+                        brain.sdcard.appendfile("loghistory.txt", bytearray(str(reversecodes.get(loglines)) + str(logline[0]), self.format))
+                log.adding=True
+            else:
+                print("Put in the sdcard.")
+        log.clear()
+
+
 
 class Log:
     def __init__(self):
@@ -559,62 +584,62 @@ class Log:
         self.adding=True
         # Predefined Log Codes dictionary
         self.codes={
-                    "ED1": "Drivetrain ERROR: Motor(s) Criticaly Hot. Temp: ",
-                    "ED2": "Drivetrain ERROR: Motor(s) Very High Power. Power: ",
-                    "ED3": "Drivetrain ERROR: Motor(s) Disconnected. Name: ",
-                    "WD0": "Drivetrain WARNING: Motor(s) Hot. Temp: ",
-                    "WD1": "Drivetrain WARNING: High Current Draw. Current: ",
-                    "WD2": "Drivetrain WARNING: Low Voltage. Voltage: ",
-                    "WD3": "Drivetrain WARNING: High Power. Power: ",
-                    "DD0": "Drivetrain Data: Velocity Changed. New Velocity: ",
-                    "DD1": "Drivetrain Data: Done Spinning.",
-                    "EI0": "Intake ERROR: No response from intake system.",
-                    "EI1": "Intake ERROR: Motor Criticaly Hot. Temp: ",
-                    "WI0": "Intake WARNING: Motor Hot. Temp: ",
-                    "WI1": "Intake WARNING: High Current Draw. Current: ",
-                    "WI2": "Intake WARNING: High Voltage. Voltage: ",
-                    "WI3": "Intake WARNING: High Power. Power: ",
-                    "DI0": "Intake INFO: Done Spinning.",
-                    "DI1": "Intake INFO: Velocity Changed. New Velocity: ",
-                    "EB0": "Battery ERROR: Critically Low Voltage. Voltage: ",
-                    "EB1": "Battery ERROR: Critically Low Battery. Capacity: ",
-                    "EB2": "Battery ERROR: Critically High Current. Current: ",
-                    "WB0": "Battery WARNING: Low Voltage. Voltage: ",
-                    "WB1": "Battery WARNING: Low Battery. capacity: ",
-                    "EA0": "Aton ERROR: No response from auton system.",
-                    "EA1": "Aton ERROR: Inertial Sensor Failure.",
-                    "EA2": "Aton ERROR: Move failed. Move:",
-                    "WA0": "Aton WARNING: Inertial Sensor Calibrating.",
-                    "WA1": "Aton WARNING: Left Aton Missing.",
-                    "WA2": "Aton WARNING: Right Aton Missing.",
-                    "DA0": "Aton DATA: Recording Started.",
-                    "DA1": "Aton DATA: Recording Stopped.",
-                    "DA2": "Aton DATA: Recording Saved.",
-                    "DA3": "Aton DATA: Recording Loaded.",
-                    "DA4": "Aton DATA: Move Forward MM. MM: ",
-                    "DA5": "Aton DATA: Drive Left Degrees. Degrees: ",
-                    "DA6": "Aton DATA: Drive Right Degrees. Degrees: ",
-                    "DA7": "Aton DATA: Curved Move. Left Degrees: , Right Degrees: ",
-                    "DA8": "Aton DATA: Turn to Rotation. Degrees: ",
-                    "DA9": "Aton DATA: Turn Degrees. Degrees: ",
-                    "DA10": "Aton DATA: Loaded Right Aton from SD Card.",
-                    "DA11": "Aton DATA: Loaded Left Aton from SD Card.",
-                    "DS0": "System DATA: Init setup complete.",
-                    "DS1": "System DATA: Driver Init setup complete.",
-                    "DS2": "System DATA: Aton Init setup complete.",
-                    "EM0": "Motor ERROR: Motor Criticaly Hot. Temp: ",
-                    "EM1": "Motor ERROR: Motor Disconnected. Name: ",
-                    "EM2": "Motor ERROR: Motor Very High Power. Power: ",
-                    "WM0": "Motor WARNING: Motor Hot. Temp: ",
-                    "WM1": "Motor WARNING: Motor High Power. Power: ",
-                    "EE0": "Exeption ERROR: Type Error. Problem in: ",
-                    "EE1": "Exeption ERROR: Value Error. Problem in: ",
-                    "EE2": "Exeption ERROR: Name Error. Problem in: ",
-                    "EE3": "Exeption ERROR: Exeption Used. Problem in: ",
-                    "EE4": "Exeption ERROR: Attribute Error. Problem in: ",
-                    "DV0": "Variable DATA: Variable Changed. Name: ",
-                    "DC0": "controller DATA: Button Pressed. Button: ",
-                    "DC1": "controller DATA: Axis Changed. Axis: ",
+                    "ED1": ":Drivetrain ERROR: Motor(s) Criticaly Hot. Temp: ",
+                    "ED2": ":Drivetrain ERROR: Motor(s) Very High Power. Power: ",
+                    "ED3": ":Drivetrain ERROR: Motor(s) Disconnected. Name: ",
+                    "WD0": ":Drivetrain WARNING: Motor(s) Hot. Temp: ",
+                    "WD1": ":Drivetrain WARNING: High Current Draw. Current: ",
+                    "WD2": ":Drivetrain WARNING: Low Voltage. Voltage: ",
+                    "WD3": ":Drivetrain WARNING: High Power. Power: ",
+                    "DD0": ":Drivetrain Data: Velocity Changed. New Velocity: ",
+                    "DD1": ":Drivetrain Data: Done Spinning.",
+                    "EI0": ":Intake ERROR: No response from intake system.:",
+                    "EI1": ":Intake ERROR: Motor Criticaly Hot. Temp: ",
+                    "WI0": ":Intake WARNING: Motor Hot. Temp: ",
+                    "WI1": ":Intake WARNING: High Current Draw. Current: ",
+                    "WI2": ":Intake WARNING: High Voltage. Voltage: ",
+                    "WI3": ":Intake WARNING: High Power. Power: ",
+                    "DI0": ":Intake INFO: Done Spinning.:",
+                    "DI1": ":Intake INFO: Velocity Changed. New Velocity: ",
+                    "EB0": ":Battery ERROR: Critically Low Voltage. Voltage: ",
+                    "EB1": ":Battery ERROR: Critically Low Battery. Capacity: ",
+                    "EB2": ":Battery ERROR: Critically High Current. Current: ",
+                    "WB0": ":Battery WARNING: Low Voltage. Voltage: ",
+                    "WB1": ":Battery WARNING: Low Battery. capacity: ",
+                    "EA0": ":Aton ERROR: No response from auton system.:",
+                    "EA1": ":Aton ERROR: Inertial Sensor Failure.:",
+                    "EA2": ":Aton ERROR: Move failed. Move:",
+                    "WA0": ":Aton WARNING: Inertial Sensor Calibrating.:",
+                    "WA1": ":Aton WARNING: Left Aton Missing.:",
+                    "WA2": ":Aton WARNING: Right Aton Missing.:",
+                    "DA0": ":Aton DATA: Recording Started.:",
+                    "DA1": ":Aton DATA: Recording Stopped.:",
+                    "DA2": ":Aton DATA: Recording Saved.:",
+                    "DA3": ":Aton DATA: Recording Loaded.:",
+                    "DA4": ":Aton DATA: Move Forward MM. MM: ",
+                    "DA5": ":Aton DATA: Drive Left Degrees. Degrees: ",
+                    "DA6": ":Aton DATA: Drive Right Degrees. Degrees: ",
+                    "DA7": ":Aton DATA: Curved Move. Left Degrees: , Right Degrees: ",
+                    "DA8": ":Aton DATA: Turn to Rotation. Degrees: ",
+                    "DA9": ":Aton DATA: Turn Degrees. Degrees: ",
+                    "DA10": ":Aton DATA: Loaded Right Aton from SD Card.:",
+                    "DA11": ":Aton DATA: Loaded Left Aton from SD Card.:",
+                    "DS0": ":System DATA: Init setup complete.:",
+                    "DS1": ":System DATA: Driver Init setup complete.:",
+                    "DS2": ":System DATA: Aton Init setup complete.:",
+                    "EM0": ":Motor ERROR: Motor Criticaly Hot. Temp: ",
+                    "EM1": ":Motor ERROR: Motor Disconnected. Name: ",
+                    "EM2": ":Motor ERROR: Motor Very High Power. Power: ",
+                    "WM0": ":Motor WARNING: Motor Hot. Temp: ",
+                    "WM1": ":Motor WARNING: Motor High Power. Power: ",
+                    "EE0": ":Exeption ERROR: Type Error. Problem in: ",
+                    "EE1": ":Exeption ERROR: Value Error. Problem in: ",
+                    "EE2": ":Exeption ERROR: Name Error. Problem in: ",
+                    "EE3": ":Exeption ERROR: Exeption Used. Problem in: ",
+                    "EE4": ":Exeption ERROR: Attribute Error. Problem in: ",
+                    "DV0": ":Variable DATA: Variable Changed. Name: ",
+                    "DC0": ":Controller DATA: Button Pressed. Button: ",
+                    "DC1": ":Controller DATA: Axis Changed. Axis: ",
                 }
         # Setting up Log Files if they dont exist 
         if brain.sdcard.is_inserted():
@@ -629,16 +654,14 @@ class Log:
             self.index=0
 
     def add(self, add_code, add_details):
-        if self.adding==True:
+        if self.adding == True:
             print(", %s [%s] %s %s"%(self.index, log_time, self.codes.get(add_code), add_details))
             if brain.sdcard.is_inserted():
                 brain.sdcard.appendfile("Log.csv", bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), "utf-8"))
                 brain.sdcard.savefile("index.txt", bytearray("%d"%(self.index), "utf-8"))
-                if record:
-                    brain.sdcard.appendfile(self.recording.Aton, bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), "utf-8"))
-            
-                
-        self.index+=1
+                if self.recording.record:
+                    brain.sdcard.appendfile(self.recording.Aton, bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), "utf-8"))       
+            self.index+=1
         
     
     def add_codes(self, code_add, Decoded_text):
@@ -675,8 +698,8 @@ class Log:
 
 
 log=Log()
-log.add_codes("DZ0", "Colorsort DATA: detected red.")
-log.add_codes("DZ1", "Colorsort DATA: detected blue.")
+log.add_codes("DZ0", ":Colorsort DATA: detected red.:")
+log.add_codes("DZ1", ":Colorsort DATA: detected blue.:")
 
 def logging_setup():
     while True:

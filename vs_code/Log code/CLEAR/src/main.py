@@ -49,11 +49,11 @@ console_precision = 0
 
 # ---------------------------------------------------------------------------- #
 #                                                                              #
-# 	Module:       Logging.py                                                   #
+# 	Module:       CLEAR.py                                                     #
 # 	Author:       Micah Bow                                                    #
 # 	Created:      1/27/2026, 12:42 PM                                          #
-#   Last Edited:  2/4/2026, 12:02 PM                                           #
-# 	Description:  Universal Logging software for Vex V5 Version 8              #
+#   Last Edited:  2/23/2026, 10:00 PM                                          #
+# 	Description:  Capture, Logging, Encoding, Archiving , Recording.           #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
@@ -67,6 +67,7 @@ loader_state = 0
 record = 0
 controlleraxis2positionhistory = 0
 controlleraxis3positionhistory = 0
+recording_state=0
 
 class Drivetrain:
     def __init__(self):
@@ -495,7 +496,7 @@ class Recording:
         if self.record == False:
             if brain.sdcard.is_inserted():
                 self.record=True
-                brain.sdcard.savefile(filename, bytearray("\n", "utf-8"))
+                brain.sdcard.savefile(filename, bytearray("\n", log.format))
                 self.Aton=Aton + "_pre.txt"
             else:
                 print("Put in sdcard")
@@ -507,11 +508,10 @@ class Recording:
             filename=str(Aton) + "_pre.txt"
             preatonfile=""
             self.record=False
-            preatonfile=brain.sdcard.loadfile(filename).decode("utf-8")
+            preatonfile=brain.sdcard.loadfile(filename).decode(log.format)
             preatonlist=preatonfile.split("\n")
             for i in range(len(preatonlist)):
                 prelist=preatonlist[i].split(' ')
-                print(prelist)
                 if len(prelist) >= 3:
                     if prelist[3] == ":Controller":
                         self.postlist.append(str(prelist) + "\n")
@@ -519,20 +519,31 @@ class Recording:
                         self.postlist.append(str(prelist) + "\n")
             for i in range(len(self.postlist)):
                 self.poststring= self.poststring + str(self.postlist[i])
-            brain.sdcard.savefile(filename, bytearray(str(self.poststring), "utf-8"))
+            brain.sdcard.savefile(filename, bytearray(str(self.poststring), log.format))
         else:
             print("Put in sdcard.")
 
-    def encode(self, Aton):
+    def encode(self, Aton, Forward, right, left, other1, other1button, other2, other2button, other3, other3button, other4, other4button, other5, other5button, other6, other6button):
+        filename=Aton + ".txt"
         self.record=False
-        brain.sdcard.savefile(Aton + ".txt", bytearray(", ", "utf-8"))
+        brain.sdcard.savefile(filename, bytearray(", ", log.format))
         prelist=[]
         preatonfile=brain.sdcard.loadfile(Aton + "_pre.txt")
-        preatonlist=preatonfile.decode("utf-8").splitlines()
+        preatonlist=preatonfile.decode(log.format).split("\n")
+        for i in range(len(preatonlist)):
+            prelist=preatonlist[i].split(',')
+            print(prelist)
+            if prelist[4] == "Controller":
+                if prelist[6] == "Axis":
+                    if prelist[10] == "Controller_1_Axis3":
+                        brain.sdcard.appendfile(filename, bytearray(str(right) + str(prelist[11]), log.format))
+                    elif prelist[10] == "Controller_1_Axis2":
+                        brain.sdcard.appendfile(filename, bytearray(str(left) + str(prelist[11]), log.format))
+
     
     def run(self, Aton):
         Atonfile=brain.sdcard.loadfile(Aton + ".txt")
-        exec(Atonfile.decode("utf-8"))
+        exec(Atonfile.decode(log.format))
 
 class Archive:
     def __init__(self):
@@ -547,13 +558,13 @@ class Archive:
             if brain.sdcard.is_inserted():
                 log.adding=False
                 reversecodes={value: key for key, value in log.codes.items()}
-                self.logfile=brain.sdcard.loadfile("Log.csv").decode(self.format)
+                self.logfile=brain.sdcard.loadfile("Log.csv").decode(log.format)
                 self.loglist=self.logfile.split("\n")
                 for i in range(len(self.loglist)):
                     logline=self.loglist[i].split(':')
                     if len(logline)>=3:
                         loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
-                        brain.sdcard.appendfile("loghistory.txt", bytearray(str(reversecodes.get(loglines)) + str(logline[0]), self.format))
+                        brain.sdcard.appendfile("loghistory.txt", bytearray(str(reversecodes.get(loglines)) + str(logline[0]), log.format))
                 self.logfile=""
                 log.adding=True
             else:
@@ -567,7 +578,7 @@ class Archive:
                     for line in self.logfile:
                         logline=line.split(':')
                         loglines= str(logline[1]) + str(logline[2])
-                        brain.sdcard.appendfile("loghistory.txt", bytearray(str(reversecodes.get(loglines)) + str(logline[0]), self.format))
+                        brain.sdcard.appendfile("loghistory.txt", bytearray(str(reversecodes.get(loglines)) + str(logline[0]), log.format))
                 log.adding=True
             else:
                 print("Put in the sdcard.")
@@ -582,6 +593,7 @@ class Log:
         self.archive=Archive()
         self.index=0
         self.adding=True
+        self.format="utf-8"
         # Predefined Log Codes dictionary
         self.codes={
                     "ED1": ":Drivetrain ERROR: Motor(s) Criticaly Hot. Temp: ",
@@ -644,12 +656,12 @@ class Log:
         # Setting up Log Files if they dont exist 
         if brain.sdcard.is_inserted():
             if not brain.sdcard.exists("Log.csv"):
-                brain.sdcard.savefile("Log.csv", bytearray("log Start: \n", "utf-8"))
+                brain.sdcard.savefile("Log.csv", bytearray("log Start: \n", self.format))
 
             if not brain.sdcard.exists("index.txt"):
-                brain.sdcard.savefile("index.txt", bytearray("0", "utf-8"))
+                brain.sdcard.savefile("index.txt", bytearray("0", self.format))
             index_content=brain.sdcard.loadfile("index.txt")
-            self.index=int(index_content.decode("utf-8"))
+            self.index=int(index_content.decode(self.format))
         else:
             self.index=0
 
@@ -657,10 +669,10 @@ class Log:
         if self.adding == True:
             print(", %s [%s] %s %s"%(self.index, log_time, self.codes.get(add_code), add_details))
             if brain.sdcard.is_inserted():
-                brain.sdcard.appendfile("Log.csv", bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), "utf-8"))
-                brain.sdcard.savefile("index.txt", bytearray("%d"%(self.index), "utf-8"))
+                brain.sdcard.appendfile("Log.csv", bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), self.format))
+                brain.sdcard.savefile("index.txt", bytearray("%d"%(self.index), self.format))
                 if self.recording.record:
-                    brain.sdcard.appendfile(self.recording.Aton, bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), "utf-8"))       
+                    brain.sdcard.appendfile(self.recording.Aton, bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), self.format))       
             self.index+=1
         
     
@@ -680,8 +692,8 @@ class Log:
     # Clearing the log file
     def clear(self):
         if brain.sdcard.is_inserted():
-            brain.sdcard.savefile("Log.csv", bytearray("Log Start: \n", "utf-8"))
-            brain.sdcard.savefile("index.txt", bytearray("0", "utf-8"))
+            brain.sdcard.savefile("Log.csv", bytearray("Log Start: \n", self.format))
+            brain.sdcard.savefile("index.txt", bytearray("0", self.format))
         else:
             print("No SD Card Inserted Cannot Clear Log")
     
@@ -692,7 +704,7 @@ class Log:
     def read(self):
         if brain.sdcard.is_inserted():
             log_content=brain.sdcard.loadfile("Log.csv")
-            print(log_content.decode("utf-8"))
+            print(log_content.decode(self.format))
         else:
             print("No SD Card Inserted Cannot Read Log")
 
@@ -735,10 +747,8 @@ def logging_setup():
 
 log.archive.log()
 
-log.add("DS0",0)
+log.add("DS0", 0)
 Thread(logging_setup)
-
-log.recording.start("Left")
 
 def rightside():
     right = controller_1.axis3.position() / 8.33
@@ -754,41 +764,31 @@ def leftside():
 
 def intakeup():
     Intake.spin(FORWARD, 12, VOLT)
-    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Intake: Up" + str(timer.time()) + "\n","utf-8"))
     while controller_1.buttonR1.pressing():
         wait(5, MSEC)
     Intake.stop()
-    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Intake: Stop" + str(timer.time()) + "\n","utf-8"))
 
 def intakedown():
     Intake.spin(REVERSE, 12, VOLT)
-    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Intake: Down" + str(timer.time()) + "\n","utf-8"))
     while controller_1.buttonR2.pressing():
         wait(5, MSEC)
     Intake.stop()
-    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Intake: Stop" + str(timer.time()) + "\n","utf-8"))
 
 def scoreup():
     TopMotor.spin(FORWARD, 12, VOLT)
     Intake.spin(FORWARD, 12, VOLT)
-    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Score: Up" + str(timer.time()) + "\n","utf-8"))
     while controller_1.buttonL1.pressing():
         wait(5,MSEC)
     TopMotor.stop()
     Intake.stop()
-    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Score: Stop" + str(timer.time()) + "\n","utf-8"))
 
 def scoredown():
     TopMotor.spin(FORWARD, 12, VOLT)
     Intake.spin(REVERSE, 12, VOLT)
-    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Score: Down" + str(timer.time()) + "\n","utf-8"))
     while controller_1.buttonL2.pressing():
         wait(5, MSEC)
     TopMotor.stop()
     Intake.stop()
-    brain.sdcard.appendfile("prerightrecording.txt", bytearray("Score: Stop" + str(timer.time()) + "\n","utf-8"))
-
-
 
 def pushertoggle():
     global pusher_state, Pusher
@@ -796,23 +796,19 @@ def pushertoggle():
         DeScorer.set(True)
         pusher_state=1
         Pusher=1
-        brain.sdcard.appendfile("prerightrecording.txt", bytearray("Pusher: " + "True, " + str(timer.time()) + "\n", "utf-8"))
     else:
         DeScorer.set(False)
         pusher_state=0
         Pusher=0
-        brain.sdcard.appendfile("prerightrecording.txt", bytearray("Pusher: " + "False, " + str(timer.time()) + "\n", "utf-8"))
 
 def loadertoggle():
     global loader_state
     if loader_state==0:
         frontPiston.set(True)
         loader_state=1
-        brain.sdcard.appendfile("prerightrecording.txt", bytearray("Loader: " + "True, " + str(timer.time()) + "\n", "utf-8"))
     else:
         frontPiston.set(False)
         loader_state=0
-        brain.sdcard.appendfile("prerightrecording.txt", bytearray("Loader: " + "False, " + str(timer.time()) + "\n", "utf-8"))
 
 
 def leftmove(leftspeed, degrees):
@@ -831,6 +827,24 @@ def rightmove(rightspeed, degrees):
     Right3.set_velocity(rightspeed, PERCENT)
     Right3.spin_for(FORWARD, degrees, DEGREES)
 
+def forwardmove():
+    pass
+
+def recordright():
+    global recording_state
+    if recording_state == 0:
+        log.recording.start("Right")
+        controller_1.screen.clear_line(3)
+        controller_1.screen.set_cursor(3,1)
+        controller_1.screen.print("Right recording.")
+        recording_state=1
+    elif recording_state == 1:
+        log.recording.stop("Right")
+        log.recording.encode("Right", forwardmove, rightmove, leftmove, intakeup, "R1", intakedown, "R2", scoreup, "L1", scoredown, "L2", loadertoggle, "B", pushertoggle, "Down")
+        controller_1.screen.clear_line(3)
+        controller_1.screen.set_cursor(3,1)
+        controller_1.screen.print("Right Stopped.")
+        recording_state=0
 
 controller_1.axis2.changed(rightside)
 controller_1.axis3.changed(leftside)
@@ -840,6 +854,4 @@ controller_1.buttonL1.pressed(scoreup)
 controller_1.buttonL2.pressed(scoredown)
 controller_1.buttonDown.pressed(pushertoggle)
 controller_1.buttonB.pressed(loadertoggle)
-
-wait(10, SECONDS)
-log.recording.stop("Left")
+controller_1.buttonRight.pressed(recordright)

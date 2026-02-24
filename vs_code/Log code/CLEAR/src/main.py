@@ -353,38 +353,54 @@ class Logging:
         elif brain.battery.current(CurrentUnits.AMP)<=5 and (self.battery_current_monitoring==1 or self.battery_current_monitoring==2):
             self.battery_current_monitoring=0
     
-    def controller(self, controller):
+    def controller(self, controller, monitormotor=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)):
         if controller==1:
             Controller=controller_1
         elif controller==2:
             Controller=controller_2
-
+        
         if Controller.axis1.position()!=0 and self.axis1 != Controller.axis1.position():
-            log.add("DC1", "Controller_%d_Axis1: %d"%(controller, Controller.axis1.position()))
+            degrees=monitormotor.position(DEGREES)
+            monitormotor.set_position(0, DEGREES)
+            log.add("DC1", "Controller_%d_Axis1: %d Moved: %d Degrees"%(controller, Controller.axis1.position(), degrees))
             self.axis1=Controller.axis1.position()
         elif 0 == Controller.axis1.position() and self.axis1!=0:
-            log.add("DC1", "Controller_%d_Axis4: %d"%(controller, Controller.axis1.position()))
+            degrees=monitormotor.position(DEGREES)
+            monitormotor.set_position(0, DEGREES)
+            log.add("DC1", "Controller_%d_Axis1: %d Moved: %d Degrees"%(controller, Controller.axis1.position(), degrees))
             self.axis1=0
 
         if Controller.axis2.position()!=0 and self.axis2 != Controller.axis2.position():
-            log.add("DC1", "Controller_%d_Axis2: %d"%(controller, Controller.axis2.position()))
+            degrees=monitormotor.position(DEGREES)
+            monitormotor.set_position(0, DEGREES)
+            log.add("DC1", "Controller_%d_Axis2: %d Moved: %d Degrees"%(controller, Controller.axis2.position(), degrees))
             self.axis2=Controller.axis2.position()
         elif 0 == Controller.axis2.position() and self.axis2!=0:
-            log.add("DC1", "Controller_%d_Axis4: %d"%(controller, Controller.axis2.position()))
+            degrees=monitormotor.position(DEGREES)
+            monitormotor.set_position(0, DEGREES)
+            log.add("DC1", "Controller_%d_Axis2: %d Moved: %d Degrees"%(controller, Controller.axis2.position(), degrees))
             self.axis2=0
 
         if Controller.axis3.position()!=0 and self.axis3 != Controller.axis3.position():
-            log.add("DC1", "Controller_%d_Axis3: %d"%(controller, Controller.axis3.position()))
+            degrees=monitormotor.position(DEGREES)
+            monitormotor.set_position(0, DEGREES)
+            log.add("DC1", "Controller_%d_Axis3: %d Moved: %d Degrees"%(controller, Controller.axis3.position(), degrees))
             self.axis3=Controller.axis3.position()
         elif 0 == Controller.axis3.position() and self.axis3!=0:
-            log.add("DC1", "Controller_%d_Axis4: %d"%(controller, Controller.axis3.position()))
+            degrees=monitormotor.position(DEGREES)
+            monitormotor.set_position(0, DEGREES)
+            log.add("DC1", "Controller_%d_Axis3: %d Moved: %d Degrees"%(controller, Controller.axis3.position(), degrees))
             self.axis3=0
 
         if Controller.axis4.position()!=0 and self.axis4 != Controller.axis4.position():
-            log.add("DC1", "Controller_%d_Axis4: %d"%(controller, Controller.axis4.position()))
+            degrees=monitormotor.position(DEGREES)
+            monitormotor.set_position(0, DEGREES)
+            log.add("DC1", "Controller_%d_Axis4: %d Moved: %d Degrees"%(controller, Controller.axis4.position(), degrees))
             self.axis4=Controller.axis4.position()
         elif 0 == Controller.axis4.position() and self.axis4!=0:
-            log.add("DC1", "Controller_%d_Axis4: %d"%(controller, Controller.axis4.position()))
+            degrees=monitormotor.position(DEGREES)
+            monitormotor.set_position(0, DEGREES)
+            log.add("DC1", "Controller_%d_Axis4: %d Moved: %d Degrees"%(controller, Controller.axis4.position(), degrees))
             self.axis4=0
 
         if Controller.buttonA.pressing() and self.button_a==True:
@@ -515,15 +531,13 @@ class Recording:
                 if len(prelist) >= 3:
                     if prelist[3] == ":Controller":
                         self.postlist.append(str(prelist) + "\n")
-                    elif prelist[3] == ":Variable":
-                        self.postlist.append(str(prelist) + "\n")
             for i in range(len(self.postlist)):
                 self.poststring= self.poststring + str(self.postlist[i])
             brain.sdcard.savefile(filename, bytearray(str(self.poststring), log.format))
         else:
             print("Put in sdcard.")
 
-    def encode(self, Aton, Forward, right, left, other1, other1button, other2, other2button, other3, other3button, other4, other4button, other5, other5button, other6, other6button):
+    def encode(self, Aton, Forward, right, left, other1start=None, other1stop=None, other1button=None, other2start=None, other2stop=None, other2button=None, other3start=None, other3stop=None, other3button=None, other4start=None, other4stop=None, other4button=None, other5start=None, other5stop=None, other5button=None, other6start=None, other6stop=None, other6button=None):
         if brain.sdcard.is_inserted:
             filename=Aton + ".txt"
             self.record=False
@@ -531,45 +545,47 @@ class Recording:
             prelist=[]
             preatonfile=brain.sdcard.loadfile(Aton + "_pre.txt")
             preatonlist=preatonfile.decode(log.format).split("\n")
-            if other1 == None:
-                other1="None"
-            if other2 == None:
-                other2="None"
-            if other3 == None:
-                other3="None"
-            if other4 == None:
-                other4="None"
-            if other5 == None:
-                other5="None"
-            if other6 == None:
-                other6="None"
-            if other1button == None:
-                other1button="None"
-            if other2button == None:
-                other2button="None"
-            if other3button == None:
-                other3button="None"
-            if other4button == None:
-                other4button="None"
-            if other5button == None:
-                other5button="None"
-            if other6button == None:
-                other6button="None"
-
             for i in range(len(preatonlist)):
-                prelist=preatonlist[i].split(',')
+                prelist=str(preatonlist[i]).split(',')
+                prelist2=str(preatonfile[i+1]).split(',')
                 print(prelist)
-                if prelist[4] == "Controller":
-                    if prelist[6] == "Axis":
-                        if prelist[10] == "Controller_1_Axis3":
-                            brain.sdcard.appendfile(filename, bytearray(str(right) + str(prelist[11]), log.format))
-                        elif prelist[10] == "Controller_1_Axis2":
-                            brain.sdcard.appendfile(filename, bytearray(str(left) + str(prelist[11]), log.format))
-                    elif prelist[6] == "Button":
-                        if prelist[11] == "Pressed":
-                            pass
-                        elif prelist[11] == "Released":
-                            pass
+                if len(prelist)>=4:
+                    if prelist[4] == ":Controller":
+                        if prelist[6] == "Axis":
+                            if prelist[8] == "Controller_1_Axis2:":
+                                brain.sdcard.appendfile(filename, bytearray(str(left) + '(' + str(prelist[9] + str(prelist[11]) + ')' + ', '), log.format))
+                            elif prelist[8] == "Controller_1_Axis3:":
+                                brain.sdcard.appendfile(filename, bytearray(str(right) + '(' + str(prelist[9] + str(prelist[11]) + ')' + ', '), log.format))
+
+                        elif prelist[6] == "Button":
+                            if prelist[11] == "Pressed":
+                                if prelist[10] == other1button:
+                                    brain.sdcard.appendfile(filename, bytearray(str(other1start) + "()", log.format))
+                                if prelist[10] == other2button:
+                                    brain.sdcard.appendfile(filename, bytearray(str(other2start) + "()", log.format))
+                                if prelist[10] == other3button:
+                                    brain.sdcard.appendfile(filename, bytearray(str(other3start) + "()", log.format))
+                                if prelist[10] == other4button:
+                                    brain.sdcard.appendfile(filename, bytearray(str(other4start) + "()", log.format))
+                                if prelist[10] == other5button:
+                                    brain.sdcard.appendfile(filename, bytearray(str(other5start) + "()", log.format))
+                                if prelist[10] == other6button:
+                                    brain.sdcard.appendfile(filename, bytearray(str(other6start) + "()", log.format))
+                            elif prelist[11] == "Released":
+                                if prelist[10] == other1button:
+                                    brain.sdcard.appendfile(filename, bytearray(str(other1stop) + "()", log.format))
+                                if prelist[10] == other2button:
+                                    brain.sdcard.appendfile(filename, bytearray(str(other2stop) + "()", log.format))
+                                if prelist[10] == other3button:
+                                    brain.sdcard.appendfile(filename, bytearray(str(other3stop) + "()", log.format))
+                                if prelist[10] == other4button:
+                                    brain.sdcard.appendfile(filename, bytearray(str(other4stop) + "()", log.format))
+                                if prelist[10] == other5button:
+                                    brain.sdcard.appendfile(filename, bytearray(str(other5stop) + "()", log.format))
+                                if prelist[10] == other6button:
+                                    brain.sdcard.appendfile(filename, bytearray(str(other6stop) + "()", log.format))
+                        
+                            
         else:
             print("Put in sdcard.")
 
@@ -812,7 +828,7 @@ def logging_setup():
             log.add("EE3", "Battery Logging Thread: %s"%(e))
 
         try:
-            log.logging.controller(1)
+            log.logging.controller(1, Right1)
         except Exception as e:
             log.add("EE3", "Controller Logging Thread: %s"%(e))
         

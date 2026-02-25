@@ -356,54 +356,58 @@ class Logging:
         elif brain.battery.current(CurrentUnits.AMP)<=5 and (self.battery_current_monitoring==1 or self.battery_current_monitoring==2):
             self.battery_current_monitoring=0
     
-    def controller(self, controller, monitormotor=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)):
+    def controller(self, controller, monitormotor1=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor2=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor3=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor4=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)):
         if controller==1:
             Controller=controller_1
         elif controller==2:
             Controller=controller_2
         
         if Controller.axis1.position()!=0 and self.axis1 != Controller.axis1.position():
-            degrees=monitormotor.position(DEGREES)
-            monitormotor.set_position(0, DEGREES)
+            degrees=monitormotor1.position(DEGREES)
+            monitormotor1.set_position(0, DEGREES)
             log.add("DC1", "Controller_%d_Axis1: %d Moved: %d Degrees"%(controller, Controller.axis1.position(), degrees))
             self.axis1=Controller.axis1.position()
         elif 0 == Controller.axis1.position() and self.axis1!=0:
-            degrees=monitormotor.position(DEGREES)
-            monitormotor.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis1: %d Moved: %d Degrees"%(controller, Controller.axis1.position(), degrees))
+            degrees=monitormotor1.position(DEGREES)
+            monitormotor2.set_position(0, DEGREES)
+            log.add("DC1", "Controller_%d_Axis1: %d Moved: %d Degrees"%(controller, self.axis1, degrees))
+            log.add("DC1", "Controller_%d_Axis1: %d Moved: %d Degrees"%(controller, 0, 0))
             self.axis1=0
 
         if Controller.axis2.position()!=0 and self.axis2 != Controller.axis2.position():
-            degrees=monitormotor.position(DEGREES)
-            monitormotor.set_position(0, DEGREES)
+            degrees=monitormotor2.position(DEGREES)
+            monitormotor2.set_position(0, DEGREES)
             log.add("DC1", "Controller_%d_Axis2: %d Moved: %d Degrees"%(controller, Controller.axis2.position(), degrees))
             self.axis2=Controller.axis2.position()
         elif 0 == Controller.axis2.position() and self.axis2!=0:
-            degrees=monitormotor.position(DEGREES)
-            monitormotor.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis2: %d Moved: %d Degrees"%(controller, Controller.axis2.position(), degrees))
+            degrees=monitormotor2.position(DEGREES)
+            monitormotor2.set_position(0, DEGREES)
+            log.add("DC1", "Controller_%d_Axis2: %d Moved: %d Degrees"%(controller, self.axis2, degrees))
+            log.add("DC1", "Controller_%d_Axis2: %d Moved: %d Degrees"%(controller, 0, 0))
             self.axis2=0
 
         if Controller.axis3.position()!=0 and self.axis3 != Controller.axis3.position():
-            degrees=monitormotor.position(DEGREES)
-            monitormotor.set_position(0, DEGREES)
+            degrees=monitormotor3.position(DEGREES)
+            monitormotor3.set_position(0, DEGREES)
             log.add("DC1", "Controller_%d_Axis3: %d Moved: %d Degrees"%(controller, Controller.axis3.position(), degrees))
             self.axis3=Controller.axis3.position()
         elif 0 == Controller.axis3.position() and self.axis3!=0:
-            degrees=monitormotor.position(DEGREES)
-            monitormotor.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis3: %d Moved: %d Degrees"%(controller, Controller.axis3.position(), degrees))
+            degrees=monitormotor3.position(DEGREES)
+            monitormotor3.set_position(0, DEGREES)
+            log.add("DC1", "Controller_%d_Axis3: %d Moved: %d Degrees"%(controller, self.axis3, degrees))
+            log.add("DC1", "Controller_%d_Axis3: %d Moved: %d Degrees"%(controller, 0, 0))
             self.axis3=0
 
         if Controller.axis4.position()!=0 and self.axis4 != Controller.axis4.position():
-            degrees=monitormotor.position(DEGREES)
-            monitormotor.set_position(0, DEGREES)
+            degrees=monitormotor4.position(DEGREES)
+            monitormotor4.set_position(0, DEGREES)
             log.add("DC1", "Controller_%d_Axis4: %d Moved: %d Degrees"%(controller, Controller.axis4.position(), degrees))
             self.axis4=Controller.axis4.position()
         elif 0 == Controller.axis4.position() and self.axis4!=0:
-            degrees=monitormotor.position(DEGREES)
-            monitormotor.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis4: %d Moved: %d Degrees"%(controller, Controller.axis4.position(), degrees))
+            degrees=monitormotor4.position(DEGREES)
+            monitormotor4.set_position(0, DEGREES)
+            log.add("DC1", "Controller_%d_Axis4: %d Moved: %d Degrees"%(controller, self.axis4, degrees))
+            log.add("DC1", "Controller_%d_Axis4: %d Moved: %d Degrees"%(controller, 0, 0))
             self.axis4=0
 
         if Controller.buttonA.pressing() and self.button_a==True:
@@ -548,6 +552,20 @@ class Recording:
             prelist=[]
             preatonfile=brain.sdcard.loadfile(Aton + "_pre.txt")
             preatonlist=preatonfile.decode(log.format).split("\n")
+            left=str(left).split(' ')
+            right=str(right).split(' ')
+            other1start=str(other1start).split(' ')
+            other2start=str(other2start).split(' ')
+            other3start=str(other3start).split(' ')
+            other4start=str(other4start).split(' ')
+            other5start=str(other5start).split(' ')
+            other6start=str(other6start).split(' ')
+            other1stop=str(other1stop).split(' ')
+            other2stop=str(other2stop).split(' ')
+            other3stop=str(other3stop).split(' ')
+            other4stop=str(other4stop).split(' ')
+            other5stop=str(other5stop).split(' ')
+            other6stop=str(other6stop).split(' ')
             for i in range(len(preatonlist)):
                 prelist=str(preatonlist[i]).split(',')
                 try:
@@ -560,40 +578,41 @@ class Recording:
                         if "Axis" in str(prelist):
                             print("found axis")
                             if "Controller_1_Axis2" in str(prelist):
-                                brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(left), str(prelist[11]), str(prelist[13])), log.format))
+                                brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(left[1]), str(prelist[11]).replace("'", ''), str(prelist[13]).replace("'", '')), log.format))
                             elif "Controller_1_Axis3" in str(prelist):
-                                brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(right), str(prelist[11]), str(prelist[13])), log.format))
+                                brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(right[1]), str(prelist[11]).replace("'", ''), str(prelist[13]).replace("'", '')), log.format))
 
                         elif "Button" in str(prelist):
                             print("found button")
                             if "Released" in str(prelist):
                                 if other1button in str(prelist[11]):
-                                    brain.sdcard.appendfile(filename, bytearray(str(other1start) + '(), ', log.format))
+                                    brain.sdcard.appendfile(filename, bytearray(str(other1start[1]) + '(), ', log.format))
                                 elif other2button in str(prelist[11]):
-                                    brain.sdcard.appendfile(filename, bytearray(str(other2start) + '(), ', log.format))
+                                    brain.sdcard.appendfile(filename, bytearray(str(other2start[1]) + '(), ', log.format))
                                 elif other3button in str(prelist[11]):
-                                    brain.sdcard.appendfile(filename, bytearray(str(other3start) + '(), ', log.format))
+                                    brain.sdcard.appendfile(filename, bytearray(str(other3start[1]) + '(), ', log.format))
                                 elif other4button in str(prelist[11]):
-                                    brain.sdcard.appendfile(filename, bytearray(str(other4start) + '(), ', log.format))
+                                    brain.sdcard.appendfile(filename, bytearray(str(other4start[1]) + '(), ', log.format))
                                 elif other5button in str(prelist[11]):
-                                    brain.sdcard.appendfile(filename, bytearray(str(other5start) + '(), ', log.format))
+                                    brain.sdcard.appendfile(filename, bytearray(str(other5start[1]) + '(), ', log.format))
                                 elif other6button in str(prelist[11]):
-                                    brain.sdcard.appendfile(filename, bytearray(str(other6start) + '(), ', log.format))
+                                    brain.sdcard.appendfile(filename, bytearray(str(other6start[1]) + '(), ', log.format))
                             elif "Pressed" in str(prelist):
                                 if other1button in str(prelist[11]):
-                                    brain.sdcard.appendfile(filename, bytearray(str(other1stop) + '(), ', log.format))
+                                    brain.sdcard.appendfile(filename, bytearray(str(other1stop[1]) + '(), ', log.format))
                                 elif other2button in str(prelist[11]):
-                                    brain.sdcard.appendfile(filename, bytearray(str(other2stop) + '(), ', log.format))
+                                    brain.sdcard.appendfile(filename, bytearray(str(other2stop[1]) + '(), ', log.format))
                                 elif other3button in str(prelist[11]):
-                                    brain.sdcard.appendfile(filename, bytearray(str(other3stop) + '(), ', log.format))
+                                    brain.sdcard.appendfile(filename, bytearray(str(other3stop[1]) + '(), ', log.format))
                                 elif other4button in str(prelist[11]):
-                                    brain.sdcard.appendfile(filename, bytearray(str(other4stop) + '(), ', log.format))
+                                    brain.sdcard.appendfile(filename, bytearray(str(other4stop[1]) + '(), ', log.format))
                                 elif other5button in str(prelist[11]):
-                                    brain.sdcard.appendfile(filename, bytearray(str(other5stop) + '(), ', log.format))
+                                    brain.sdcard.appendfile(filename, bytearray(str(other5stop[1]) + '(), ', log.format))
                                 elif other6button in str(prelist[11]):
-                                    brain.sdcard.appendfile(filename, bytearray(str(other6stop) + '(), ', log.format))
-                    if len(prelist2) >= 3:
-                        brain.sdcard.appendfile(filename, bytearray("wait(" + str(abs(int(prelist[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')) - int(prelist2[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')))) + ", MSEC)", log.format))
+                                    brain.sdcard.appendfile(filename, bytearray(str(other6stop[1]) + '(), ', log.format))
+                        
+                        if len(prelist2) >= 3:
+                            brain.sdcard.appendfile(filename, bytearray("wait(" + str(abs(int(prelist[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')) - int(prelist2[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')))) + ", MSEC), ", log.format))
             print("Encode done.")            
                             
         else:
@@ -838,7 +857,7 @@ def logging_setup():
             log.add("EE3", "Battery Logging Thread: %s"%(e))
 
         try:
-            log.logging.controller(1, Right1)
+            log.logging.controller(1, Right1, Right1, left1, left1)
         except Exception as e:
             log.add("EE3", "Controller Logging Thread: %s"%(e))
         
@@ -860,13 +879,13 @@ log.add("DS0", 0)
 Thread(logging_setup)
 
 def rightside():
-    rightspeed = controller_1.axis3.position() / 8.33
+    rightspeed = controller_1.axis2.position() / 8.33
     Right1.spin(FORWARD, rightspeed, VOLT)
     Right2.spin(FORWARD, rightspeed, VOLT)
     Right3.spin(FORWARD, rightspeed, VOLT)
 
 def leftside():
-    leftspeed=controller_1.axis2.position()/8.33
+    leftspeed = controller_1.axis3.position()/8.33
     left1.spin(FORWARD, leftspeed, VOLT)
     left2.spin(FORWARD, leftspeed, VOLT)
     left3.spin(FORWARD, leftspeed, VOLT)
@@ -921,20 +940,17 @@ def loadertoggle():
 
 
 def leftmove(leftspeed, degrees):
-    left1.set_velocity(leftspeed, PERCENT)
-    left1.spin_for(FORWARD, degrees, DEGREES)
-    left2.set_velocity(leftspeed, PERCENT)
-    left2.spin_for(FORWARD, degrees, DEGREES)
-    left3.set_velocity(leftspeed, PERCENT)
-    left3.spin_for(FORWARD, degrees, DEGREES)
+    print("left: ", leftspeed)
+    leftspeed=leftspeed/8.33
+    left1.spin(FORWARD, leftspeed, VOLT)
+    left2.spin(FORWARD, leftspeed, VOLT)
+    left3.spin(FORWARD, leftspeed, VOLT)
 
 def rightmove(rightspeed, degrees):
-    Right1.set_velocity(rightspeed, PERCENT)
-    Right1.spin_for(FORWARD, degrees, DEGREES)
-    Right2.set_velocity(rightspeed, PERCENT)
-    Right2.spin_for(FORWARD, degrees, DEGREES)
-    Right3.set_velocity(rightspeed, PERCENT)
-    Right3.spin_for(FORWARD, degrees, DEGREES)
+    print("Right: ", rightspeed)
+    Right1.spin(FORWARD, rightspeed, VOLT)
+    Right2.spin(FORWARD, rightspeed, VOLT)
+    Right3.spin(FORWARD, rightspeed, VOLT)
 
 def forwardmove(leftspeed, rightspeed, leftdegrees, rightdegrees):
     left1.set_velocity(leftspeed, PERCENT)
@@ -951,23 +967,29 @@ def forwardmove(leftspeed, rightspeed, leftdegrees, rightdegrees):
     Right3.spin_for(FORWARD, rightdegrees, DEGREES)
 
 def intakeupstart():
+    print("Intake up")
     Intake.spin(FORWARD)
 
 def intakedownstart():
+    print("Intake down")
     Intake.spin(REVERSE)
 
 def intakestop():
+    print("Intake stop")
     Intake.stop()
 
 def scoreupstart():
+    print("Score up")
     Intake.spin(FORWARD)
     TopMotor.spin(FORWARD)
 
 def scoredownstart():
+    print("Score down")
     Intake.spin(REVERSE)
     TopMotor.spin(FORWARD)
 
 def scorestop():
+    print("Score stop")
     Intake.stop()
     TopMotor.stop()
 
@@ -987,6 +1009,15 @@ def recordright():
         controller_1.screen.print("Right Stopped.")
         recording_state=0
 
+def aton():
+    log.recording.run("Right")
+
+def driver():
+    pass
+
+Intake.set_velocity(100, PERCENT)
+TopMotor.set_velocity(100, PERCENT)
+comp=Competition(driver, aton)
 controller_1.axis2.changed(rightside)
 controller_1.axis3.changed(leftside)
 controller_1.buttonR1.pressed(intakeup)

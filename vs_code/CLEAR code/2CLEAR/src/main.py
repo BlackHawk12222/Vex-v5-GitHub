@@ -361,18 +361,21 @@ class Logging:
             Controller=controller_1
         elif controller==2:
             Controller=controller_2
-        
         if Controller.axis1.position()!=0 and self.axis1 != Controller.axis1.position():
+            #speed=timer.time()
             degrees=monitormotor1.position(DEGREES)
             monitormotor1.set_position(0, DEGREES)
             log.add("DC1", "Controller_%d_Axis1: %d Moved: %d Degrees"%(controller, Controller.axis1.position(), degrees))
             self.axis1=Controller.axis1.position()
+            #print(str(timer.time() - speed) + " Controller Time")
         elif 0 == Controller.axis1.position() and self.axis1!=0:
+            #speed=timer.time()
             degrees=monitormotor1.position(DEGREES)
             monitormotor2.set_position(0, DEGREES)
             log.add("DC1", "Controller_%d_Axis1: %d Moved: %d Degrees"%(controller, self.axis1, degrees))
             log.add("DC1", "Controller_%d_Axis1: %d Moved: %d Degrees"%(controller, 0, 0))
             self.axis1=0
+            #print(str(timer.time() - speed) + " Controller Time")
 
         if Controller.axis2.position()!=0 and self.axis2 != Controller.axis2.position():
             degrees=monitormotor2.position(DEGREES)
@@ -628,12 +631,10 @@ class Archive:
         self.format="utf-8"
         self.logfile=""
         self.loglist=[]
-        if not brain.sdcard.exists("loghistory.txt"):
-            brain.sdcard.savefile("loghistory.txt")
     
     def log(self):
         speed=timer.time()
-        arcivelist=[]
+        archivelist=""
         try:
             if brain.sdcard.is_inserted():
                 log.adding=False
@@ -642,10 +643,10 @@ class Archive:
                 self.loglist=self.logfile.split("\n")
                 for i in range(len(self.loglist)):
                     logline=self.loglist[i].split(':')
-                    if len(logline)>=3:
+                    if len(logline)>=4:
                         loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
-                        arcivelist=[str(reversecodes.get(loglines)) + str(logline[0])]
-                brain.sdcard.appendfile("loghistory.txt", bytearray(str(arcivelist), log.format))
+                        archivelist=str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n' + archivelist
+                brain.sdcard.appendfile("loghistory.txt", bytearray(archivelist, log.format))
                 self.logfile=""
                 log.adding=True
             else:
@@ -659,7 +660,7 @@ class Archive:
                     for line in self.logfile:
                         logline=line.split(':')
                         loglines= str(logline[1]) + str(logline[2])
-                        brain.sdcard.appendfile("loghistory.txt", bytearray(str(reversecodes.get(loglines)) + str(logline[0]), log.format))
+                        brain.sdcard.appendfile("loghistory.txt", bytearray(str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n', log.format))
                 log.adding=True
             else:
                 print("Put in the sdcard.")
@@ -788,13 +789,18 @@ class Log:
                 }
         # Setting up Log Files if they dont exist 
         if brain.sdcard.is_inserted():
+            log_lines=[]
+            loghistory_lines=[]
             if not brain.sdcard.exists("Log.csv"):
                 brain.sdcard.savefile("Log.csv", bytearray("log Start: \n", self.format))
-
-            if not brain.sdcard.exists("index.txt"):
-                brain.sdcard.savefile("index.txt", bytearray("0", self.format))
-            index_content=brain.sdcard.loadfile("index.txt")
-            self.index=int(index_content.decode(self.format))
+                self.index=0
+            else:
+                log_lines=brain.sdcard.loadfile("Log.csv").decode(self.format).split("\n")
+                if not brain.sdcard.exists("loghistory.txt"):
+                    brain.sdcard.savefile("loghistory.txt", bytearray("", self.format))                   
+                else:
+                    loghistory_lines=brain.sdcard.loadfile("loghistory.txt").decode(self.format).split("\n")
+                self.index=len(log_lines) + len(loghistory_lines) - 1
         else:
             self.index=0
 
@@ -803,12 +809,10 @@ class Log:
             print(", %s [%s] %s %s"%(self.index, log_time, self.codes.get(add_code), add_details))
             if brain.sdcard.is_inserted():
                 brain.sdcard.appendfile("Log.csv", bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), self.format))
-                brain.sdcard.savefile("index.txt", bytearray("%d"%(self.index), self.format))
                 if self.recording.record:
                     brain.sdcard.appendfile(self.recording.Aton, bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), self.format))       
             self.index+=1
         
-    
     def add_codes(self, code_add, Decoded_text):
         self.codes.update({code_add : "%s"%(Decoded_text)})
 

@@ -53,7 +53,7 @@ console_precision = 0
 # 	Author:       Micah Bow                                                    #
 # 	Created:      1/27/2026, 12:42 PM                                          #
 #   Last Edited:  2/23/2026, 10:00 PM                                          #
-# 	Description:  Capture, Logging, Encoding, Archiving , Recording.           #
+# 	Description:  Capture, Logging, Encoding, Archiving ,Recording.           #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
@@ -95,19 +95,19 @@ class Drivetrain:
         power_state = self.drivetrain_power_monitoring.get('pair', 0)
         
         if (right_motor.temperature()>70 or left_motor.temperature()>70) and (temp_state==0 or temp_state==2):
-            log.add("ED1", "Temp: %s"%(max(right_motor.temperature(), left_motor.temperature())))
+            log.add("ED1", "Temp %s"%(max(right_motor.temperature(), left_motor.temperature())))
             self.drivetrain_temp_monitoring['pair'] = 1
         elif (right_motor.temperature()>50 or left_motor.temperature()>50) and (temp_state==0 or temp_state==1):
-            log.add("WD0", "Temp: %s"%(max(right_motor.temperature(), left_motor.temperature())))
+            log.add("WD0", "Temp %s"%(max(right_motor.temperature(), left_motor.temperature())))
             self.drivetrain_temp_monitoring['pair'] = 2
         elif right_motor.temperature()<=50 and left_motor.temperature()<=50 and (temp_state==1 or temp_state==2):
             self.drivetrain_temp_monitoring['pair'] = 0
         
         if right_motor.power(PowerUnits.WATT)>40 or left_motor.power(PowerUnits.WATT)>40 and (power_state==0 or power_state==2):
-            log.add("ED3", "Power: %s"%(max(right_motor.power(PowerUnits.WATT), left_motor.power(PowerUnits.WATT))))
+            log.add("ED3", "Power %s"%(max(right_motor.power(PowerUnits.WATT), left_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['pair'] = 1
         elif right_motor.power(PowerUnits.WATT)>30 or left_motor.power(PowerUnits.WATT)>30 and (power_state==0 or power_state==1):
-            log.add("WD3", "Power: %s"%(max(right_motor.power(PowerUnits.WATT), left_motor.power(PowerUnits.WATT))))
+            log.add("WD3", "Power %s"%(max(right_motor.power(PowerUnits.WATT), left_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['pair'] = 2
         elif right_motor.power(PowerUnits.WATT)<=30 and left_motor.power(PowerUnits.WATT)<=30 and (power_state==1 or power_state==2):
             self.drivetrain_power_monitoring['pair'] = 0
@@ -143,19 +143,19 @@ class Drivetrain:
         power_state = self.drivetrain_power_monitoring.get('four_motor', 0)
         
         if (front_left_motor.temperature()>70 or front_right_motor.temperature()>70 or back_left_motor.temperature()>70 or back_right_motor.temperature()>70) and (temp_state==0 or temp_state==2):
-            log.add("ED1", "Temp: %s"%(max(front_left_motor.temperature(), front_right_motor.temperature(), back_left_motor.temperature(), back_right_motor.temperature())))
+            log.add("ED1", "Temp %s"%(max(front_left_motor.temperature(), front_right_motor.temperature(), back_left_motor.temperature(), back_right_motor.temperature())))
             self.drivetrain_temp_monitoring['four_motor']=1
         elif (front_left_motor.temperature()>50 or front_right_motor.temperature()>50 or back_left_motor.temperature()>50 or back_right_motor.temperature()>50) and (temp_state==0 or temp_state==1):
-            log.add("WD0", "Temp: %s"%(max(front_left_motor.temperature(), front_right_motor.temperature(), back_left_motor.temperature(), back_right_motor.temperature())))
+            log.add("WD0", "Temp %s"%(max(front_left_motor.temperature(), front_right_motor.temperature(), back_left_motor.temperature(), back_right_motor.temperature())))
             self.drivetrain_temp_monitoring['four_motor']=2
         elif (front_left_motor.temperature()<=50 and front_right_motor.temperature()<=50 and back_left_motor.temperature()<=50 and back_right_motor.temperature()<=50) and (temp_state==1 or temp_state==2):
             self.drivetrain_temp_monitoring['four_motor']=0
         
         if front_left_motor.power(PowerUnits.WATT)>40 or front_right_motor.power(PowerUnits.WATT)>40 or back_left_motor.power(PowerUnits.WATT)>40 or back_right_motor.power(PowerUnits.WATT)>40 and (power_state==0 or power_state==2):
-            log.add("ED3", "Power: %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
+            log.add("ED3", "Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['four_motor']=1
         elif front_left_motor.power(PowerUnits.WATT)>30 or front_right_motor.power(PowerUnits.WATT)>30 or back_left_motor.power(PowerUnits.WATT)>30 or back_right_motor.power(PowerUnits.WATT)>30 and (power_state==0 or power_state==1):  
-            log.add("WD3", "Power: %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
+            log.add("WD3", "Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['four_motor']=2
         elif front_left_motor.power(PowerUnits.WATT)<=30 and front_right_motor.power(PowerUnits.WATT)<=30 and back_left_motor.power(PowerUnits.WATT)<=30 and back_right_motor.power(PowerUnits.WATT)<=30 and (power_state==1 or power_state==2):
             self.drivetrain_power_monitoring['four_motor']=0
@@ -205,19 +205,19 @@ class Drivetrain:
         power_state = self.drivetrain_power_monitoring.get('six_motor', 0)
         
         if (front_left_motor.temperature(PERCENT)>70 or front_right_motor.temperature(PERCENT)>70 or middle_left_motor.temperature(PERCENT)>70 or middle_right_motor.temperature(PERCENT)>70 or back_left_motor.temperature(PERCENT)>70 or back_right_motor.temperature(PERCENT)>70) and (temp_state==0 or temp_state==2):
-            log.add("ED1", "Temp: %s"%(max(front_left_motor.temperature(PERCENT), front_right_motor.temperature(PERCENT), middle_left_motor.temperature(PERCENT), middle_right_motor.temperature(PERCENT), back_left_motor.temperature(PERCENT), back_right_motor.temperature(PERCENT))))
+            log.add("ED1", "Temp %s"%(max(front_left_motor.temperature(PERCENT), front_right_motor.temperature(PERCENT), middle_left_motor.temperature(PERCENT), middle_right_motor.temperature(PERCENT), back_left_motor.temperature(PERCENT), back_right_motor.temperature(PERCENT))))
             self.drivetrain_temp_monitoring['six_motor']=1
         elif (front_left_motor.temperature(PERCENT)>50 or front_right_motor.temperature(PERCENT)>50 or middle_left_motor.temperature(PERCENT)>50 or middle_right_motor.temperature(PERCENT)>50 or back_left_motor.temperature(PERCENT)>50 or back_right_motor.temperature(PERCENT)>50) and (temp_state==0 or temp_state==1):
-            log.add("WD0", "Temp: %s"%(max(front_left_motor.temperature(PERCENT), front_right_motor.temperature(PERCENT), middle_left_motor.temperature(PERCENT), middle_right_motor.temperature(PERCENT), back_left_motor.temperature(PERCENT), back_right_motor.temperature(PERCENT))))
+            log.add("WD0", "Temp %s"%(max(front_left_motor.temperature(PERCENT), front_right_motor.temperature(PERCENT), middle_left_motor.temperature(PERCENT), middle_right_motor.temperature(PERCENT), back_left_motor.temperature(PERCENT), back_right_motor.temperature(PERCENT))))
             self.drivetrain_temp_monitoring['six_motor']=2
         elif (front_left_motor.temperature(PERCENT)<=50 and front_right_motor.temperature(PERCENT)<=50 and middle_left_motor.temperature(PERCENT)<=50 and middle_right_motor.temperature(PERCENT)<=50 and back_left_motor.temperature(PERCENT)<=50 and back_right_motor.temperature(PERCENT)<=50) and (temp_state==1 or temp_state==2):
             self.drivetrain_temp_monitoring['six_motor']=0
         
         if front_left_motor.power(PowerUnits.WATT)>40 or front_right_motor.power(PowerUnits.WATT)>40 or middle_left_motor.power(PowerUnits.WATT)>40 or middle_right_motor.power(PowerUnits.WATT)>40 or back_left_motor.power(PowerUnits.WATT)>40 or back_right_motor.power(PowerUnits.WATT)>40 and (power_state==0 or power_state==2):
-            log.add("ED3", "Power: %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), middle_left_motor.power(PowerUnits.WATT), middle_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
+            log.add("ED3", "Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), middle_left_motor.power(PowerUnits.WATT), middle_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['six_motor']=1
         elif front_left_motor.power(PowerUnits.WATT)>30 or front_right_motor.power(PowerUnits.WATT)>30 or middle_left_motor.power(PowerUnits.WATT)>30 or middle_right_motor.power(PowerUnits.WATT)>30 or back_left_motor.power(PowerUnits.WATT)>30 or back_right_motor.power(PowerUnits.WATT)>30 and (power_state==0 or power_state==1):  
-            log.add("WD3", "Power: %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), middle_left_motor.power(PowerUnits.WATT), middle_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
+            log.add("WD3", "Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), middle_left_motor.power(PowerUnits.WATT), middle_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['six_motor']=2
         elif front_left_motor.power(PowerUnits.WATT)<=30 and front_right_motor.power(PowerUnits.WATT)<=30 and middle_left_motor.power(PowerUnits.WATT)<=30 and middle_right_motor.power(PowerUnits.WATT)<=30 and back_left_motor.power(PowerUnits.WATT)<=30 and back_right_motor.power(PowerUnits.WATT)<=30 and (power_state==1 or power_state==2):
             self.drivetrain_power_monitoring['six_motor']=0
@@ -302,19 +302,19 @@ class Logging:
             self.motor_disconnected[motor_id] = 0
         
         if motor.temperature()>70 and (self.motor_temp_monitoring[motor_id]==0 or self.motor_temp_monitoring[motor_id]==2):
-            log.add("EM0", "Motor %s Temp: %s"%(motor, motor.temperature(PERCENT)))
+            log.add("EM0", "Motor %s Temp %s"%(motor, motor.temperature(PERCENT)))
             self.motor_temp_monitoring[motor_id]=1
         elif motor.temperature()>50 and (self.motor_temp_monitoring[motor_id]==0 or self.motor_temp_monitoring[motor_id]==1):
-            log.add("WM0", "Motor %s Temp: %s"%(motor, motor.temperature(PERCENT)))
+            log.add("WM0", "Motor %s Temp %s"%(motor, motor.temperature(PERCENT)))
             self.motor_temp_monitoring[motor_id]=2
         elif motor.temperature()<=50 and (self.motor_temp_monitoring[motor_id]==2 or self.motor_temp_monitoring[motor_id]==1):
             self.motor_temp_monitoring[motor_id]=0
         
         if motor.power(PowerUnits.WATT)>40 and (self.motor_power_monitoring[motor_id]==0 or self.motor_power_monitoring[motor_id]==2):
-            log.add("EM2", "Motor %s Power: %s"%(motor, motor.power(PowerUnits.WATT)))
+            log.add("EM2", "Motor %s Power %s"%(motor, motor.power(PowerUnits.WATT)))
             self.motor_power_monitoring[motor_id]=1
         elif motor.power(PowerUnits.WATT)>30 and (self.motor_power_monitoring[motor_id]==0 or self.motor_power_monitoring[motor_id]==1):
-            log.add("WM1", "Motor %s Power: %s"%(motor, motor.power(PowerUnits.WATT)))
+            log.add("WM1", "Motor %s Power %s"%(motor, motor.power(PowerUnits.WATT)))
             self.motor_power_monitoring[motor_id]=2
         elif motor.power(PowerUnits.WATT)<=30 and (self.motor_power_monitoring[motor_id]==1 or self.motor_power_monitoring[motor_id]==2):
             self.motor_power_monitoring[motor_id]=0
@@ -365,52 +365,52 @@ class Logging:
             #speed=timer.time()
             degrees=monitormotor1.position(DEGREES)
             monitormotor1.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis1: %d Moved: %d Degrees"%(controller, Controller.axis1.position(), degrees))
+            log.add("DC1", "Controller_%d_Axis1 %d Moved %d Degrees"%(controller, Controller.axis1.position(), degrees))
             self.axis1=Controller.axis1.position()
             #print(str(timer.time() - speed) + " Controller Time")
         elif 0 == Controller.axis1.position() and self.axis1!=0:
             speed=timer.time()
             degrees=monitormotor1.position(DEGREES)
             monitormotor2.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis1: %d Moved: %d Degrees"%(controller, self.axis1, degrees))
-            log.add("DC1", "Controller_%d_Axis1: %d Moved: %d Degrees"%(controller, 0, 0))
+            log.add("DC1", "Controller_%d_Axis1 %d Moved %d Degrees"%(controller, self.axis1, degrees))
+            log.add("DC1", "Controller_%d_Axis1 %d Moved %d Degrees"%(controller, 0, 0))
             self.axis1=0
             print(str(timer.time() - speed) + " Controller Time")
 
         if Controller.axis2.position()!=0 and self.axis2 != Controller.axis2.position():
             degrees=monitormotor2.position(DEGREES)
             monitormotor2.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis2: %d Moved: %d Degrees"%(controller, Controller.axis2.position(), degrees))
+            log.add("DC1", "Controller_%d_Axis2 %d Moved %d Degrees"%(controller, Controller.axis2.position(), degrees))
             self.axis2=Controller.axis2.position()
         elif 0 == Controller.axis2.position() and self.axis2!=0:
             degrees=monitormotor2.position(DEGREES)
             monitormotor2.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis2: %d Moved: %d Degrees"%(controller, self.axis2, degrees))
-            log.add("DC1", "Controller_%d_Axis2: %d Moved: %d Degrees"%(controller, 0, 0))
+            log.add("DC1", "Controller_%d_Axis2 %d Moved %d Degrees"%(controller, self.axis2, degrees))
+            log.add("DC1", "Controller_%d_Axis2 %d Moved %d Degrees"%(controller, 0, 0))
             self.axis2=0
 
         if Controller.axis3.position()!=0 and self.axis3 != Controller.axis3.position():
             degrees=monitormotor3.position(DEGREES)
             monitormotor3.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis3: %d Moved: %d Degrees"%(controller, Controller.axis3.position(), degrees))
+            log.add("DC1", "Controller_%d_Axis3 %d Moved %d Degrees"%(controller, Controller.axis3.position(), degrees))
             self.axis3=Controller.axis3.position()
         elif 0 == Controller.axis3.position() and self.axis3!=0:
             degrees=monitormotor3.position(DEGREES)
             monitormotor3.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis3: %d Moved: %d Degrees"%(controller, self.axis3, degrees))
-            log.add("DC1", "Controller_%d_Axis3: %d Moved: %d Degrees"%(controller, 0, 0))
+            log.add("DC1", "Controller_%d_Axis3 %d Moved %d Degrees"%(controller, self.axis3, degrees))
+            log.add("DC1", "Controller_%d_Axis3 %d Moved %d Degrees"%(controller, 0, 0))
             self.axis3=0
 
         if Controller.axis4.position()!=0 and self.axis4 != Controller.axis4.position():
             degrees=monitormotor4.position(DEGREES)
             monitormotor4.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis4: %d Moved: %d Degrees"%(controller, Controller.axis4.position(), degrees))
+            log.add("DC1", "Controller_%d_Axis4 %d Moved %d Degrees"%(controller, Controller.axis4.position(), degrees))
             self.axis4=Controller.axis4.position()
         elif 0 == Controller.axis4.position() and self.axis4!=0:
             degrees=monitormotor4.position(DEGREES)
             monitormotor4.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis4: %d Moved: %d Degrees"%(controller, self.axis4, degrees))
-            log.add("DC1", "Controller_%d_Axis4: %d Moved: %d Degrees"%(controller, 0, 0))
+            log.add("DC1", "Controller_%d_Axis4 %d Moved %d Degrees"%(controller, self.axis4, degrees))
+            log.add("DC1", "Controller_%d_Axis4 %d Moved %d Degrees"%(controller, 0, 0))
             self.axis4=0
 
         if Controller.buttonA.pressing() and self.button_a==True:
@@ -497,13 +497,13 @@ class Logging:
         elif Controller.buttonR2.pressing()==False and self.button_R2==False:
             log.add("DC0", "Controller_%d_Button R2 Released"%(controller))
             self.button_R2=True
-        
+
     def variable(self, name, value):
         valueid=id(name)
         if valueid not in self.variables:
             self.variables[valueid]=0
         if value != self.variables[valueid]:
-            log.add("DV0", "Variable %s Value: %s"%(name, value))
+            log.add("DV0", "Variable %s Value %s"%(name, value))
             self.variables[valueid] = value
 
 class Recording:
@@ -547,8 +547,8 @@ class Recording:
         else:
             print("Put in sdcard.")
 
-    def encode(self, Aton, Forward, right, left, other1start=none, other1stop=none, other1button=none, other2start=none, other2stop=none, other2button=none, other3start=none, other3stop=none, other3button=none, other4start=none, other4stop=none, other4button=none, other5start=none, other5stop=none, other5button=none, other6start=none, other6stop=none, other6button=none):
-        if brain.sdcard.is_inserted:
+    def encode(self, Aton, right, left, other1start=none, other1stop=none, other1button=none, other2start=none, other2stop=none, other2button=none, other3start=none, other3stop=none, other3button=none, other4start=none, other4stop=none, other4button=none, other5start=none, other5stop=none, other5button=none, other6start=none, other6stop=none, other6button=none):
+        if brain.sdcard.is_inserted():
             filename=Aton + ".txt"
             self.record=False
             brain.sdcard.savefile(filename)
@@ -880,7 +880,7 @@ def logging_setup():
             log.add("DC1", 0)
         elif 240 < optical_9.hue() < 260:
             log.add("DC0", 0)
-        wait(100, MSEC)
+        wait(50, MSEC)
 
 log.archive.log()
 
@@ -1018,7 +1018,7 @@ def recordright():
         controller_1.screen.clear_line(3)
         controller_1.screen.set_cursor(3,1)
         controller_1.screen.print("Right Stopped.")
-        log.recording.encode("Right", forwardmove, rightmove, leftmove, intakeupstart, intakestop, "R1", intakedownstart, intakestop, "R2", scoreupstart, scorestop, "L1", scoredownstart, scorestop, "L2", loadertoggle, none, "B", pushertoggle, none, "DOWN")
+        log.recording.encode("Right", rightmove, leftmove, intakeupstart, intakestop, "R1", intakedownstart, intakestop, "R2", scoreupstart, scorestop, "L1", scoredownstart, scorestop, "L2", loadertoggle, none, "B", pushertoggle, none, "DOWN")
         controller_1.screen.clear_line(3)
         controller_1.screen.set_cursor(3,1)
         controller_1.screen.print("Right Encoded.")
@@ -1043,4 +1043,11 @@ controller_1.buttonL2.pressed(scoredown)
 controller_1.buttonDown.pressed(pushertoggle)
 controller_1.buttonB.pressed(loadertoggle)
 controller_1.buttonRight.pressed(recordright)
+while True:
+    while optical_9.hue() < 20 or optical_9.hue() > 340:
+        if 340 < optical_9.hue() <20:
+            colorsorting.spin(FORWARD, 12, VOLT)
+        else:
+            colorsorting.spin(REVERSE, 12, VOLT)
+    colorsorting.stop()
 

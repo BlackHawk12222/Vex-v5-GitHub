@@ -846,6 +846,14 @@ class Log:
             print("No SD Card Inserted Cannot Read Log")
 
 
+Right1.set_stopping(HOLD)
+Right2.set_stopping(HOLD)
+Right3.set_stopping(HOLD)
+left1.set_stopping(HOLD)
+left2.set_stopping(HOLD)
+left3.set_stopping(HOLD)
+
+
 log=Log()
 log.add_codes("DZ0", ":Colorsort DATA: detected red.:")
 log.add_codes("DZ1", ":Colorsort DATA: detected blue.:")

@@ -369,13 +369,13 @@ class Logging:
             self.axis1=Controller.axis1.position()
             #print(str(timer.time() - speed) + " Controller Time")
         elif 0 == Controller.axis1.position() and self.axis1!=0:
-            #speed=timer.time()
+            speed=timer.time()
             degrees=monitormotor1.position(DEGREES)
             monitormotor2.set_position(0, DEGREES)
             log.add("DC1", "Controller_%d_Axis1: %d Moved: %d Degrees"%(controller, self.axis1, degrees))
             log.add("DC1", "Controller_%d_Axis1: %d Moved: %d Degrees"%(controller, 0, 0))
             self.axis1=0
-            #print(str(timer.time() - speed) + " Controller Time")
+            print(str(timer.time() - speed) + " Controller Time")
 
         if Controller.axis2.position()!=0 and self.axis2 != Controller.axis2.position():
             degrees=monitormotor2.position(DEGREES)
@@ -580,27 +580,14 @@ class Recording:
                         print("found controller")
                         if "Axis" in str(prelist):
                             print("found axis")
-                            if "Controller_1_Axis2" in str(prelist):
+                            if "Controller_1_Axis3" in str(prelist):
                                 brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(left[1]), str(prelist[11]).replace("'", ''), str(prelist[13]).replace("'", '')), log.format))
-                            elif "Controller_1_Axis3" in str(prelist):
+                            elif "Controller_1_Axis2" in str(prelist):
                                 brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(right[1]), str(prelist[11]).replace("'", ''), str(prelist[13]).replace("'", '')), log.format))
 
                         elif "Button" in str(prelist):
                             print("found button")
                             if "Released" in str(prelist):
-                                if other1button in str(prelist[11]):
-                                    brain.sdcard.appendfile(filename, bytearray(str(other1start[1]) + '(), ', log.format))
-                                elif other2button in str(prelist[11]):
-                                    brain.sdcard.appendfile(filename, bytearray(str(other2start[1]) + '(), ', log.format))
-                                elif other3button in str(prelist[11]):
-                                    brain.sdcard.appendfile(filename, bytearray(str(other3start[1]) + '(), ', log.format))
-                                elif other4button in str(prelist[11]):
-                                    brain.sdcard.appendfile(filename, bytearray(str(other4start[1]) + '(), ', log.format))
-                                elif other5button in str(prelist[11]):
-                                    brain.sdcard.appendfile(filename, bytearray(str(other5start[1]) + '(), ', log.format))
-                                elif other6button in str(prelist[11]):
-                                    brain.sdcard.appendfile(filename, bytearray(str(other6start[1]) + '(), ', log.format))
-                            elif "Pressed" in str(prelist):
                                 if other1button in str(prelist[11]):
                                     brain.sdcard.appendfile(filename, bytearray(str(other1stop[1]) + '(), ', log.format))
                                 elif other2button in str(prelist[11]):
@@ -613,6 +600,19 @@ class Recording:
                                     brain.sdcard.appendfile(filename, bytearray(str(other5stop[1]) + '(), ', log.format))
                                 elif other6button in str(prelist[11]):
                                     brain.sdcard.appendfile(filename, bytearray(str(other6stop[1]) + '(), ', log.format))
+                            elif "Pressed" in str(prelist):
+                                if other1button in str(prelist[11]):
+                                    brain.sdcard.appendfile(filename, bytearray(str(other1start[1]) + '(), ', log.format))
+                                elif other2button in str(prelist[11]):
+                                    brain.sdcard.appendfile(filename, bytearray(str(other2start[1]) + '(), ', log.format))
+                                elif other3button in str(prelist[11]):
+                                    brain.sdcard.appendfile(filename, bytearray(str(other3start[1]) + '(), ', log.format))
+                                elif other4button in str(prelist[11]):
+                                    brain.sdcard.appendfile(filename, bytearray(str(other4start[1]) + '(), ', log.format))
+                                elif other5button in str(prelist[11]):
+                                    brain.sdcard.appendfile(filename, bytearray(str(other5start[1]) + '(), ', log.format))
+                                elif other6button in str(prelist[11]):
+                                    brain.sdcard.appendfile(filename, bytearray(str(other6start[1]) + '(), ', log.format))
                         
                         if len(prelist2) >= 3:
                             brain.sdcard.appendfile(filename, bytearray("wait(" + str(abs(int(prelist[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')) - int(prelist2[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')))) + ", MSEC), ", log.format))
@@ -880,7 +880,7 @@ def logging_setup():
             log.add("DC1", 0)
         elif 240 < optical_9.hue() < 260:
             log.add("DC0", 0)
-        wait(25, MSEC)
+        wait(100, MSEC)
 
 log.archive.log()
 
@@ -894,7 +894,7 @@ def rightside():
     Right3.spin(FORWARD, rightspeed, VOLT)
 
 def leftside():
-    leftspeed = controller_1.axis3.position()/8.33
+    leftspeed = controller_1.axis3.position() / 8.33
     left1.spin(FORWARD, leftspeed, VOLT)
     left2.spin(FORWARD, leftspeed, VOLT)
     left3.spin(FORWARD, leftspeed, VOLT)
@@ -1015,11 +1015,15 @@ def recordright():
         recording_state=1
     elif recording_state == 1:
         log.recording.stop("Right")
-        log.recording.encode("Right", forwardmove, rightmove, leftmove, intakeupstart, intakestop, "R1", intakedownstart, intakestop, "R2", scoreupstart, scorestop, "L1", scoredownstart, scorestop, "L2", loadertoggle, loadertoggle, "B", pushertoggle, pushertoggle, "DOWN")
         controller_1.screen.clear_line(3)
         controller_1.screen.set_cursor(3,1)
         controller_1.screen.print("Right Stopped.")
+        log.recording.encode("Right", forwardmove, rightmove, leftmove, intakeupstart, intakestop, "R1", intakedownstart, intakestop, "R2", scoreupstart, scorestop, "L1", scoredownstart, scorestop, "L2", loadertoggle, none, "B", pushertoggle, none, "DOWN")
+        controller_1.screen.clear_line(3)
+        controller_1.screen.set_cursor(3,1)
+        controller_1.screen.print("Right Encoded.")
         recording_state=0
+
 
 def aton():
     log.recording.run("Right")
@@ -1039,3 +1043,4 @@ controller_1.buttonL2.pressed(scoredown)
 controller_1.buttonDown.pressed(pushertoggle)
 controller_1.buttonB.pressed(loadertoggle)
 controller_1.buttonRight.pressed(recordright)
+

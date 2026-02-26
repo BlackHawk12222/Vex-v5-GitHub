@@ -632,6 +632,8 @@ class Archive:
             brain.sdcard.savefile("loghistory.txt")
     
     def log(self):
+        speed=timer.time()
+        arcivelist=[]
         try:
             if brain.sdcard.is_inserted():
                 log.adding=False
@@ -642,7 +644,8 @@ class Archive:
                     logline=self.loglist[i].split(':')
                     if len(logline)>=3:
                         loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
-                        brain.sdcard.appendfile("loghistory.txt", bytearray(str(reversecodes.get(loglines)) + str(logline[0]), log.format))
+                        arcivelist=[str(reversecodes.get(loglines)) + str(logline[0])]
+                brain.sdcard.appendfile("loghistory.txt", bytearray(str(arcivelist), log.format))
                 self.logfile=""
                 log.adding=True
             else:
@@ -661,6 +664,8 @@ class Archive:
             else:
                 print("Put in the sdcard.")
         log.clear()
+        print(str(timer.time() - speed))
+
     
     def recording(self, name):
         try:
@@ -871,7 +876,7 @@ def logging_setup():
             log.add("DC1", 0)
         elif 240 < optical_9.hue() < 260:
             log.add("DC0", 0)
-        wait(50, MSEC)
+        wait(25, MSEC)
 
 log.archive.log()
 
@@ -941,13 +946,16 @@ def loadertoggle():
 
 def leftmove(leftspeed, degrees):
     print("left: ", leftspeed)
-    leftspeed=leftspeed/8.33
+    if leftspeed != 0:
+        leftspeed=leftspeed/8.33
     left1.spin(FORWARD, leftspeed, VOLT)
     left2.spin(FORWARD, leftspeed, VOLT)
     left3.spin(FORWARD, leftspeed, VOLT)
 
 def rightmove(rightspeed, degrees):
     print("Right: ", rightspeed)
+    if rightspeed != 0:
+        rightspeed=rightspeed/8.33
     Right1.spin(FORWARD, rightspeed, VOLT)
     Right2.spin(FORWARD, rightspeed, VOLT)
     Right3.spin(FORWARD, rightspeed, VOLT)

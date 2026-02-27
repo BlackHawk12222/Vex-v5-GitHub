@@ -11,4 +11,20 @@ The most fundamental part is the capture the code is capable of capturing a lot 
 
 Section three, Logging:
 
+The logging of the code is part of the capture and is the main object named Log. The log.add() function takes any code in the dictionary "codes" and produces a full string to log into an sdcard the logging always try's the print into the vex terminal but will only log into an sdcard if the card is in when the code starts. Then, the "codes" dictionary can add any code the user wants into the dictionary by a simple calling of a function every startup called log.add_codes(), this makes it a lot easyer to adapt to robots with special features.
 
+Section four, Archive:
+
+Archiving the logging code is a big part of the code as if it is not it will bog down the sdcard and take up a lot of space after long use or long recording sessions. How it works is by turning the full strings back into the codes that made them. This makes a much smaller file that will not bog down the sdcard nearly as fast.
+
+Section five, Recording:
+
+recoding with this code is very different than the code that was originally intended. It works by using the capture of the code, because of the code using a time based movement we need the polling of the capture to be VERY fast in the current config we have it does from 5 Hz to 1000 Hz to do this it uses a Cashe and after looping the capture 300 times will unload the Cashe and put it into the Aton file and the log file. Even with this casheing it is very resource intensive and will take a while to encode and a lot of battery.
+
+Section six, Encoding:
+
+The encoding is simple in idea but a pain to make it work as it takes the logs strings and makes them into the function calls that the encode function inputs provide with the button than activates them and turns it into the exact python code needed to run it as fast as possible.
+
+Section seven, Other:
+
+Now that the basics of what the code does now i will get into the deep details of how it works and how everything is linked together to make a fast and useful code that can work with most vex v5 robots 

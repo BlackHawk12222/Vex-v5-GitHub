@@ -1120,20 +1120,6 @@ def rightmove(rightspeed, degrees):
     Right2.spin(FORWARD, rightspeed, VOLT)
     Right3.spin(FORWARD, rightspeed, VOLT)
 
-def forwardmove(leftspeed, rightspeed, leftdegrees, rightdegrees):
-    left1.set_velocity(leftspeed, PERCENT)
-    left1.spin_for(FORWARD, leftdegrees, DEGREES)
-    Right1.set_velocity(rightspeed, PERCENT)
-    Right1.spin_for(FORWARD, rightdegrees, DEGREES)
-    left2.set_velocity(leftspeed, PERCENT)
-    left2.spin_for(FORWARD, leftdegrees, DEGREES)
-    Right2.set_velocity(rightspeed, PERCENT)
-    Right2.spin_for(FORWARD, rightdegrees, DEGREES)
-    left3.set_velocity(leftspeed, PERCENT)
-    left3.spin_for(FORWARD, leftdegrees, DEGREES)
-    Right3.set_velocity(rightspeed, PERCENT)
-    Right3.spin_for(FORWARD, rightdegrees, DEGREES)
-
 def intakeupstart():
     print("Intake up")
     Intake.spin(FORWARD)
@@ -1206,4 +1192,3 @@ while True:
         else:
             colorsorting.spin(REVERSE, 12, VOLT)
     colorsorting.stop()
-

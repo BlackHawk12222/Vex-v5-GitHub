@@ -542,8 +542,8 @@ class Recording:
             preatonfile=""
             self.record=False
             try:
+                log.unloadcashe()
                 preatonfile=brain.sdcard.loadfile(filename).decode(log.format)
-                preatonfile=preatonfile + log.cashe
                 preatonlist=preatonfile.split("\n")
                 for i in range(len(preatonlist)):
                     prelist=preatonlist[i].split(' ')
@@ -653,9 +653,9 @@ class Recording:
                                     if "Axis" in str(prelist):
                                         print("found axis")
                                         if "Controller_1_Axis3" in str(prelist):
-                                            brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(left[1]), str(prelist[11]).replace("'", ''), str(prelist[13]).replace("'", '')), log.format))
+                                            brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(left[1]), str(prelist[10]).replace("'", ''), str(prelist[12]).replace("'", '')), log.format))
                                         elif "Controller_1_Axis2" in str(prelist):
-                                            brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(right[1]), str(prelist[11]).replace("'", ''), str(prelist[13]).replace("'", '')), log.format))
+                                            brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(right[1]), str(prelist[10]).replace("'", ''), str(prelist[12]).replace("'", '')), log.format))
 
                                     elif "Button" in str(prelist):
                                         print("found button")
@@ -700,9 +700,17 @@ class Recording:
 
     
     def run(self, Aton):
-        Atonfile=brain.sdcard.loadfile(Aton + ".txt")
-        exec(Atonfile.decode(log.format))
         log.add("DA3", Aton + ".txt")
+        try:
+            Atonfile=brain.sdcard.loadfile(Aton + ".txt")
+            exec(Atonfile.decode(log.format))
+        except MemoryError:
+            with open(Aton + ".txt", 'r') as f:
+                for line in f:
+                    for item in line.split(','):
+                        item = item.strip()
+                        if item:
+                            exec(item)
 
 class Archive:
     def __init__(self):
@@ -925,6 +933,7 @@ class Log:
                 brain.sdcard.appendfile("Log.csv", bytearray(self.cashe, self.format))
                 brain.sdcard.appendfile(self.recording.Aton, bytearray(self.cashe, self.format))
                 self.cashe=""
+                print("Unloaded cashe")
         else:
             print("Put in sdcard.")
 
@@ -989,7 +998,8 @@ log.add_codes("DZ1", ":Colorsort DATA: detected blue.:")
 
 def logging_setup():
     while True:
-        for i in range(100):
+        for i in range(300):
+            #speed=timer.time()
             try:
                 log.logging.drivetrain.six_motor(left1, Right1, left2, Right2, left3, Right3)
                 log.logging.motor(Intake)
@@ -1021,7 +1031,9 @@ def logging_setup():
             if log.recording.record==False:
                 wait(200, MSEC)
             else:
-                wait(5, MSEC)
+                #wait(1, MSEC)
+                pass
+            #print("Logging loop took: " + str(timer.time() - speed) + " MSEC")
         if log.recording.record:
             log.unloadcashe()
         

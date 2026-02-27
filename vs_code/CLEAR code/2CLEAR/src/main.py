@@ -362,32 +362,35 @@ class Logging:
         elif controller==2:
             Controller=controller_2
         if Controller.axis1.position()!=0 and self.axis1 != Controller.axis1.position():
-            #speed=timer.time()
+            
             degrees=monitormotor1.position(DEGREES)
             monitormotor1.set_position(0, DEGREES)
             log.add("DC1", "Controller_%d_Axis1 %d Moved %d Degrees"%(controller, Controller.axis1.position(), degrees))
             self.axis1=Controller.axis1.position()
-            #print(str(timer.time() - speed) + " Controller Time")
         elif 0 == Controller.axis1.position() and self.axis1!=0:
             speed=timer.time()
             degrees=monitormotor1.position(DEGREES)
             monitormotor2.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis1 %d Moved %d Degrees"%(controller, self.axis1, degrees))
+            #log.add("DC1", "Controller_%d_Axis1 %d Moved %d Degrees"%(controller, self.axis1, degrees))
             log.add("DC1", "Controller_%d_Axis1 %d Moved %d Degrees"%(controller, 0, 0))
             self.axis1=0
             print(str(timer.time() - speed) + " Controller Time")
 
         if Controller.axis2.position()!=0 and self.axis2 != Controller.axis2.position():
+            speed=timer.time()
             degrees=monitormotor2.position(DEGREES)
             monitormotor2.set_position(0, DEGREES)
             log.add("DC1", "Controller_%d_Axis2 %d Moved %d Degrees"%(controller, Controller.axis2.position(), degrees))
             self.axis2=Controller.axis2.position()
+            print(str(timer.time() - speed) + " Controller Time")
         elif 0 == Controller.axis2.position() and self.axis2!=0:
+            speed=timer.time()
             degrees=monitormotor2.position(DEGREES)
             monitormotor2.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis2 %d Moved %d Degrees"%(controller, self.axis2, degrees))
+            #log.add("DC1", "Controller_%d_Axis2 %d Moved %d Degrees"%(controller, self.axis2, degrees))
             log.add("DC1", "Controller_%d_Axis2 %d Moved %d Degrees"%(controller, 0, 0))
             self.axis2=0
+            print(str(timer.time() - speed) + " Controller Time")
 
         if Controller.axis3.position()!=0 and self.axis3 != Controller.axis3.position():
             degrees=monitormotor3.position(DEGREES)
@@ -397,7 +400,7 @@ class Logging:
         elif 0 == Controller.axis3.position() and self.axis3!=0:
             degrees=monitormotor3.position(DEGREES)
             monitormotor3.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis3 %d Moved %d Degrees"%(controller, self.axis3, degrees))
+            #log.add("DC1", "Controller_%d_Axis3 %d Moved %d Degrees"%(controller, self.axis3, degrees))
             log.add("DC1", "Controller_%d_Axis3 %d Moved %d Degrees"%(controller, 0, 0))
             self.axis3=0
 
@@ -409,7 +412,7 @@ class Logging:
         elif 0 == Controller.axis4.position() and self.axis4!=0:
             degrees=monitormotor4.position(DEGREES)
             monitormotor4.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis4 %d Moved %d Degrees"%(controller, self.axis4, degrees))
+            #log.add("DC1", "Controller_%d_Axis4 %d Moved %d Degrees"%(controller, self.axis4, degrees))
             log.add("DC1", "Controller_%d_Axis4 %d Moved %d Degrees"%(controller, 0, 0))
             self.axis4=0
 
@@ -534,7 +537,8 @@ class Recording:
             filename=str(Aton) + "_pre.txt"
             preatonfile=""
             self.record=False
-            preatonfile=brain.sdcard.loadfile(filename).decode(log.format)
+            #preatonfile=brain.sdcard.loadfile(filename).decode(log.format)
+            preatonfile=log.cashe
             preatonlist=preatonfile.split("\n")
             for i in range(len(preatonlist)):
                 prelist=preatonlist[i].split(' ')
@@ -544,6 +548,7 @@ class Recording:
             for i in range(len(self.postlist)):
                 self.poststring= self.poststring + str(self.postlist[i])
             brain.sdcard.savefile(filename, bytearray(str(self.poststring), log.format))
+            log.cashe=""
         else:
             print("Put in sdcard.")
 
@@ -554,7 +559,10 @@ class Recording:
             brain.sdcard.savefile(filename)
             prelist=[]
             preatonfile=brain.sdcard.loadfile(Aton + "_pre.txt")
-            preatonlist=preatonfile.decode(log.format).split("\n")
+            try:
+                preatonlist=preatonfile.decode(log.format).split("\n")
+            except AttributeError:
+                raise AttributeError("File cannot be decoded.")
             left=str(left).split(' ')
             right=str(right).split(' ')
             other1start=str(other1start).split(' ')
@@ -728,6 +736,7 @@ class Log:
         self.index=0
         self.adding=True
         self.format="utf-8"
+        self.cashe=""
         # Predefined Log Codes dictionary
         self.codes={
                     "ED1": ":Drivetrain ERROR: Motor(s) Criticaly Hot. Temp: ",
@@ -808,9 +817,14 @@ class Log:
         if self.adding == True:
             print(", %s [%s] %s %s"%(self.index, log_time, self.codes.get(add_code), add_details))
             if brain.sdcard.is_inserted():
-                brain.sdcard.appendfile("Log.csv", bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), self.format))
-                if self.recording.record:
-                    brain.sdcard.appendfile(self.recording.Aton, bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), self.format))       
+                if self.recording.record==False:
+                    brain.sdcard.appendfile("Log.csv", bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), self.format))
+                elif self.recording.record==False and self.cashe!="":
+                    brain.sdcard.appendfile("Log.csv", bytearray(self.cashe, self.format))
+                    #brain.sdcard.appendfile(self.recording.Aton, bytearray(self.cashe, self.format))
+                    #self.cashe=""
+                elif self.recording.record==True:
+                    self.cashe= self.cashe + ", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details)
             self.index+=1
         
     def add_codes(self, code_add, Decoded_text):
@@ -888,7 +902,11 @@ def logging_setup():
             log.add("DC1", 0)
         elif 240 < optical_9.hue() < 260:
             log.add("DC0", 0)
-        wait(50, MSEC)
+        if log.recording.record==False:
+            wait(50, MSEC)
+        else:
+            wait(5, MSEC)
+        
 
 log.archive.log()
 

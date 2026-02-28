@@ -189,6 +189,7 @@ class Drivetrain:
             self.drivetrain_disconnected[bl_id]=0
     
     def six_motor(self, front_left_motor, front_right_motor, middle_left_motor, middle_right_motor, back_left_motor, back_right_motor):
+        #speed=timer.time()
         fl_id = id(front_left_motor)
         fr_id = id(front_right_motor)
         ml_id = id(middle_left_motor)
@@ -262,6 +263,7 @@ class Drivetrain:
             self.drivetrain_disconnected[bl_id]=1
         elif back_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[bl_id]==1:
             self.drivetrain_disconnected[bl_id]=0
+        #print(str(timer.time() - speed) + " Drivetrain Time")
 
 
 # logging for the log class
@@ -296,6 +298,7 @@ class Logging:
         self.variables={}
     
     def motor(self, motor):
+        #speed=timer.time()
         motor_id = id(motor) 
         
         # Initialize tracking
@@ -331,8 +334,10 @@ class Logging:
         
         if motor.temperature(PERCENT)!=2 and self.motor_disconnected[motor_id]==1:
             self.motor_disconnected[motor_id]=0
+        #print(str(timer.time() - speed) + " Motor Time")
 
     def Battery(self):
+        #speed=timer.time()
         # Battery monitoring for voltage, capacity, and current.
         if brain.battery.voltage(VoltageUnits.VOLT)<11 and (self.battery_voltage_monitoring==0 or self.battery_voltage_monitoring==2):
             log.add("EB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
@@ -361,9 +366,10 @@ class Logging:
             self.battery_current_monitoring=2
         elif brain.battery.current(CurrentUnits.AMP)<=5 and (self.battery_current_monitoring==1 or self.battery_current_monitoring==2):
             self.battery_current_monitoring=0
+        #print(str(timer.time() - speed) + " Battery Time")
     
     def controller(self, controller, monitormotor1=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor2=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor3=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor4=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)):
-        
+        #speed=timer.time()
         # controller assignment
         if controller==1:
             Controller=controller_1
@@ -509,14 +515,18 @@ class Logging:
         elif Controller.buttonR2.pressing()==False and self.button_R2==False:
             log.add("DC0", "Controller_%d_Button R2 Released"%(controller))
             self.button_R2=True
+        
+        #print(str(timer.time() - speed) + " Controller Time")
 
     def variable(self, name, value):
+        #speed=timer.time()
         valueid=id(name)
         if valueid not in self.variables:
             self.variables[valueid]=0
         if value != self.variables[valueid]:
             log.add("DV0", "Variable %s Value %s"%(name, value))
             self.variables[valueid] = value
+        #print(str(timer.time() - speed) + " Variable Time")
 
 class Recording:
     def __init__(self):
@@ -944,17 +954,16 @@ class Log:
             print("Put in sdcard.")
 
     def add(self, add_code, add_details):
+        speed=timer.time()
         if self.adding == True:
             print(", %s [%s] %s %s"%(self.index, log_time, self.codes.get(add_code), add_details))
             if brain.sdcard.is_inserted():
-                if self.recording.record==False:
+                if self.recording.record==True:
+                    self.cashe= self.cashe + ", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details)
+                elif self.recording.record==False:
                     brain.sdcard.appendfile("Log.csv", bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), self.format))
                 elif self.recording.record==False and self.cashe!="":
                     brain.sdcard.appendfile("Log.csv", bytearray(self.cashe, self.format))
-                    #brain.sdcard.appendfile(self.recording.Aton, bytearray(self.cashe, self.format))
-                    #self.cashe=""
-                elif self.recording.record==True:
-                    self.cashe= self.cashe + ", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details)
             self.index+=1
         
     def add_codes(self, code_add, Decoded_text):
@@ -1004,44 +1013,32 @@ log.add_codes("DZ1", ":Colorsort DATA: detected blue.:")
 
 def logging_setup():
     while True:
-        for i in range(300): # Ment only when recoding to tell it when to unload the cashe.
-            #speed=timer.time()
-            try:
-                log.logging.drivetrain.six_motor(left1, Right1, left2, Right2, left3, Right3)
-                log.logging.motor(Intake)
-                log.logging.motor(TopMotor)
-                log.logging.motor(colorsorting)
-            except Exception as e:
-                log.add("EE3", "Motor Logging Thread: %s"%(e))
-
-            try:
-                log.logging.Battery()
-            except Exception as e:
-                log.add("EE3", "Battery Logging Thread: %s"%(e))
-
-            try:
-                log.logging.controller(1, Right1, Right1, left1, left1)
-            except Exception as e:
-                log.add("EE3", "Controller Logging Thread: %s"%(e))
+        for i in range(200): # Ment only when recoding to tell it when to unload the cashe.
+            speed=timer.time()
+            log.logging.controller(1, Right1, Right1, left1, left1)
+            log.logging.drivetrain.six_motor(left1, Right1, left2, Right2, left3, Right3)
+            log.logging.motor(Intake)
+            log.logging.motor(TopMotor)
+            log.logging.motor(colorsorting)
+            log.logging.Battery()
+            log.logging.variable("Pusher", pusher_state)
+            log.logging.variable("Loader", loader_state)
             
-            try:
-                log.logging.variable("Pusher", pusher_state)
-                log.logging.variable("Loader", loader_state)
-            except Exception as e:
-                    log.add("EE3", "Variable Logging Thread: %s"%(e))
-            
-            if 340 < optical_9.hue() <20:
-                log.add("DC1", 0)
-            elif 240 < optical_9.hue() < 260:
-                log.add("DC0", 0)
+            #if 340 < optical_9.hue() <20:
+            #    log.add("DC1", 0)
+            #elif 240 < optical_9.hue() < 260:
+            #    log.add("DC0", 0)
+
             if log.recording.record==False:
                 wait(200, MSEC)
             else:
-                #wait(1, MSEC)
-                pass
+                print("Logging loop waited: " + str(abs(10 - (timer.time() - speed))) + " MSEC")
+                wait(abs(10 - (timer.time() - speed)), MSEC)
+                print("Logging loop took: " + str(timer.time() - speed) + " MSEC")
+                
             #print("Logging loop took: " + str(timer.time() - speed) + " MSEC")
         if log.recording.record:
-            log.unloadcashe()
+            Thread(log.unloadcashe)
         
 
 Thread(log.archive.log)

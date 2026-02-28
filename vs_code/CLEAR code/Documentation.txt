@@ -1,29 +1,1257 @@
 this is the documentation of the CLEAR code:
 
+Section zero, Code:
+
+Here is the code in it current form and an example of what you can do with this code:
+
+#region VEXcode Generated Robot Configuration
+from vex import *
+import urandom
+
+# Brain should be defined by default
+brain=Brain()
+
+# Robot configuration code
+controller_1 = Controller(PRIMARY)
+Right1 = Motor(Ports.PORT11, GearSetting.RATIO_6_1, False)
+Right2 = Motor(Ports.PORT13, GearSetting.RATIO_6_1, False)
+Right3 = Motor(Ports.PORT12, GearSetting.RATIO_6_1, True)
+left1 = Motor(Ports.PORT20, GearSetting.RATIO_6_1, True)
+left3 = Motor(Ports.PORT18, GearSetting.RATIO_6_1, False)
+optical_9 = Optical(Ports.PORT9)
+colorsorting = Motor(Ports.PORT15, GearSetting.RATIO_18_1, True)
+left2 = Motor(Ports.PORT19, GearSetting.RATIO_6_1, True)
+TopMotor = Motor(Ports.PORT1, GearSetting.RATIO_18_1, True)
+frontPiston = DigitalOut(brain.three_wire_port.a)
+inertial_for_auton = Inertial(Ports.PORT6)
+DeScorer = DigitalOut(brain.three_wire_port.b)
+Intake = Motor(Ports.PORT14, GearSetting.RATIO_6_1, True)
+
+# wait for rotation sensor to fully initialize
+wait(30, MSEC)
+
+
+# Make random actually random
+def initializeRandomSeed():
+    wait(100, MSEC)
+    random = brain.battery.voltage(MV) + brain.battery.current(CurrentUnits.AMP) * 100 + brain.timer.system_high_res()
+    urandom.seed(int(random))
+      
+# Set random seed 
+initializeRandomSeed()
+
+def play_vexcode_sound(sound_name):
+    print("VEXPlaySound:" + sound_name)
+    wait(5, MSEC)
+
+# add a small delay to make sure we don't print in the middle of the REPL header
+wait(200, MSEC)
+# clear the console to make sure we don't have the REPL in the console
+print("\033[2J")
+
+#endregion VEXcode Generated Robot Configuration
+screen_precision = 0
+console_precision = 0
+
+# ---------------------------------------------------------------------------- #
+#                                                                              #
+# 	Module:       CLEAR.py                                                 #
+# 	Author:       Micah Bow                                                #
+# 	Created:      1/27/2026, 12:42 PM                                      #
+#   Last Edited:  2/23/2026, 10:00 PM                                          #
+# 	Description:  Capture, Logging, Encoding, Archiving, Recording.        #
+#                                                                              #
+# ---------------------------------------------------------------------------- #
+
+
+# Timer for log time
+log_time= Timer()
+timer=Timer()
+controller_2=Controller(PARTNER)
+pusher_state = 0
+loader_state = 0
+record = 0
+controlleraxis2positionhistory = 0
+controlleraxis3positionhistory = 0
+recording_state=0
+
+def none():
+    return(none)
+
+class Drivetrain:
+    def __init__(self):
+        # Sets used for tracking of the drivetrain.
+        self.drivetrain_temp_monitoring={}
+        self.drivetrain_power_monitoring={}
+        self.drivetrain_disconnected={}
+    
+    def two_motor(self, left_motor, right_motor):
+        left_id = id(left_motor)
+        right_id = id(right_motor)
+        
+        # Initialize tracking
+        for motor_id in [left_id, right_id]:
+            if motor_id not in self.drivetrain_temp_monitoring:
+                self.drivetrain_temp_monitoring[motor_id] = 0
+            if motor_id not in self.drivetrain_power_monitoring:
+                self.drivetrain_power_monitoring[motor_id] = 0
+            if motor_id not in self.drivetrain_disconnected:
+                self.drivetrain_disconnected[motor_id] = 0
+        
+        temp_state = self.drivetrain_temp_monitoring.get('pair', 0)
+        power_state = self.drivetrain_power_monitoring.get('pair', 0)
+        
+        # Cheaks for the temps,  power, and cheaks for conecttions of the drivetrain.
+        if (right_motor.temperature()>70 or left_motor.temperature()>70) and (temp_state==0 or temp_state==2):
+            log.add("ED1", "Temp %s"%(max(right_motor.temperature(), left_motor.temperature())))
+            self.drivetrain_temp_monitoring['pair'] = 1
+        elif (right_motor.temperature()>50 or left_motor.temperature()>50) and (temp_state==0 or temp_state==1):
+            log.add("WD0", "Temp %s"%(max(right_motor.temperature(), left_motor.temperature())))
+            self.drivetrain_temp_monitoring['pair'] = 2
+        elif right_motor.temperature()<=50 and left_motor.temperature()<=50 and (temp_state==1 or temp_state==2):
+            self.drivetrain_temp_monitoring['pair'] = 0
+        
+        if right_motor.power(PowerUnits.WATT)>40 or left_motor.power(PowerUnits.WATT)>40 and (power_state==0 or power_state==2):
+            log.add("ED3", "Power %s"%(max(right_motor.power(PowerUnits.WATT), left_motor.power(PowerUnits.WATT))))
+            self.drivetrain_power_monitoring['pair'] = 1
+        elif right_motor.power(PowerUnits.WATT)>30 or left_motor.power(PowerUnits.WATT)>30 and (power_state==0 or power_state==1):
+            log.add("WD3", "Power %s"%(max(right_motor.power(PowerUnits.WATT), left_motor.power(PowerUnits.WATT))))
+            self.drivetrain_power_monitoring['pair'] = 2
+        elif right_motor.power(PowerUnits.WATT)<=30 and left_motor.power(PowerUnits.WATT)<=30 and (power_state==1 or power_state==2):
+            self.drivetrain_power_monitoring['pair'] = 0
+        
+        if right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[right_id]==0:
+            log.add("ED3", "Right Motor")
+            self.drivetrain_disconnected[right_id]=1
+        elif right_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[right_id]==1:
+            self.drivetrain_disconnected[right_id]=0
+
+        if left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[left_id]==0:
+            log.add("ED3", "Left Motor")            
+            self.drivetrain_disconnected[left_id]=1
+        elif left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[left_id]==1:
+            self.drivetrain_disconnected[left_id]=0
+        
+    def four_motor(self, front_left_motor, front_right_motor, back_left_motor, back_right_motor):
+        fl_id = id(front_left_motor)
+        fr_id = id(front_right_motor)
+        bl_id = id(back_left_motor)
+        br_id = id(back_right_motor)
+        
+        # Initialize tracking
+        for motor_id in [fl_id, fr_id, bl_id, br_id]:
+            if motor_id not in self.drivetrain_temp_monitoring:
+                self.drivetrain_temp_monitoring[motor_id] = 0
+            if motor_id not in self.drivetrain_power_monitoring:
+                self.drivetrain_power_monitoring[motor_id] = 0
+            if motor_id not in self.drivetrain_disconnected:
+                self.drivetrain_disconnected[motor_id] = 0
+        
+        temp_state = self.drivetrain_temp_monitoring.get('four_motor', 0)
+        power_state = self.drivetrain_power_monitoring.get('four_motor', 0)
+        
+        # Cheaks for the temps,  power, and cheaks for conecttions of the drivetrain.
+        if (front_left_motor.temperature()>70 or front_right_motor.temperature()>70 or back_left_motor.temperature()>70 or back_right_motor.temperature()>70) and (temp_state==0 or temp_state==2):
+            log.add("ED1", "Temp %s"%(max(front_left_motor.temperature(), front_right_motor.temperature(), back_left_motor.temperature(), back_right_motor.temperature())))
+            self.drivetrain_temp_monitoring['four_motor']=1
+        elif (front_left_motor.temperature()>50 or front_right_motor.temperature()>50 or back_left_motor.temperature()>50 or back_right_motor.temperature()>50) and (temp_state==0 or temp_state==1):
+            log.add("WD0", "Temp %s"%(max(front_left_motor.temperature(), front_right_motor.temperature(), back_left_motor.temperature(), back_right_motor.temperature())))
+            self.drivetrain_temp_monitoring['four_motor']=2
+        elif (front_left_motor.temperature()<=50 and front_right_motor.temperature()<=50 and back_left_motor.temperature()<=50 and back_right_motor.temperature()<=50) and (temp_state==1 or temp_state==2):
+            self.drivetrain_temp_monitoring['four_motor']=0
+        
+        if front_left_motor.power(PowerUnits.WATT)>40 or front_right_motor.power(PowerUnits.WATT)>40 or back_left_motor.power(PowerUnits.WATT)>40 or back_right_motor.power(PowerUnits.WATT)>40 and (power_state==0 or power_state==2):
+            log.add("ED3", "Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
+            self.drivetrain_power_monitoring['four_motor']=1
+        elif front_left_motor.power(PowerUnits.WATT)>30 or front_right_motor.power(PowerUnits.WATT)>30 or back_left_motor.power(PowerUnits.WATT)>30 or back_right_motor.power(PowerUnits.WATT)>30 and (power_state==0 or power_state==1):  
+            log.add("WD3", "Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
+            self.drivetrain_power_monitoring['four_motor']=2
+        elif front_left_motor.power(PowerUnits.WATT)<=30 and front_right_motor.power(PowerUnits.WATT)<=30 and back_left_motor.power(PowerUnits.WATT)<=30 and back_right_motor.power(PowerUnits.WATT)<=30 and (power_state==1 or power_state==2):
+            self.drivetrain_power_monitoring['four_motor']=0
+        
+        if front_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[fr_id]==0:
+            log.add("ED3", "Front Right Motor")
+            self.drivetrain_disconnected[fr_id]=1
+        elif front_right_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[fr_id]==1:
+            self.drivetrain_disconnected[fr_id]=0
+        
+        if front_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[fl_id]==0:
+            log.add("ED3", "Front Left Motor")            
+            self.drivetrain_disconnected[fl_id]=1
+        elif front_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[fl_id]==1:
+            self.drivetrain_disconnected[fl_id]=0
+        
+        if back_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[br_id]==0:
+            log.add("ED3", "Back Right Motor")
+            self.drivetrain_disconnected[br_id]=1
+        elif back_right_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[br_id]==1:
+            self.drivetrain_disconnected[br_id]=0
+        
+        if back_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[bl_id]==0:
+            log.add("ED3", "Back Left Motor")            
+            self.drivetrain_disconnected[bl_id]=1
+        elif back_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[bl_id]==1:
+            self.drivetrain_disconnected[bl_id]=0
+    
+    def six_motor(self, front_left_motor, front_right_motor, middle_left_motor, middle_right_motor, back_left_motor, back_right_motor):
+        fl_id = id(front_left_motor)
+        fr_id = id(front_right_motor)
+        ml_id = id(middle_left_motor)
+        mr_id = id(middle_right_motor)
+        bl_id = id(back_left_motor)
+        br_id = id(back_right_motor)
+        
+        # Initialize tracking
+        for motor_id in [fl_id, fr_id, ml_id, mr_id, bl_id, br_id]:
+            if motor_id not in self.drivetrain_temp_monitoring:
+                self.drivetrain_temp_monitoring[motor_id] = 0
+            if motor_id not in self.drivetrain_power_monitoring:
+                self.drivetrain_power_monitoring[motor_id] = 0
+            if motor_id not in self.drivetrain_disconnected:
+                self.drivetrain_disconnected[motor_id] = 0
+        
+        temp_state = self.drivetrain_temp_monitoring.get('six_motor', 0)
+        power_state = self.drivetrain_power_monitoring.get('six_motor', 0)
+        
+        # Cheaks for the temps,  power, and cheaks for conecttions of the drivetrain.
+        if (front_left_motor.temperature(PERCENT)>70 or front_right_motor.temperature(PERCENT)>70 or middle_left_motor.temperature(PERCENT)>70 or middle_right_motor.temperature(PERCENT)>70 or back_left_motor.temperature(PERCENT)>70 or back_right_motor.temperature(PERCENT)>70) and (temp_state==0 or temp_state==2):
+            log.add("ED1", "Temp %s"%(max(front_left_motor.temperature(PERCENT), front_right_motor.temperature(PERCENT), middle_left_motor.temperature(PERCENT), middle_right_motor.temperature(PERCENT), back_left_motor.temperature(PERCENT), back_right_motor.temperature(PERCENT))))
+            self.drivetrain_temp_monitoring['six_motor']=1
+        elif (front_left_motor.temperature(PERCENT)>50 or front_right_motor.temperature(PERCENT)>50 or middle_left_motor.temperature(PERCENT)>50 or middle_right_motor.temperature(PERCENT)>50 or back_left_motor.temperature(PERCENT)>50 or back_right_motor.temperature(PERCENT)>50) and (temp_state==0 or temp_state==1):
+            log.add("WD0", "Temp %s"%(max(front_left_motor.temperature(PERCENT), front_right_motor.temperature(PERCENT), middle_left_motor.temperature(PERCENT), middle_right_motor.temperature(PERCENT), back_left_motor.temperature(PERCENT), back_right_motor.temperature(PERCENT))))
+            self.drivetrain_temp_monitoring['six_motor']=2
+        elif (front_left_motor.temperature(PERCENT)<=50 and front_right_motor.temperature(PERCENT)<=50 and middle_left_motor.temperature(PERCENT)<=50 and middle_right_motor.temperature(PERCENT)<=50 and back_left_motor.temperature(PERCENT)<=50 and back_right_motor.temperature(PERCENT)<=50) and (temp_state==1 or temp_state==2):
+            self.drivetrain_temp_monitoring['six_motor']=0
+        
+        if front_left_motor.power(PowerUnits.WATT)>40 or front_right_motor.power(PowerUnits.WATT)>40 or middle_left_motor.power(PowerUnits.WATT)>40 or middle_right_motor.power(PowerUnits.WATT)>40 or back_left_motor.power(PowerUnits.WATT)>40 or back_right_motor.power(PowerUnits.WATT)>40 and (power_state==0 or power_state==2):
+            log.add("ED3", "Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), middle_left_motor.power(PowerUnits.WATT), middle_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
+            self.drivetrain_power_monitoring['six_motor']=1
+        elif front_left_motor.power(PowerUnits.WATT)>30 or front_right_motor.power(PowerUnits.WATT)>30 or middle_left_motor.power(PowerUnits.WATT)>30 or middle_right_motor.power(PowerUnits.WATT)>30 or back_left_motor.power(PowerUnits.WATT)>30 or back_right_motor.power(PowerUnits.WATT)>30 and (power_state==0 or power_state==1):  
+            log.add("WD3", "Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), middle_left_motor.power(PowerUnits.WATT), middle_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
+            self.drivetrain_power_monitoring['six_motor']=2
+        elif front_left_motor.power(PowerUnits.WATT)<=30 and front_right_motor.power(PowerUnits.WATT)<=30 and middle_left_motor.power(PowerUnits.WATT)<=30 and middle_right_motor.power(PowerUnits.WATT)<=30 and back_left_motor.power(PowerUnits.WATT)<=30 and back_right_motor.power(PowerUnits.WATT)<=30 and (power_state==1 or power_state==2):
+            self.drivetrain_power_monitoring['six_motor']=0
+
+        if front_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[fr_id]==0:
+            log.add("ED3", "Front Right Motor")
+            self.drivetrain_disconnected[fr_id]=1
+        elif front_right_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[fr_id]==1:
+            self.drivetrain_disconnected[fr_id]=0
+        
+        if front_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[fl_id]==0:
+            log.add("ED3", "FrontLeft Motor")            
+            self.drivetrain_disconnected[fl_id]=1
+        elif front_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[fl_id]==1:
+            self.drivetrain_disconnected[fl_id]=0
+        
+        if middle_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[mr_id]==0:
+            log.add("ED3", "Middle Right Motor")
+            self.drivetrain_disconnected[mr_id]=1
+        elif middle_right_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[mr_id]==1:
+            self.drivetrain_disconnected[mr_id]=0
+        
+        if middle_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[ml_id]==0:
+            log.add("ED3", "Middle Left Motor")            
+            self.drivetrain_disconnected[ml_id]=1
+        elif middle_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[ml_id]==1:
+            self.drivetrain_disconnected[ml_id]=0
+        
+        if back_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[br_id]==0:
+            log.add("ED3", "Back Right Motor")
+            self.drivetrain_disconnected[br_id]=1
+        elif back_right_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[br_id]==1:
+            self.drivetrain_disconnected[br_id]=0
+        
+        if back_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[bl_id]==0:
+            log.add("ED3", "Back Left Motor")        
+            self.drivetrain_disconnected[bl_id]=1
+        elif back_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[bl_id]==1:
+            self.drivetrain_disconnected[bl_id]=0
+
+
+# logging for the log class
+class Logging:
+
+    def __init__(self):
+        self.drivetrain=Drivetrain()
+        self.motor_temp_monitoring={} 
+        self.motor_power_monitoring={}  
+        self.motor_disconnected={}  
+        self.battery_voltage_monitoring=0
+        self.battery_capacity_monitoring=0
+        self.battery_current_monitoring=0
+        self.button_a=True
+        self.button_b=True
+        self.button_x=True
+        self.button_y=True
+        self.button_up=True
+        self.button_down=True
+        self.button_left=True
+        self.button_right=True
+        self.button_L1=True
+        self.button_L2=True
+        self.button_R1=True
+        self.button_R2=True
+        self.value_history=-1
+        self.axis1=0
+        self.axis2=0
+        self.axis3=0
+        self.axis4=0
+        self.tolrance=3
+        self.variables={}
+    
+    def motor(self, motor):
+        motor_id = id(motor) 
+        
+        # Initialize tracking
+        if motor_id not in self.motor_temp_monitoring:
+            self.motor_temp_monitoring[motor_id] = 0
+        if motor_id not in self.motor_power_monitoring:
+            self.motor_power_monitoring[motor_id] = 0
+        if motor_id not in self.motor_disconnected:
+            self.motor_disconnected[motor_id] = 0
+        
+        # Cheaks for the temps,  power, and cheaks for conecttions of motors(s).
+        if motor.temperature()>70 and (self.motor_temp_monitoring[motor_id]==0 or self.motor_temp_monitoring[motor_id]==2):
+            log.add("EM0", "Motor %s Temp %s"%(motor, motor.temperature(PERCENT)))
+            self.motor_temp_monitoring[motor_id]=1
+        elif motor.temperature()>50 and (self.motor_temp_monitoring[motor_id]==0 or self.motor_temp_monitoring[motor_id]==1):
+            log.add("WM0", "Motor %s Temp %s"%(motor, motor.temperature(PERCENT)))
+            self.motor_temp_monitoring[motor_id]=2
+        elif motor.temperature()<=50 and (self.motor_temp_monitoring[motor_id]==2 or self.motor_temp_monitoring[motor_id]==1):
+            self.motor_temp_monitoring[motor_id]=0
+        
+        if motor.power(PowerUnits.WATT)>40 and (self.motor_power_monitoring[motor_id]==0 or self.motor_power_monitoring[motor_id]==2):
+            log.add("EM2", "Motor %s Power %s"%(motor, motor.power(PowerUnits.WATT)))
+            self.motor_power_monitoring[motor_id]=1
+        elif motor.power(PowerUnits.WATT)>30 and (self.motor_power_monitoring[motor_id]==0 or self.motor_power_monitoring[motor_id]==1):
+            log.add("WM1", "Motor %s Power %s"%(motor, motor.power(PowerUnits.WATT)))
+            self.motor_power_monitoring[motor_id]=2
+        elif motor.power(PowerUnits.WATT)<=30 and (self.motor_power_monitoring[motor_id]==1 or self.motor_power_monitoring[motor_id]==2):
+            self.motor_power_monitoring[motor_id]=0
+        
+        if motor.temperature(PERCENT)==2 and self.motor_disconnected[motor_id]==0:
+            log.add("EM1", "Motor %s Disconnected"%(motor))
+            self.motor_disconnected[motor_id]=1
+        
+        if motor.temperature(PERCENT)!=2 and self.motor_disconnected[motor_id]==1:
+            self.motor_disconnected[motor_id]=0
+
+    def Battery(self):
+        # Battery monitoring for voltage, capacity, and current.
+        if brain.battery.voltage(VoltageUnits.VOLT)<11 and (self.battery_voltage_monitoring==0 or self.battery_voltage_monitoring==2):
+            log.add("EB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
+            self.battery_voltage_monitoring=1
+        elif brain.battery.voltage(VoltageUnits.VOLT)<12 and (self.battery_voltage_monitoring==0 or self.battery_voltage_monitoring==1):
+            log.add("WB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
+            self.battery_voltage_monitoring=2
+        elif brain.battery.voltage(VoltageUnits.VOLT)>=12 and (self.battery_voltage_monitoring==1 or self.battery_voltage_monitoring==2):
+            self.battery_voltage_monitoring=0
+        
+        if brain.battery.capacity()<25 and (self.battery_capacity_monitoring==0 or self.battery_capacity_monitoring==2):
+            log.add("EB1", "%s"%(brain.battery.capacity()))
+            self.battery_capacity_monitoring=1
+        
+        elif brain.battery.capacity()<50 and (self.battery_capacity_monitoring==0):
+            log.add("WB1", "%s"%(brain.battery.capacity()))
+            self.battery_capacity_monitoring=2
+        elif brain.battery.capacity()>=50 and (self.battery_capacity_monitoring==1 or self.battery_capacity_monitoring==2):
+            self.battery_capacity_monitoring=0
+        
+        if brain.battery.current(CurrentUnits.AMP)>15 and (self.battery_current_monitoring==0 or self.battery_current_monitoring==2):
+            log.add("EB2", "%s"%(brain.battery.current(CurrentUnits.AMP)))
+            self.battery_current_monitoring=1
+        elif brain.battery.current(CurrentUnits.AMP)>10 and (self.battery_current_monitoring==0 or self.battery_current_monitoring==1):
+            log.add("WB2", "%s"%(brain.battery.current(CurrentUnits.AMP)))
+            self.battery_current_monitoring=2
+        elif brain.battery.current(CurrentUnits.AMP)<=5 and (self.battery_current_monitoring==1 or self.battery_current_monitoring==2):
+            self.battery_current_monitoring=0
+    
+    def controller(self, controller, monitormotor1=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor2=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor3=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor4=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)):
+        
+        # controller assignment
+        if controller==1:
+            Controller=controller_1
+        elif controller==2:
+            Controller=controller_2
+
+        
+        if not log.recording.record: # Only logs when not recoding to save space on the recording file.
+            if Controller.axis1.position()!=0 and self.axis1 != Controller.axis1.position():
+                degrees=monitormotor1.position(DEGREES)
+                monitormotor1.set_position(0, DEGREES)
+                log.add("DC1", "Controller_%d_Axis1 %d Moved %d Degrees"%(controller, Controller.axis1.position(), degrees))
+                self.axis1=Controller.axis1.position()
+            elif 0 == Controller.axis1.position() and self.axis1!=0:
+                degrees=monitormotor1.position(DEGREES)
+                monitormotor1.set_position(0, DEGREES)
+                #log.add("DC1", "Controller_%d_Axis1 %d Moved %d Degrees"%(controller, self.axis1, degrees))
+                log.add("DC1", "Controller_%d_Axis1 %d Moved %d Degrees"%(controller, 0, 0))
+                self.axis1=0
+
+        if Controller.axis2.position()!=0 and self.axis2 != Controller.axis2.position():
+            #speed=timer.time()
+            degrees=monitormotor2.position(DEGREES)
+            monitormotor2.set_position(0, DEGREES)
+            log.add("DC1", "Controller_%d_Axis2 %d Moved %d Degrees"%(controller, Controller.axis2.position(), degrees))
+            self.axis2=Controller.axis2.position()
+            #print(str(timer.time() - speed) + " Controller Time")
+        elif 0 == Controller.axis2.position() and self.axis2!=0:
+            #speed=timer.time()
+            degrees=monitormotor2.position(DEGREES)
+            monitormotor2.set_position(0, DEGREES)
+            #log.add("DC1", "Controller_%d_Axis2 %d Moved %d Degrees"%(controller, self.axis2, degrees))
+            log.add("DC1", "Controller_%d_Axis2 %d Moved %d Degrees"%(controller, 0, 0))
+            self.axis2=0
+            #print(str(timer.time() - speed) + " Controller Time")
+
+        if Controller.axis3.position()!=0 and self.axis3 != Controller.axis3.position():
+            degrees=monitormotor3.position(DEGREES)
+            monitormotor3.set_position(0, DEGREES)
+            log.add("DC1", "Controller_%d_Axis3 %d Moved %d Degrees"%(controller, Controller.axis3.position(), degrees))
+            self.axis3=Controller.axis3.position()
+        elif 0 == Controller.axis3.position() and self.axis3!=0:
+            degrees=monitormotor3.position(DEGREES)
+            monitormotor3.set_position(0, DEGREES)
+            #log.add("DC1", "Controller_%d_Axis3 %d Moved %d Degrees"%(controller, self.axis3, degrees))
+            log.add("DC1", "Controller_%d_Axis3 %d Moved %d Degrees"%(controller, 0, 0))
+            self.axis3=0
+
+        if not log.recording.record:
+            if Controller.axis4.position()!=0 and self.axis4 != Controller.axis4.position():
+                degrees=monitormotor4.position(DEGREES)
+                monitormotor4.set_position(0, DEGREES)
+                log.add("DC1", "Controller_%d_Axis4 %d Moved %d Degrees"%(controller, Controller.axis4.position(), degrees))
+                self.axis4=Controller.axis4.position()
+            elif 0 == Controller.axis4.position() and self.axis4!=0:
+                degrees=monitormotor4.position(DEGREES)
+                monitormotor4.set_position(0, DEGREES)
+                #log.add("DC1", "Controller_%d_Axis4 %d Moved %d Degrees"%(controller, self.axis4, degrees))
+                log.add("DC1", "Controller_%d_Axis4 %d Moved %d Degrees"%(controller, 0, 0))
+                self.axis4=0
+
+        if Controller.buttonA.pressing() and self.button_a==True:
+            log.add("DC0", "Controller_%d_Button A Pressed"%(controller))
+            self.button_a=False
+        elif Controller.buttonA.pressing()==False and self.button_a==False:
+            log.add("DC0", "Controller_%d_Button A Released"%(controller))
+            self.button_a=True
+
+
+        if Controller.buttonB.pressing() and self.button_b==True:
+            log.add("DC0", "Controller_%d_Button B Pressed"%(controller))
+            self.button_b=False
+        elif Controller.buttonB.pressing()==False and self.button_b==False:
+            log.add("DC0", "Controller_%d_Button B Released"%(controller))
+            self.button_b=True
+
+        if Controller.buttonX.pressing() and self.button_x==True:
+            log.add("DC0", "Controller_%d_Button X Pressed"%(controller))
+            self.button_x=False
+        elif Controller.buttonX.pressing()==False and self.button_x==False:
+            log.add("DC0", "Controller_%d_Button X Released"%(controller))
+            self.button_x=True
+
+        if Controller.buttonY.pressing() and self.button_y==True:
+            log.add("DC0", "Controller_%d_Button Y Pressed"%(controller))
+            self.button_y=False
+        elif Controller.buttonY.pressing()==False and self.button_y==False:
+            log.add("DC0", "Controller_%d_Button Y Released"%(controller))
+            self.button_y=True
+
+        if Controller.buttonUp.pressing() and self.button_up==True:
+            log.add("DC0", "Controller_%d_Button UP Pressed"%(controller))
+            self.button_up=False
+        elif Controller.buttonUp.pressing()==False and self.button_up==False:
+            log.add("DC0", "Controller_%d_Button UP Released"%(controller))
+            self.button_up=True
+
+        if Controller.buttonDown.pressing() and self.button_down==True:
+            log.add("DC0", "Controller_%d_Button DOWN Pressed"%(controller))
+            self.button_down=False
+        elif Controller.buttonDown.pressing()==False and self.button_down==False:
+            log.add("DC0", "Controller_%d_Button DOWN Released"%(controller))
+            self.button_down=True
+
+        if Controller.buttonLeft.pressing() and self.button_left==True:
+            log.add("DC0", "Controller_%d_Button LEFT Pressed"%(controller))
+            self.button_left=False
+        elif Controller.buttonLeft.pressing()==False and self.button_left==False:
+            log.add("DC0", "Controller_%d_Button LEFT Released"%(controller))
+            self.button_left=True
+
+        if Controller.buttonRight.pressing() and self.button_right==True:
+            log.add("DC0", "Controller_%d_Button RIGHT Pressed"%(controller))
+            self.button_right=False
+        elif Controller.buttonRight.pressing()==False and self.button_right==False:
+            log.add("DC0", "Controller_%d_Button RIGHT Released"%(controller))
+            self.button_right=True
+
+        if Controller.buttonL1.pressing() and self.button_L1==True:
+            log.add("DC0", "Controller_%d_Button L1 Pressed"%(controller))
+            self.button_L1=False
+        elif Controller.buttonL1.pressing()==False and self.button_L1==False:
+            log.add("DC0", "Controller_%d_Button L1 Released"%(controller))
+            self.button_L1=True
+
+        if Controller.buttonL2.pressing() and self.button_L2==True:
+            log.add("DC0", "Controller_%d_Button L2 Pressed"%(controller))
+            self.button_L2=False
+        elif Controller.buttonL2.pressing()==False and self.button_L2==False:
+            log.add("DC0", "Controller_%d_Button L2 Released"%(controller))
+            self.button_L2=True
+
+        if Controller.buttonR1.pressing() and self.button_R1==True:
+            log.add("DC0", "Controller_%d_Button R1 Pressed"%(controller))
+            self.button_R1=False
+        elif Controller.buttonR1.pressing()==False and self.button_R1==False:
+            log.add("DC0", "Controller_%d_Button R1 Released"%(controller))
+            self.button_R1=True
+
+        if Controller.buttonR2.pressing() and self.button_R2==True:
+            log.add("DC0", "Controller_%d_Button R2 Pressed"%(controller))
+            self.button_R2=False
+        elif Controller.buttonR2.pressing()==False and self.button_R2==False:
+            log.add("DC0", "Controller_%d_Button R2 Released"%(controller))
+            self.button_R2=True
+
+    def variable(self, name, value):
+        valueid=id(name)
+        if valueid not in self.variables:
+            self.variables[valueid]=0
+        if value != self.variables[valueid]:
+            log.add("DV0", "Variable %s Value %s"%(name, value))
+            self.variables[valueid] = value
+
+class Recording:
+    def __init__(self):
+        self.record=False
+        self.timerecord=0
+        self.posttimerecord=0
+        self.Aton=""
+        self.postlist=[]
+        self.File=""
+        self.poststring=""
+
+
+    def start(self, Aton):
+        filename=str(Aton) + "_pre.txt"
+        if self.record == False:
+            if brain.sdcard.is_inserted():
+                self.record=True
+                brain.sdcard.savefile(filename, bytearray("\n", log.format))
+                self.Aton=Aton + "_pre.txt"
+                log.add("DA0", filename)
+            else:
+                print("Put in sdcard")
+        else:
+            print("Cant start recording because recording is on.")
+
+    def stop(self, Aton):
+        if brain.sdcard.is_inserted():
+            filename=str(Aton) + "_pre.txt"
+            preatonfile=""
+            self.record=False
+            try:
+                log.unloadcashe()
+                preatonfile=brain.sdcard.loadfile(filename).decode(log.format)
+                preatonlist=preatonfile.split("\n")
+                for i in range(len(preatonlist)):
+                    prelist=preatonlist[i].split(' ')
+                    if len(prelist) >= 3:
+                        if prelist[3] == ":Controller":
+                            self.postlist.append(str(prelist) + "\n")
+                for i in range(len(self.postlist)):
+                    self.poststring= self.poststring + str(self.postlist[i])
+                brain.sdcard.savefile(filename, bytearray(str(self.poststring), log.format))
+            except MemoryError:
+                preatonfile=""
+                with open(filename, 'r') as f:
+                    for line in f:
+                        prelist=line.split(' ')
+                    if len(prelist) >= 3:
+                        if prelist[3] == ":Controller":
+                            brain.sdcard.appendfile(filename, bytearray(str(prelist) + "\n", log.format))
+
+            log.cashe=""
+            log.add("DA1", filename)
+        else:
+            print("Put in sdcard.")
+
+    def encode(self, Aton, right, left, other1start=none, other1stop=none, other1button=none, other2start=none, other2stop=none, other2button=none, other3start=none, other3stop=none, other3button=none, other4start=none, other4stop=none, other4button=none, other5start=none, other5stop=none, other5button=none, other6start=none, other6stop=none, other6button=none):
+        if brain.sdcard.is_inserted():
+            filename=Aton + ".txt"
+            self.record=False
+            brain.sdcard.savefile(filename)
+            prelist=[]
+            left=str(left).split(' ')
+            right=str(right).split(' ')
+            other1start=str(other1start).split(' ')
+            other2start=str(other2start).split(' ')
+            other3start=str(other3start).split(' ')
+            other4start=str(other4start).split(' ')
+            other5start=str(other5start).split(' ')
+            other6start=str(other6start).split(' ')
+            other1stop=str(other1stop).split(' ')
+            other2stop=str(other2stop).split(' ')
+            other3stop=str(other3stop).split(' ')
+            other4stop=str(other4stop).split(' ')
+            other5stop=str(other5stop).split(' ')
+            other6stop=str(other6stop).split(' ')
+            try:
+                preatonfile=brain.sdcard.loadfile(Aton + "_pre.txt")
+                preatonlist=preatonfile.decode(log.format).split("\n")
+                for i in range(len(preatonlist)):
+                    prelist=str(preatonlist[i]).split(',')
+                    try:
+                        prelist2=str(preatonlist[i+1]).split(',')
+                    except IndexError:
+                        pass
+                    if len(prelist)>=12:
+                        if "Controller" in str(prelist):
+                            print("found controller")
+                            if "Axis" in str(prelist):
+                                print("found axis")
+                                if "Controller_1_Axis3" in str(prelist):
+                                    brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(left[1]), str(prelist[11]).replace("'", ''), str(prelist[13]).replace("'", '')), log.format))
+                                elif "Controller_1_Axis2" in str(prelist):
+                                    brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(right[1]), str(prelist[11]).replace("'", ''), str(prelist[13]).replace("'", '')), log.format))
+
+                            elif "Button" in str(prelist):
+                                print("found button")
+                                if "Released" in str(prelist):
+                                    if other1button in str(prelist[11]):
+                                        brain.sdcard.appendfile(filename, bytearray(str(other1stop[1]) + '(), ', log.format))
+                                    elif other2button in str(prelist[11]):
+                                        brain.sdcard.appendfile(filename, bytearray(str(other2stop[1]) + '(), ', log.format))
+                                    elif other3button in str(prelist[11]):
+                                        brain.sdcard.appendfile(filename, bytearray(str(other3stop[1]) + '(), ', log.format))
+                                    elif other4button in str(prelist[11]):
+                                        brain.sdcard.appendfile(filename, bytearray(str(other4stop[1]) + '(), ', log.format))
+                                    elif other5button in str(prelist[11]):
+                                        brain.sdcard.appendfile(filename, bytearray(str(other5stop[1]) + '(), ', log.format))
+                                    elif other6button in str(prelist[11]):
+                                        brain.sdcard.appendfile(filename, bytearray(str(other6stop[1]) + '(), ', log.format))
+                                elif "Pressed" in str(prelist):
+                                    if other1button in str(prelist[11]):
+                                        brain.sdcard.appendfile(filename, bytearray(str(other1start[1]) + '(), ', log.format))
+                                    elif other2button in str(prelist[11]):
+                                        brain.sdcard.appendfile(filename, bytearray(str(other2start[1]) + '(), ', log.format))
+                                    elif other3button in str(prelist[11]):
+                                        brain.sdcard.appendfile(filename, bytearray(str(other3start[1]) + '(), ', log.format))
+                                    elif other4button in str(prelist[11]):
+                                        brain.sdcard.appendfile(filename, bytearray(str(other4start[1]) + '(), ', log.format))
+                                    elif other5button in str(prelist[11]):
+                                        brain.sdcard.appendfile(filename, bytearray(str(other5start[1]) + '(), ', log.format))
+                                    elif other6button in str(prelist[11]):
+                                        brain.sdcard.appendfile(filename, bytearray(str(other6start[1]) + '(), ', log.format))
+                            
+                            if len(prelist2) >= 3:
+                                brain.sdcard.appendfile(filename, bytearray("wait(" + str(abs(int(prelist[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')) - int(prelist2[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')))) + ", MSEC), ", log.format))
+            except MemoryError: # If the preatonfile is too big to load into memory, it will read the file line by line and write to the new file.
+                    preatonlist=[]
+                    with open(Aton + "_pre.txt", 'r') as f:
+                        for line in f:
+                            prelist=str(line).split(' ')
+                            print(prelist)
+                            try:
+                                prelist2=str(next(f)).split(' ')
+                            except StopIteration:
+                                prelist2=[]
+                            if len(prelist)>=12:
+                                if "Controller" in str(prelist):
+                                    print("found controller")
+                                    if "Axis" in str(prelist):
+                                        print("found axis")
+                                        if "Controller_1_Axis3" in str(prelist):
+                                            brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(left[1]), str(prelist[10]).replace("'", ''), str(prelist[12]).replace("'", '')), log.format))
+                                        elif "Controller_1_Axis2" in str(prelist):
+                                            brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(right[1]), str(prelist[10]).replace("'", ''), str(prelist[12]).replace("'", '')), log.format))
+
+                                    elif "Button" in str(prelist):
+                                        print("found button")
+                                        if "Released" in str(prelist):
+                                            if other1button in str(prelist[11]):
+                                                brain.sdcard.appendfile(filename, bytearray(str(other1stop[1]) + '(), ', log.format))
+                                            elif other2button in str(prelist[11]):
+                                                brain.sdcard.appendfile(filename, bytearray(str(other2stop[1]) + '(), ', log.format))
+                                            elif other3button in str(prelist[11]):
+                                                brain.sdcard.appendfile(filename, bytearray(str(other3stop[1]) + '(), ', log.format))
+                                            elif other4button in str(prelist[11]):
+                                                brain.sdcard.appendfile(filename, bytearray(str(other4stop[1]) + '(), ', log.format))
+                                            elif other5button in str(prelist[11]):
+                                                brain.sdcard.appendfile(filename, bytearray(str(other5stop[1]) + '(), ', log.format))
+                                            elif other6button in str(prelist[11]):
+                                                brain.sdcard.appendfile(filename, bytearray(str(other6stop[1]) + '(), ', log.format))
+                                        elif "Pressed" in str(prelist):
+                                            if other1button in str(prelist[11]):
+                                                brain.sdcard.appendfile(filename, bytearray(str(other1start[1]) + '(), ', log.format))
+                                            elif other2button in str(prelist[11]):
+                                                brain.sdcard.appendfile(filename, bytearray(str(other2start[1]) + '(), ', log.format))
+                                            elif other3button in str(prelist[11]):
+                                                brain.sdcard.appendfile(filename, bytearray(str(other3start[1]) + '(), ', log.format))
+                                            elif other4button in str(prelist[11]):
+                                                brain.sdcard.appendfile(filename, bytearray(str(other4start[1]) + '(), ', log.format))
+                                            elif other5button in str(prelist[11]):
+                                                brain.sdcard.appendfile(filename, bytearray(str(other5start[1]) + '(), ', log.format))
+                                            elif other6button in str(prelist[11]):
+                                                brain.sdcard.appendfile(filename, bytearray(str(other6start[1]) + '(), ', log.format))
+                                    
+                                    if len(prelist2) >= 3:
+                                        print(prelist[2].replace("[", '').replace("]", '').replace("'", '').replace("'", ''))
+                                        print(prelist2[2].replace("[", '').replace("]", '').replace("'", '').replace("'", ''))
+                                        brain.sdcard.appendfile(filename, bytearray("wait(" + str(abs(int(prelist[2].replace("[", '').replace("]", '').replace("'", '').replace("'", '').replace(",", '')) - int(prelist2[2].replace("[", '').replace("]", '').replace("'", '').replace("'", '').replace(",", '')))) + ", MSEC), ", log.format))
+
+            
+            log.add("DA2", filename)
+            print("Encode done.")            
+                            
+        else:
+            print("Put in sdcard.")
+
+    
+    def run(self, Aton):
+        log.add("DA3", Aton + ".txt")
+        try:
+            Atonfile=brain.sdcard.loadfile(Aton + ".txt")
+            exec(Atonfile.decode(log.format))
+        except MemoryError:
+            with open(Aton + ".txt", 'r') as f:
+                for line in f:
+                    for item in line.split(','):
+                        item = item.strip()
+                        if item:
+                            exec(item)
+
+class Archive:
+    def __init__(self):
+        self.format="utf-8"
+        self.logfile=""
+        self.loglist=[]
+    
+    def log(self):
+        speed=timer.time()
+        archivelist=""
+        try:
+            if brain.sdcard.is_inserted():
+                log.adding=False
+                reversecodes={value: key for key, value in log.codes.items()}
+                self.logfile=brain.sdcard.loadfile("Log.csv").decode(log.format)
+                self.loglist=self.logfile.split("\n")
+                for i in range(len(self.loglist)):
+                    logline=self.loglist[i].split(':')
+                    if len(logline)>=4:
+                        loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
+                        archivelist=str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n' + archivelist
+                brain.sdcard.appendfile("loghistory.txt", bytearray(archivelist, log.format))
+                self.logfile=""
+                log.adding=True
+            else:
+                print("Put in the sdcard.")
+        except MemoryError: # If the log file is too big to load into memory, it will read the file line by line and write to the new file.
+            if brain.sdcard.is_inserted():
+                log.adding=False
+                reversecodes={value: key for key, value in log.codes.items()}
+                with open("Log.csv", 'r') as file:
+                    for line in file:
+                        speed2=timer.time()
+                        logline=line.split(':')
+                        if len(logline)>=4:
+                            loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
+                            brain.sdcard.appendfile("loghistory.txt", bytearray(str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n', log.format))
+                        print("Archiving took: " + str(timer.time() - speed2) + " MSEC")
+                log.adding=True
+            else:
+                print("Put in the sdcard.")
+        log.clear()
+        print("Archive took: " + str(timer.time() - speed) + " MSEC")
+
+    
+    def recording(self, name):
+        try:
+            if brain.sdcard.is_inserted():
+                archname=(name - ".txt") + "history.txt"
+                reversecodes={value: key for key, value in log.codes.items()}
+                self.file=brain.sdcard.loadfile(name).decode(log.format)
+                self.list=self.file.split("\n")
+                for i in range(len(self.list)):
+                    line=self.list[i].split(':')
+                    if len(line)>=3:
+                        lines= ":" + str(line[1]) + ":" + str(line[2]) + ": "
+                        brain.sdcard.appendfile(archname, bytearray(str(reversecodes.get(lines)) + str(line[0]), log.format))
+                self.logfile=""
+                brain.sdcard.savefile(name)
+            else:
+                print("Put in the sdcard.")
+        except MemoryError: # Same thing as the last two exceptions.
+            self.file=""
+            if brain.sdcard.is_inserted():
+                archname=(name - ".txt") + "history.txt"
+                reversecodes={value: key for key, value in log.codes.items()}
+                with open(name, 'r') as self.file:
+                    for line in self.file:
+                        logline=line.split(':')
+                        loglines= str(logline[1]) + str(logline[2])
+                        brain.sdcard.appendfile(archname, bytearray(str(reversecodes.get(loglines)) + str(logline[0]), log.format))                        
+                brain.sdcard.savefile(name)
+            else:
+                print("Put in the sdcard.")
+    
+    def recall(self, name):
+        filename=name - "history"
+        try:
+            file=brain.sdcard.loadfile(name).decode(log.format)
+            brain.sdcard.savefile(filename)
+            filelist=file.split(',')
+            for i in range(len(filelist)):
+                prelist=filelist[i].split(' ')
+                prelist2=filelist[i+1].split(' ')
+                if len(prelist) >= 2 and len(prelist2) >=1:
+                    brain.sdcard.appendfile(filename, bytearray(str(prelist2[0]) + str(prelist2[1]) + str(log.codes.get(prelist[2])), log.format))
+        except MemoryError: # Same thing as the last three exceptions.
+            with open(name, 'r') as file:
+                for line in file:
+                    prelist=line.split(' ')
+                    try:
+                        prelist2=next(file).split(' ')
+                    except StopIteration:
+                        pass
+                    if len(prelist) >= 2 and len(prelist2) >=1:
+                        brain.sdcard.appendfile(filename, bytearray(str(prelist2[0]) + str(prelist2[1]) + str(log.codes.get(prelist[2])), log.format))
+
+class Log:
+    def __init__(self):
+        self.logging=Logging()
+        self.recording=Recording()
+        self.archive=Archive()
+        self.index=0
+        self.adding=True
+        self.format="utf-8"
+        self.cashe=""
+        # Predefined Log Codes dictionary
+        self.codes={
+                    "ED1": ":Drivetrain ERROR: Motor(s) Criticaly Hot. Temp: ",
+                    "ED2": ":Drivetrain ERROR: Motor(s) Very High Power. Power: ",
+                    "ED3": ":Drivetrain ERROR: Motor(s) Disconnected. Name: ",
+                    "WD0": ":Drivetrain WARNING: Motor(s) Hot. Temp: ",
+                    "WD1": ":Drivetrain WARNING: High Current Draw. Current: ",
+                    "WD2": ":Drivetrain WARNING: Low Voltage. Voltage: ",
+                    "WD3": ":Drivetrain WARNING: High Power. Power: ",
+                    "DD0": ":Drivetrain Data: Velocity Changed. New Velocity: ",
+                    "DD1": ":Drivetrain Data: Done Spinning.",
+                    "EI0": ":Intake ERROR: No response from intake system.:",
+                    "EI1": ":Intake ERROR: Motor Criticaly Hot. Temp: ",
+                    "WI0": ":Intake WARNING: Motor Hot. Temp: ",
+                    "WI1": ":Intake WARNING: High Current Draw. Current: ",
+                    "WI2": ":Intake WARNING: High Voltage. Voltage: ",
+                    "WI3": ":Intake WARNING: High Power. Power: ",
+                    "DI0": ":Intake INFO: Done Spinning.:",
+                    "DI1": ":Intake INFO: Velocity Changed. New Velocity: ",
+                    "EB0": ":Battery ERROR: Critically Low Voltage. Voltage: ",
+                    "EB1": ":Battery ERROR: Critically Low Battery. Capacity: ",
+                    "EB2": ":Battery ERROR: Critically High Current. Current: ",
+                    "WB0": ":Battery WARNING: Low Voltage. Voltage: ",
+                    "WB1": ":Battery WARNING: Low Battery. capacity: ",
+                    "EA0": ":Aton ERROR: No response from auton system.:",
+                    "EA1": ":Aton ERROR: Inertial Sensor Failure.:",
+                    "EA2": ":Aton ERROR: Move failed. Move:",
+                    "WA0": ":Aton WARNING: Inertial Sensor Calibrating.:",
+                    "WA1": ":Aton WARNING: Left Aton Missing.:",
+                    "WA2": ":Aton WARNING: Right Aton Missing.:",
+                    "DA0": ":Aton DATA: Recording Started.:",
+                    "DA1": ":Aton DATA: Recording Stopped.:",
+                    "DA2": ":Aton DATA: Recording Saved.:",
+                    "DA3": ":Aton DATA: Recording Loaded.:",
+                    "DA4": ":Aton DATA: Move Forward MM. MM: ",
+                    "DA5": ":Aton DATA: Drive Left Degrees. Degrees: ",
+                    "DA6": ":Aton DATA: Drive Right Degrees. Degrees: ",
+                    "DA7": ":Aton DATA: Curved Move. Left Degrees: , Right Degrees: ",
+                    "DA8": ":Aton DATA: Turn to Rotation. Degrees: ",
+                    "DA9": ":Aton DATA: Turn Degrees. Degrees: ",
+                    "DA10": ":Aton DATA: Loaded Right Aton from SD Card.:",
+                    "DA11": ":Aton DATA: Loaded Left Aton from SD Card.:",
+                    "DS0": ":System DATA: Init setup complete.:",
+                    "DS1": ":System DATA: Driver Init setup complete.:",
+                    "DS2": ":System DATA: Aton Init setup complete.:",
+                    "EM0": ":Motor ERROR: Motor Criticaly Hot. Temp: ",
+                    "EM1": ":Motor ERROR: Motor Disconnected. Name: ",
+                    "EM2": ":Motor ERROR: Motor Very High Power. Power: ",
+                    "WM0": ":Motor WARNING: Motor Hot. Temp: ",
+                    "WM1": ":Motor WARNING: Motor High Power. Power: ",
+                    "EE0": ":Exeption ERROR: Type Error. Problem in: ",
+                    "EE1": ":Exeption ERROR: Value Error. Problem in: ",
+                    "EE2": ":Exeption ERROR: Name Error. Problem in: ",
+                    "EE3": ":Exeption ERROR: Exeption Used. Problem in: ",
+                    "EE4": ":Exeption ERROR: Attribute Error. Problem in: ",
+                    "DV0": ":Variable DATA: Variable Changed. Name: ",
+                    "DC0": ":Controller DATA: Button Pressed. Button: ",
+                    "DC1": ":Controller DATA: Axis Changed. Axis: ",
+                }
+        # Setting up Log Files if they dont exist 
+        if brain.sdcard.is_inserted():
+            log_lines=[]
+            loghistory_lines=[]
+            log_number=0
+            if not brain.sdcard.exists("Log.csv"):
+                brain.sdcard.savefile("Log.csv", bytearray("log Start: \n", self.format))
+                self.index=0
+            else:
+                try:
+                    log_lines=brain.sdcard.loadfile("Log.csv").decode(self.format).split("\n")
+                except MemoryError: # If the log file is too big to load into memory, it will read the file line by line and count the number of lines to set the index.
+                    print("Log.csv cannot be decoded.")
+                    log_lines=[]
+                    with open("Log.csv", 'r') as log_file:
+                        for line in log_file:
+                            log_number+=1
+                    print("Log done")
+                except OSError: # same as the memory error but for an os error that works the same way.
+                    print("Log.csv cannot be decoded trying step open.")
+                    log_lines=[]
+                    with open("Log.csv", 'r') as log_file:
+                        for line in log_file:
+                            log_number+=1
+                    print("Log done")
+                if not brain.sdcard.exists("loghistory.txt"):
+                    brain.sdcard.savefile("loghistory.txt", bytearray("", self.format))                   
+                else:
+                    try:
+                        loghistory_lines=brain.sdcard.loadfile("loghistory.txt").decode(self.format).split("\n")
+                    except MemoryError: # If the log history file is too big to load into memory, it will read the file line by line and count the number of lines to set the index.
+                        print("loghistory.txt cannot be decoded.")
+                        loghistory_lines=[]
+                        with open("loghistory.txt", 'r') as loghistory_file:
+                            for line in loghistory_file:
+                                log_number+=1
+                        print("loghistory done")
+                    except OSError: # same as the memory error but for an os error that works the same way.
+                        print("loghistory.txt cannot be decoded trying step open.")
+                        loghistory_lines=[]
+                        with open("loghistory.txt", 'r') as loghistory_file:
+                            for line in loghistory_file:
+                                log_number+=1
+                        print("loghistory done")
+                self.index=len(log_lines) + len(loghistory_lines) + log_number - 1
+                log_lines=[]
+                loghistory_lines=[]
+                log_number=0
+        else:
+            self.index=0
+
+    def unloadcashe(self): # this is only ment for the recording.
+        if brain.sdcard.is_inserted():
+            if self.cashe!="":
+                brain.sdcard.appendfile("Log.csv", bytearray(self.cashe, self.format))
+                brain.sdcard.appendfile(self.recording.Aton, bytearray(self.cashe, self.format))
+                self.cashe=""
+                print("Unloaded cashe")
+        else:
+            print("Put in sdcard.")
+
+    def add(self, add_code, add_details):
+        if self.adding == True:
+            print(", %s [%s] %s %s"%(self.index, log_time, self.codes.get(add_code), add_details))
+            if brain.sdcard.is_inserted():
+                if self.recording.record==False:
+                    brain.sdcard.appendfile("Log.csv", bytearray(", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details), self.format))
+                elif self.recording.record==False and self.cashe!="":
+                    brain.sdcard.appendfile("Log.csv", bytearray(self.cashe, self.format))
+                    #brain.sdcard.appendfile(self.recording.Aton, bytearray(self.cashe, self.format))
+                    #self.cashe=""
+                elif self.recording.record==True:
+                    self.cashe= self.cashe + ", %s [%s] %s %s \n"%(self.index, log_time, self.codes.get(add_code), add_details)
+            self.index+=1
+        
+    def add_codes(self, code_add, Decoded_text):
+        self.codes.update({code_add : "%s"%(Decoded_text)})
+
+    def remove_codes(self, code_remove):
+        if code_remove in self.codes:
+            self.codes.pop(code_remove)
+        else:
+            print("Code Not Found In Log Codes")
+
+    def edit_codes(self, code_edit, new_decoded_text):
+        if code_edit in self.codes:
+            self.codes.update({code_edit : "%s"%( new_decoded_text)})
+
+    # Clearing the log file
+    def clear(self):
+        if brain.sdcard.is_inserted():
+            brain.sdcard.savefile("Log.csv", bytearray("Log Start: \n", self.format))
+            brain.sdcard.savefile("index.txt", bytearray("0", self.format))
+        else:
+            print("No SD Card Inserted Cannot Clear Log")
+    
+    # Displaying log codes dictionary
+    def table(self):
+        print(self.codes)
+
+    def read(self):
+        if brain.sdcard.is_inserted():
+            log_content=brain.sdcard.loadfile("Log.csv")
+            print(log_content.decode(self.format))
+        else:
+            print("No SD Card Inserted Cannot Read Log")
+
+
+Right1.set_stopping(HOLD)
+Right2.set_stopping(HOLD)
+Right3.set_stopping(HOLD)
+left1.set_stopping(HOLD)
+left2.set_stopping(HOLD)
+left3.set_stopping(HOLD)
+
+
+log=Log()
+log.add_codes("DZ0", ":Colorsort DATA: detected red.:")
+log.add_codes("DZ1", ":Colorsort DATA: detected blue.:")
+
+def logging_setup():
+    while True:
+        for i in range(300): # Ment only when recoding to tell it when to unload the cashe.
+            #speed=timer.time()
+            try:
+                log.logging.drivetrain.six_motor(left1, Right1, left2, Right2, left3, Right3)
+                log.logging.motor(Intake)
+                log.logging.motor(TopMotor)
+                log.logging.motor(colorsorting)
+            except Exception as e:
+                log.add("EE3", "Motor Logging Thread: %s"%(e))
+
+            try:
+                log.logging.Battery()
+            except Exception as e:
+                log.add("EE3", "Battery Logging Thread: %s"%(e))
+
+            try:
+                log.logging.controller(1, Right1, Right1, left1, left1)
+            except Exception as e:
+                log.add("EE3", "Controller Logging Thread: %s"%(e))
+            
+            try:
+                log.logging.variable("Pusher", pusher_state)
+                log.logging.variable("Loader", loader_state)
+            except Exception as e:
+                    log.add("EE3", "Variable Logging Thread: %s"%(e))
+            
+            if 340 < optical_9.hue() <20:
+                log.add("DC1", 0)
+            elif 240 < optical_9.hue() < 260:
+                log.add("DC0", 0)
+            if log.recording.record==False:
+                wait(200, MSEC)
+            else:
+                #wait(1, MSEC)
+                pass
+            #print("Logging loop took: " + str(timer.time() - speed) + " MSEC")
+        if log.recording.record:
+            log.unloadcashe()
+        
+
+Thread(log.archive.log)
+
+log.add("DS0", 0)
+Thread(logging_setup)
+
+# Driver Control Functions
+
+def rightside():
+    rightspeed = controller_1.axis2.position() / 8.33
+    Right1.spin(FORWARD, rightspeed, VOLT)
+    Right2.spin(FORWARD, rightspeed, VOLT)
+    Right3.spin(FORWARD, rightspeed, VOLT)
+
+def leftside():
+    leftspeed = controller_1.axis3.position() / 8.33
+    left1.spin(FORWARD, leftspeed, VOLT)
+    left2.spin(FORWARD, leftspeed, VOLT)
+    left3.spin(FORWARD, leftspeed, VOLT)
+
+def intakeup():
+    Intake.spin(FORWARD, 12, VOLT)
+    while controller_1.buttonR1.pressing():
+        wait(5, MSEC)
+    Intake.stop()
+
+def intakedown():
+    Intake.spin(REVERSE, 12, VOLT)
+    while controller_1.buttonR2.pressing():
+        wait(5, MSEC)
+    Intake.stop()
+
+def scoreup():
+    TopMotor.spin(FORWARD, 12, VOLT)
+    Intake.spin(FORWARD, 12, VOLT)
+    while controller_1.buttonL1.pressing():
+        wait(5,MSEC)
+    TopMotor.stop()
+    Intake.stop()
+
+def scoredown():
+    TopMotor.spin(FORWARD, 12, VOLT)
+    Intake.spin(REVERSE, 12, VOLT)
+    while controller_1.buttonL2.pressing():
+        wait(5, MSEC)
+    TopMotor.stop()
+    Intake.stop()
+
+# Mixed functions
+
+def pushertoggle():
+    global pusher_state, Pusher
+    if pusher_state==0:
+        DeScorer.set(True)
+        pusher_state=1
+        Pusher=1
+    else:
+        DeScorer.set(False)
+        pusher_state=0
+        Pusher=0
+
+def loadertoggle():
+    global loader_state
+    if loader_state==0:
+        frontPiston.set(True)
+        loader_state=1
+    else:
+        frontPiston.set(False)
+        loader_state=0
+
+# Aton Functions
+
+def leftmove(leftspeed, degrees):
+    print("left: ", leftspeed)
+    if leftspeed != 0:
+        leftspeed=leftspeed/8.33
+    left1.spin(FORWARD, leftspeed, VOLT)
+    left2.spin(FORWARD, leftspeed, VOLT)
+    left3.spin(FORWARD, leftspeed, VOLT)
+
+def rightmove(rightspeed, degrees):
+    print("Right: ", rightspeed)
+    if rightspeed != 0:
+        rightspeed=rightspeed/8.33
+    Right1.spin(FORWARD, rightspeed, VOLT)
+    Right2.spin(FORWARD, rightspeed, VOLT)
+    Right3.spin(FORWARD, rightspeed, VOLT)
+
+def intakeupstart():
+    print("Intake up")
+    Intake.spin(FORWARD)
+
+def intakedownstart():
+    print("Intake down")
+    Intake.spin(REVERSE)
+
+def intakestop():
+    print("Intake stop")
+    Intake.stop()
+
+def scoreupstart():
+    print("Score up")
+    Intake.spin(FORWARD)
+    TopMotor.spin(FORWARD)
+
+def scoredownstart():
+    print("Score down")
+    Intake.spin(REVERSE)
+    TopMotor.spin(FORWARD)
+
+def scorestop():
+    print("Score stop")
+    Intake.stop()
+    TopMotor.stop()
+
+# Recording Functions
+
+def recordright():
+    global recording_state
+    if recording_state == 0:
+        log.recording.start("Right")
+        controller_1.screen.clear_line(3)
+        controller_1.screen.set_cursor(3,1)
+        controller_1.screen.print("Right recording.")
+        recording_state=1
+    elif recording_state == 1:
+        log.recording.stop("Right")
+        controller_1.screen.clear_line(3)
+        controller_1.screen.set_cursor(3,1)
+        controller_1.screen.print("Right Stopped.")
+        log.recording.encode("Right", rightmove, leftmove, intakeupstart, intakestop, "R1", intakedownstart, intakestop, "R2", scoreupstart, scorestop, "L1", scoredownstart, scorestop, "L2", loadertoggle, none, "B", pushertoggle, none, "DOWN")
+        controller_1.screen.clear_line(3)
+        controller_1.screen.set_cursor(3,1)
+        controller_1.screen.print("Right Encoded.")
+        recording_state=0
+
+# Event setup
+def aton():
+    log.recording.run("Right")
+
+def driver():
+    pass
+
+Intake.set_velocity(100, PERCENT)
+TopMotor.set_velocity(100, PERCENT)
+comp=Competition(driver, aton)
+controller_1.axis2.changed(rightside)
+controller_1.axis3.changed(leftside)
+controller_1.buttonR1.pressed(intakeup)
+controller_1.buttonR2.pressed(intakedown)
+controller_1.buttonL1.pressed(scoreup)
+controller_1.buttonL2.pressed(scoredown)
+controller_1.buttonDown.pressed(pushertoggle)
+controller_1.buttonB.pressed(loadertoggle)
+controller_1.buttonRight.pressed(recordright)
+
+# Colorsort loop
+while True:
+    while optical_9.hue() < 20 or optical_9.hue() > 340:
+        if 340 < optical_9.hue() <20:
+            colorsorting.spin(FORWARD, 12, VOLT)
+        else:
+            colorsorting.spin(REVERSE, 12, VOLT)
+    colorsorting.stop()
+
+End of code CLEAR.
+
+
 Section one, Intro:
 
-The CLEAR code is a multi purpose code that is designed to work with most vex v5 robots with minimal code changes. It has five main functions Capture, Log, Encoding, Archiving, Recording. This is why it is named CLEAR the most fundamental parts is the capture and log so we will start with them next.
+The CLEAR code is a multi purpose code that is designed to work with most vex v5 robots with minimal code changes. This code is large but is designed to run lightly when not recording. This makes it useable with very big or resource intensive programs. Also, it is compatible with blocks because it uses python and can be copy pasted and put into a switch block to run in blocks. It has five main functions Capture, Log, Encoding, Archiving, Recording. This is why it is named CLEAR the most fundamental parts is the capture and log so we will start with them next.
 
 Section two, Capture:
 
-The most fundamental part is the capture code its capabilities of capturing most of the info the robot gives. Because of the very customizable nature of the code, we will talk mostly about the standard things in the Logging object. The first thing is the controller logging it will log all buttons and stick axis and can do both controllers. It can also monitor the motors as it will give warnings about things like power and temps it does not give simple data about the motors. The last of the logging object is the drivetrain, the drivetrain is a separate object and can monitor a two motor, four motor, or a six motor drivetrain and monitors the same as the motors but as a more unified capture and uses different codes for the logging.
+The most fundamental part is the capture code its capabilities of capturing most of the info the robot gives. Because of the very customizable nature of the code, we will talk mostly about the standard things in the Logging object. The first thing is the controller logging it will log all buttons and stick axis and can do both controllers. It can also monitor the motors as it will give warnings about things like power and temps it does not give simple data about the motors. The last of the logging object is the drivetrain, the drivetrain is a separate object and can monitor a two motor, four motor, or a six motor drivetrain and monitors the same as the motors but as a more unified capture and uses different codes for the logging. Now, this is only the stander logging and in the code you can configure add loops or do one time captures to make it capture everything you want with even the most basic of coding skills.
 
 Section three, Logging:
 
-The logging of the code is part of the capture and is the main object named Log. The log.add() function takes any code in the dictionary "codes" and produces a full string to log into an sdcard the logging always try's the print into the vex terminal but will only log into an sdcard if the card is in when the code starts. Then, the "codes" dictionary can add any code the user wants into the dictionary by a simple calling of a function every startup called log.add_codes(), this makes it a lot easyer to adapt to robots with special features.
+The logging of the code is part of the capture and is the main object named Log. The log.add() function takes any code in the dictionary "codes" and produces a full string to log into an sdcard the logging always try's the print into the vex terminal but will only log into an sdcard if the card is in when the code starts. Then, the "codes" dictionary can add any code the user wants into the dictionary by a simple calling of a function every startup called log.add_codes(), this makes it a lot easier to adapt to robots with special features, This i why it is so easy to get the capture and logging to get anything that the person configuring the code wants.
 
 Section four, Archive:
 
-Archiving the logging code is a big part of the code as if it is not it will bog down the sdcard and take up a lot of space after long use or long recording sessions. How it works is by turning the full strings back into the codes that made them. This makes a much smaller file that will not bog down the sdcard nearly as fast.
+Archiving the logging code is a big part of the code as if it is not it will bog down the sdcard and take up a lot of space after long use or long recording sessions. How it works is by turning the full strings back into the codes that made them. This makes a much smaller file that will not bog down the sdcard nearly as fast. Then, because of the extra space used it can load the full log into memory and can load more lines from log history.
 
 Section five, Recording:
 
-recoding with this code is very different than the code that was originally intended. It works by using the capture of the code, because of the code using a time based movement we need the polling of the capture to be VERY fast in the current config we have it does from 5 Hz to 1000 Hz to do this it uses a Cashe and after looping the capture 300 times will unload the Cashe and put it into the Aton file and the log file. Even with this casheing it is very resource intensive and will take a while to encode and a lot of battery.
+Recoding with this code is very different than the code that was originally intended. It works by using the capture of the code, because of the code using a time based movement we need the polling of the capture to be VERY fast in the current config we have it does from 5 Hz to 1000 Hz to do this it uses a Cashe and after looping the capture 300 times will unload the Cashe and put it into the Aton file and the log file. Even with this casheing it is very resource intensive and will take a while to encode and a lot of battery. We would like to note that when the code is not recording the resources is very small and even when recording it is all the a thread so it will not interfere with the main code however it will affect any other program that is using the Thread() object by slowing it down some.
 
 Section six, Encoding:
 
-The encoding is simple in idea but a pain to make it work as it takes the logs strings and makes them into the function calls that the encode function inputs provide with the button than activates them and turns it into the exact python code needed to run it as fast as possible.
+The encoding is simple in idea but a pain to make it work as it takes the logs strings and makes them into the function calls that the encode function inputs provide with the button than activates them and turns it into the exact python code needed to run it as fast as possible. This is done by having the function call have 21 variables with the functions that the coder wants to use for the Aton along side with there buttons to call that function.  NOTE It is recommended that the function work as similar as possible to the driver control funtions to make the recording more accurate
 
 Section seven, Other:
 
-Now that the basics of what the code does now i will get into the deep details of how it works and how everything is linked together to make a fast and useful code that can work with most vex v5 robots 
+In the code (See section zero) you will see a lot of "try:", and "except MemoryError:" this is because the size of the files in the sdcard can very easily fill up the memory allocated to the program and lead to a memory error so in this case the file will be read and possess or use the file line by line this makes it still work but will make things slower as it is pulling from the sdcard and not the memory. Also in the Log objects init function you will also see a "except OSError:" the true reason why is unknown to us but it comes of the memory being completely filled before it can get all the library's from python and showing an OS error 27 so it works the same as the memory error so it does not fill up all the memory on startup and force stop the program.
+
+Next, the code it primarily makes objects in the python. The reason for doing this is two big reasons. First is the wanting to learn to use objects to better understand python and use it to are advantage to learn and grow in are skills. the Final reason is for it to be able to be used with other robots in a clean and quick way that looks and feels like the vex code objects and help it for more beginner coders and makes it easy to make it do just about anything within the CLEAR codes goals.
+
+
+
+
+
+
+
+
+
+ 

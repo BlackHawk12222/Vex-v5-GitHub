@@ -54,7 +54,7 @@ console_precision = 0
 # 	Author:       Micah Bow                                                    #
 # 	Created:      1/27/2026, 12:42 PM                                          #
 #   Last Edited:  2/23/2026, 10:00 PM                                          #
-# 	Description:  Capture, Logging, Encoding, Archiving ,Recording.           #
+# 	Description:  Capture, Logging, Encoding, Archiving, Recording.            #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
@@ -75,9 +75,10 @@ def none():
 
 class Drivetrain:
     def __init__(self):
-        self.drivetrain_temp_monitoring={}  # Track per motor
-        self.drivetrain_power_monitoring={}  # Track per motor
-        self.drivetrain_disconnected={}  # Track per motor
+        # Sets used for tracking of the drivetrain.
+        self.drivetrain_temp_monitoring={}
+        self.drivetrain_power_monitoring={}
+        self.drivetrain_disconnected={}
     
     def two_motor(self, left_motor, right_motor):
         left_id = id(left_motor)
@@ -95,6 +96,7 @@ class Drivetrain:
         temp_state = self.drivetrain_temp_monitoring.get('pair', 0)
         power_state = self.drivetrain_power_monitoring.get('pair', 0)
         
+        # Cheaks for the temps,  power, and cheaks for conecttions of the drivetrain.
         if (right_motor.temperature()>70 or left_motor.temperature()>70) and (temp_state==0 or temp_state==2):
             log.add("ED1", "Temp %s"%(max(right_motor.temperature(), left_motor.temperature())))
             self.drivetrain_temp_monitoring['pair'] = 1
@@ -143,6 +145,7 @@ class Drivetrain:
         temp_state = self.drivetrain_temp_monitoring.get('four_motor', 0)
         power_state = self.drivetrain_power_monitoring.get('four_motor', 0)
         
+        # Cheaks for the temps,  power, and cheaks for conecttions of the drivetrain.
         if (front_left_motor.temperature()>70 or front_right_motor.temperature()>70 or back_left_motor.temperature()>70 or back_right_motor.temperature()>70) and (temp_state==0 or temp_state==2):
             log.add("ED1", "Temp %s"%(max(front_left_motor.temperature(), front_right_motor.temperature(), back_left_motor.temperature(), back_right_motor.temperature())))
             self.drivetrain_temp_monitoring['four_motor']=1
@@ -205,6 +208,7 @@ class Drivetrain:
         temp_state = self.drivetrain_temp_monitoring.get('six_motor', 0)
         power_state = self.drivetrain_power_monitoring.get('six_motor', 0)
         
+        # Cheaks for the temps,  power, and cheaks for conecttions of the drivetrain.
         if (front_left_motor.temperature(PERCENT)>70 or front_right_motor.temperature(PERCENT)>70 or middle_left_motor.temperature(PERCENT)>70 or middle_right_motor.temperature(PERCENT)>70 or back_left_motor.temperature(PERCENT)>70 or back_right_motor.temperature(PERCENT)>70) and (temp_state==0 or temp_state==2):
             log.add("ED1", "Temp %s"%(max(front_left_motor.temperature(PERCENT), front_right_motor.temperature(PERCENT), middle_left_motor.temperature(PERCENT), middle_right_motor.temperature(PERCENT), back_left_motor.temperature(PERCENT), back_right_motor.temperature(PERCENT))))
             self.drivetrain_temp_monitoring['six_motor']=1
@@ -302,6 +306,7 @@ class Logging:
         if motor_id not in self.motor_disconnected:
             self.motor_disconnected[motor_id] = 0
         
+        # Cheaks for the temps,  power, and cheaks for conecttions of motors(s).
         if motor.temperature()>70 and (self.motor_temp_monitoring[motor_id]==0 or self.motor_temp_monitoring[motor_id]==2):
             log.add("EM0", "Motor %s Temp %s"%(motor, motor.temperature(PERCENT)))
             self.motor_temp_monitoring[motor_id]=1
@@ -328,7 +333,7 @@ class Logging:
             self.motor_disconnected[motor_id]=0
 
     def Battery(self):
-
+        # Battery monitoring for voltage, capacity, and current.
         if brain.battery.voltage(VoltageUnits.VOLT)<11 and (self.battery_voltage_monitoring==0 or self.battery_voltage_monitoring==2):
             log.add("EB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
             self.battery_voltage_monitoring=1
@@ -358,25 +363,26 @@ class Logging:
             self.battery_current_monitoring=0
     
     def controller(self, controller, monitormotor1=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor2=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor3=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor4=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)):
+        
+        # controller assignment
         if controller==1:
             Controller=controller_1
         elif controller==2:
             Controller=controller_2
-        if not log.recording.record:
+
+        
+        if not log.recording.record: # Only logs when not recoding to save space on the recording file.
             if Controller.axis1.position()!=0 and self.axis1 != Controller.axis1.position():
-                
                 degrees=monitormotor1.position(DEGREES)
                 monitormotor1.set_position(0, DEGREES)
                 log.add("DC1", "Controller_%d_Axis1 %d Moved %d Degrees"%(controller, Controller.axis1.position(), degrees))
                 self.axis1=Controller.axis1.position()
             elif 0 == Controller.axis1.position() and self.axis1!=0:
-                speed=timer.time()
                 degrees=monitormotor1.position(DEGREES)
-                monitormotor2.set_position(0, DEGREES)
+                monitormotor1.set_position(0, DEGREES)
                 #log.add("DC1", "Controller_%d_Axis1 %d Moved %d Degrees"%(controller, self.axis1, degrees))
                 log.add("DC1", "Controller_%d_Axis1 %d Moved %d Degrees"%(controller, 0, 0))
                 self.axis1=0
-                print(str(timer.time() - speed) + " Controller Time")
 
         if Controller.axis2.position()!=0 and self.axis2 != Controller.axis2.position():
             #speed=timer.time()
@@ -637,7 +643,7 @@ class Recording:
                             
                             if len(prelist2) >= 3:
                                 brain.sdcard.appendfile(filename, bytearray("wait(" + str(abs(int(prelist[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')) - int(prelist2[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')))) + ", MSEC), ", log.format))
-            except MemoryError:
+            except MemoryError: # If the preatonfile is too big to load into memory, it will read the file line by line and write to the new file.
                     preatonlist=[]
                     with open(Aton + "_pre.txt", 'r') as f:
                         for line in f:
@@ -737,7 +743,7 @@ class Archive:
                 log.adding=True
             else:
                 print("Put in the sdcard.")
-        except MemoryError:
+        except MemoryError: # If the log file is too big to load into memory, it will read the file line by line and write to the new file.
             if brain.sdcard.is_inserted():
                 log.adding=False
                 reversecodes={value: key for key, value in log.codes.items()}
@@ -772,7 +778,7 @@ class Archive:
                 brain.sdcard.savefile(name)
             else:
                 print("Put in the sdcard.")
-        except MemoryError:
+        except MemoryError: # Same thing as the last two exceptions.
             self.file=""
             if brain.sdcard.is_inserted():
                 archname=(name - ".txt") + "history.txt"
@@ -797,7 +803,7 @@ class Archive:
                 prelist2=filelist[i+1].split(' ')
                 if len(prelist) >= 2 and len(prelist2) >=1:
                     brain.sdcard.appendfile(filename, bytearray(str(prelist2[0]) + str(prelist2[1]) + str(log.codes.get(prelist[2])), log.format))
-        except MemoryError:
+        except MemoryError: # Same thing as the last three exceptions.
             with open(name, 'r') as file:
                 for line in file:
                     prelist=line.split(' ')
@@ -887,14 +893,14 @@ class Log:
             else:
                 try:
                     log_lines=brain.sdcard.loadfile("Log.csv").decode(self.format).split("\n")
-                except MemoryError:
+                except MemoryError: # If the log file is too big to load into memory, it will read the file line by line and count the number of lines to set the index.
                     print("Log.csv cannot be decoded.")
                     log_lines=[]
                     with open("Log.csv", 'r') as log_file:
                         for line in log_file:
                             log_number+=1
                     print("Log done")
-                except OSError:
+                except OSError: # same as the memory error but for an os error that works the same way.
                     print("Log.csv cannot be decoded trying step open.")
                     log_lines=[]
                     with open("Log.csv", 'r') as log_file:
@@ -906,14 +912,14 @@ class Log:
                 else:
                     try:
                         loghistory_lines=brain.sdcard.loadfile("loghistory.txt").decode(self.format).split("\n")
-                    except MemoryError:
+                    except MemoryError: # If the log history file is too big to load into memory, it will read the file line by line and count the number of lines to set the index.
                         print("loghistory.txt cannot be decoded.")
                         loghistory_lines=[]
                         with open("loghistory.txt", 'r') as loghistory_file:
                             for line in loghistory_file:
                                 log_number+=1
                         print("loghistory done")
-                    except OSError:
+                    except OSError: # same as the memory error but for an os error that works the same way.
                         print("loghistory.txt cannot be decoded trying step open.")
                         loghistory_lines=[]
                         with open("loghistory.txt", 'r') as loghistory_file:
@@ -927,7 +933,7 @@ class Log:
         else:
             self.index=0
 
-    def unloadcashe(self):
+    def unloadcashe(self): # this is only ment for the recording.
         if brain.sdcard.is_inserted():
             if self.cashe!="":
                 brain.sdcard.appendfile("Log.csv", bytearray(self.cashe, self.format))
@@ -998,7 +1004,7 @@ log.add_codes("DZ1", ":Colorsort DATA: detected blue.:")
 
 def logging_setup():
     while True:
-        for i in range(300):
+        for i in range(300): # Ment only when recoding to tell it when to unload the cashe.
             #speed=timer.time()
             try:
                 log.logging.drivetrain.six_motor(left1, Right1, left2, Right2, left3, Right3)
@@ -1043,6 +1049,8 @@ Thread(log.archive.log)
 log.add("DS0", 0)
 Thread(logging_setup)
 
+# Driver Control Functions
+
 def rightside():
     rightspeed = controller_1.axis2.position() / 8.33
     Right1.spin(FORWARD, rightspeed, VOLT)
@@ -1083,6 +1091,8 @@ def scoredown():
     TopMotor.stop()
     Intake.stop()
 
+# Mixed functions
+
 def pushertoggle():
     global pusher_state, Pusher
     if pusher_state==0:
@@ -1103,6 +1113,7 @@ def loadertoggle():
         frontPiston.set(False)
         loader_state=0
 
+# Aton Functions
 
 def leftmove(leftspeed, degrees):
     print("left: ", leftspeed)
@@ -1147,6 +1158,8 @@ def scorestop():
     Intake.stop()
     TopMotor.stop()
 
+# Recording Functions
+
 def recordright():
     global recording_state
     if recording_state == 0:
@@ -1166,7 +1179,7 @@ def recordright():
         controller_1.screen.print("Right Encoded.")
         recording_state=0
 
-
+# Event setup
 def aton():
     log.recording.run("Right")
 
@@ -1185,6 +1198,8 @@ controller_1.buttonL2.pressed(scoredown)
 controller_1.buttonDown.pressed(pushertoggle)
 controller_1.buttonB.pressed(loadertoggle)
 controller_1.buttonRight.pressed(recordright)
+
+# Colorsort loop
 while True:
     while optical_9.hue() < 20 or optical_9.hue() > 340:
         if 340 < optical_9.hue() <20:

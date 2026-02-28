@@ -2,12 +2,11 @@ this is the documentation of the CLEAR code:
 
 Section one, Intro:
 
-The CLEAR code is a multi purpose code that is designed to work with most vex v5 robots with minimal code changes
-it has five main functions Capture, Log, Encoding, Archiving, Recording. This is why it is named CLEAR the most fundamental parts is the capture and log so we will start with them next.
+The CLEAR code is a multi purpose code that is designed to work with most vex v5 robots with minimal code changes. It has five main functions Capture, Log, Encoding, Archiving, Recording. This is why it is named CLEAR the most fundamental parts is the capture and log so we will start with them next.
 
 Section two, Capture:
 
-The most fundamental part is the capture the code is capable of capturing a lot of the info the robot gives. because of the very customizable nature of the code, we will talk mostly about the standard things in the Logging object. The first thing is the controller logging it will log all buttons and stick axis and can do both controllers. It can also monitor the motors as it will give warnings about things like power and temps it does not give simple data about the motors. The last of the logging object is the drivetrain, the drivetrain is a separate object and can monitor a two motor, four motor, or a six motor drivetrain and monitors the same as the motors but as a more unified capture and uses different codes for the logging.
+The most fundamental part is the capture code its capabilities of capturing most of the info the robot gives. Because of the very customizable nature of the code, we will talk mostly about the standard things in the Logging object. The first thing is the controller logging it will log all buttons and stick axis and can do both controllers. It can also monitor the motors as it will give warnings about things like power and temps it does not give simple data about the motors. The last of the logging object is the drivetrain, the drivetrain is a separate object and can monitor a two motor, four motor, or a six motor drivetrain and monitors the same as the motors but as a more unified capture and uses different codes for the logging.
 
 Section three, Logging:
 

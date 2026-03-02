@@ -4,12 +4,11 @@ from vex import *
 #    from CLEAR import *#type:ignore
 #except ImportError:
 #        print("CLEAR.py not found. Make sure it is in the sdcard and try again.")
-import CLEAR
+
 import urandom #type:ignore
 
 # Brain should be defined by default
 brain=Brain()
-log=CLEAR.Log()
 
 def none():
     pass
@@ -189,36 +188,56 @@ def scorestop():
     TopMotor.stop()
 
 # Recording Functions
+if brain.sdcard.is_inserted():
+    try:
+        import CLEAR
+        Clear=CLEAR
 
-def recordright():
-    global recording_state
-    if recording_state == 0:
-        log.recording.start("Right")
-        controller_1.screen.clear_line(3)
-        controller_1.screen.set_cursor(3,1)
-        controller_1.screen.print("Right recording.")
-        recording_state=1
-    elif recording_state == 1:
-        log.recording.stop("Right")
-        controller_1.screen.clear_line(3)
-        controller_1.screen.set_cursor(3,1)
-        controller_1.screen.print("Right Stopped.")
-        log.recording.encode("Right", rightmove, leftmove, intakeupstart, intakestop, "R1", intakedownstart, intakestop, "R2", scoreupstart, scorestop, "L1", scoredownstart, scorestop, "L2", loadertoggle, none, "B", pushertoggle, none, "DOWN")
-        controller_1.screen.clear_line(3)
-        controller_1.screen.set_cursor(3,1)
-        controller_1.screen.print("Right Encoded.")
-        recording_state=0
+        def capture_setup():
+            Clear.log.add_codes("DZ0", ":Colorsort DATA: detected red.:")
+            Clear.log.add_codes("DZ1", ":Colorsort DATA: detected blue.:")
+            Clear.log.archive.log()
+            Clear.log.add("DS0", 0)
+            Clear.log.logstart(Right1, left1, Right2, left2, Right3, left3, Intake, TopMotor, colorsorting, variable1=pusher_state, variable1name="pusher_state", variable2=loader_state, variable2name="loader_state")
+        Thread(capture_setup)
+
+        def recordright():
+            global recording_state
+            if recording_state == 0:
+                Clear.log.recording.start("Right")
+                controller_1.screen.clear_line(3)
+                controller_1.screen.set_cursor(3,1)
+                controller_1.screen.print("Right recording.")
+                recording_state=1
+            elif recording_state == 1:
+                Clear.log.recording.stop("Right")
+                controller_1.screen.clear_line(3)
+                controller_1.screen.set_cursor(3,1)
+                controller_1.screen.print("Right Stopped.")
+                Clear.log.recording.encode("Right", rightmove, leftmove, intakeupstart, intakestop, "R1", intakedownstart, intakestop, "R2", scoreupstart, scorestop, "L1", scoredownstart, scorestop, "L2", loadertoggle, none, "B", pushertoggle, none, "DOWN")
+                controller_1.screen.clear_line(3)
+                controller_1.screen.set_cursor(3,1)
+                controller_1.screen.print("Right Encoded.")
+                recording_state=0
+
+        controller_1.buttonRight.pressed(recordright)
+        def aton():
+            Clear.log.recording.run("Right")
+
+        def driver():
+            pass
+        
+        comp=Competition(driver, aton)
+    except ImportError:
+        print("CLEAR.py not found. Make sure it is in the sdcard and try again.")
+    except AttributeError:
+        print("CLEAR.py not found. Make sure it is in the sdcard and try again.")
+    
+    
 
 # Event setup
-def aton():
-    log.recording.run("Right")
-
-def driver():
-    pass
-
 Intake.set_velocity(100, PERCENT)
 TopMotor.set_velocity(100, PERCENT)
-comp=Competition(driver, aton)
 controller_1.axis2.changed(rightside)
 controller_1.axis3.changed(leftside)
 controller_1.buttonR1.pressed(intakeup)
@@ -227,16 +246,6 @@ controller_1.buttonL1.pressed(scoreup)
 controller_1.buttonL2.pressed(scoredown)
 controller_1.buttonDown.pressed(pushertoggle)
 controller_1.buttonB.pressed(loadertoggle)
-controller_1.buttonRight.pressed(recordright)
-
-if brain.sdcard.is_inserted():
-    def capture_setup():
-        log.add_codes("DZ0", ":Colorsort DATA: detected red.:")
-        log.add_codes("DZ1", ":Colorsort DATA: detected blue.:")
-        log.archive.log()
-        log.add("DS0", 0)
-        log.logstart(Right1, left1, Right2, left2, Right3, left3, Intake, TopMotor, colorsorting, variable1=pusher_state, variable1name="pusher_state", variable2=loader_state, variable2name="loader_state")
-    Thread(capture_setup)
 
 # Colorsort loop
 while True:

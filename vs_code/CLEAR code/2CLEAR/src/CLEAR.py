@@ -499,89 +499,132 @@ class Recording:
         global record
         filename=str(Aton) + "_pre.txt"
         if self.record == False:
-            if brain.sdcard.is_inserted():
-                self.record= True
-                record=True
-                brain.sdcard.savefile(filename, bytearray("\n", log.format))
-                self.Aton=Aton + "_pre.txt"
-                log.add("DA0", filename)
-            else:
-                print("Put in sdcard")
-        else:
-            print("Cant start recording because recording is on.")
+            self.record= True
+            record=True
+            brain.sdcard.savefile(filename, bytearray("\n", log.format))
+            self.Aton=Aton + "_pre.txt"
+            log.add("DA0", filename)
 
     def stop(self, Aton):
         global record
-        if brain.sdcard.is_inserted():
-            filename=str(Aton) + "_pre.txt"
+        
+        filename=str(Aton) + "_pre.txt"
+        preatonfile=""
+        self.record=False
+        record=False
+        try:
+            log.unloadcache()
+            preatonfile=brain.sdcard.loadfile(filename).decode(log.format)
+            preatonlist=preatonfile.split("\n")
+            for i in range(len(preatonlist)):
+                prelist=preatonlist[i].split(' ')
+                if len(prelist) >= 3:
+                    if prelist[3] == ":Controller":
+                        self.postlist.append(str(prelist) + "\n")
+            for i in range(len(self.postlist)):
+                self.poststring= self.poststring + str(self.postlist[i])
+            brain.sdcard.savefile(filename, bytearray(str(self.poststring), log.format))
+        except MemoryError:
             preatonfile=""
-            self.record=False
-            record=False
-            try:
-                log.unloadcache()
-                preatonfile=brain.sdcard.loadfile(filename).decode(log.format)
-                preatonlist=preatonfile.split("\n")
-                for i in range(len(preatonlist)):
-                    prelist=preatonlist[i].split(' ')
-                    if len(prelist) >= 3:
-                        if prelist[3] == ":Controller":
-                            self.postlist.append(str(prelist) + "\n")
-                for i in range(len(self.postlist)):
-                    self.poststring= self.poststring + str(self.postlist[i])
-                brain.sdcard.savefile(filename, bytearray(str(self.poststring), log.format))
-            except MemoryError:
-                preatonfile=""
-                with open(filename, 'r') as f:
-                    for line in f:
-                        prelist=line.split(' ')
-                    if len(prelist) >= 3:
-                        if prelist[3] == ":Controller":
-                            brain.sdcard.appendfile(filename, bytearray(str(prelist) + "\n", log.format))
+            with open(filename, 'r') as f:
+                for line in f:
+                    prelist=line.split(' ')
+                if len(prelist) >= 3:
+                    if prelist[3] == ":Controller":
+                        brain.sdcard.appendfile(filename, bytearray(str(prelist) + "\n", log.format))
 
-            log.add("DA1", filename)
-        else:
-            print("Put in sdcard.")
+        log.add("DA1", filename)
 
     def encode(self, Aton, right, left, other1start=none, other1stop=none, other1button=none, other2start=none, other2stop=none, other2button=none, other3start=none, other3stop=none, other3button=none, other4start=none, other4stop=none, other4button=none, other5start=none, other5stop=none, other5button=none, other6start=none, other6stop=none, other6button=none):
-        global record
-        if brain.sdcard.is_inserted():
-            filename=Aton + ".txt"
-            self.record=False
-            record=False
-            brain.sdcard.savefile(filename)
-            prelist=[]
-            left=str(left).split(' ')
-            right=str(right).split(' ')
-            other1start=str(other1start).split(' ')
-            other2start=str(other2start).split(' ')
-            other3start=str(other3start).split(' ')
-            other4start=str(other4start).split(' ')
-            other5start=str(other5start).split(' ')
-            other6start=str(other6start).split(' ')
-            other1stop=str(other1stop).split(' ')
-            other2stop=str(other2stop).split(' ')
-            other3stop=str(other3stop).split(' ')
-            other4stop=str(other4stop).split(' ')
-            other5stop=str(other5stop).split(' ')
-            other6stop=str(other6stop).split(' ')
-            try:
-                preatonfile=brain.sdcard.loadfile(Aton + "_pre.txt")
-                preatonlist=preatonfile.decode(log.format).split("\n")
-                for i in range(len(preatonlist)):
-                    prelist=str(preatonlist[i]).split(',')
+        global record   
+        filename=Aton + ".txt"
+        self.record=False
+        record=False
+        brain.sdcard.savefile(filename)
+        prelist=[]
+        left=str(left).split(' ')
+        right=str(right).split(' ')
+        other1start=str(other1start).split(' ')
+        other2start=str(other2start).split(' ')
+        other3start=str(other3start).split(' ')
+        other4start=str(other4start).split(' ')
+        other5start=str(other5start).split(' ')
+        other6start=str(other6start).split(' ')
+        other1stop=str(other1stop).split(' ')
+        other2stop=str(other2stop).split(' ')
+        other3stop=str(other3stop).split(' ')
+        other4stop=str(other4stop).split(' ')
+        other5stop=str(other5stop).split(' ')
+        other6stop=str(other6stop).split(' ')
+        try:
+            preatonfile=brain.sdcard.loadfile(Aton + "_pre.txt")
+            preatonlist=preatonfile.decode(log.format).split("\n")
+            for i in range(len(preatonlist)):
+                prelist=str(preatonlist[i]).split(',')
+                try:
+                    prelist2=str(preatonlist[i+1]).split(',')
+                except IndexError:
+                    pass
+                if len(prelist)>=12:
+                    if "Controller" in str(prelist):
+                        print("found controller")
+                        if "Axis" in str(prelist):
+                            print("found axis")
+                            if "Controller_1_Axis3" in str(prelist):
+                                brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(left[1]), str(prelist[11]).replace("'", ''), str(prelist[13]).replace("'", '')), log.format))
+                            elif "Controller_1_Axis2" in str(prelist):
+                                brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(right[1]), str(prelist[11]).replace("'", ''), str(prelist[13]).replace("'", '')), log.format))
+
+                        elif "Button" in str(prelist):
+                            print("found button")
+                            if "Released" in str(prelist):
+                                if other1button in str(prelist[11]):
+                                    brain.sdcard.appendfile(filename, bytearray(str(other1stop[1]) + '(), ', log.format))
+                                elif other2button in str(prelist[11]):
+                                    brain.sdcard.appendfile(filename, bytearray(str(other2stop[1]) + '(), ', log.format))
+                                elif other3button in str(prelist[11]):
+                                    brain.sdcard.appendfile(filename, bytearray(str(other3stop[1]) + '(), ', log.format))
+                                elif other4button in str(prelist[11]):
+                                    brain.sdcard.appendfile(filename, bytearray(str(other4stop[1]) + '(), ', log.format))
+                                elif other5button in str(prelist[11]):
+                                    brain.sdcard.appendfile(filename, bytearray(str(other5stop[1]) + '(), ', log.format))
+                                elif other6button in str(prelist[11]):
+                                    brain.sdcard.appendfile(filename, bytearray(str(other6stop[1]) + '(), ', log.format))
+                            elif "Pressed" in str(prelist):
+                                if other1button in str(prelist[11]):
+                                    brain.sdcard.appendfile(filename, bytearray(str(other1start[1]) + '(), ', log.format))
+                                elif other2button in str(prelist[11]):
+                                    brain.sdcard.appendfile(filename, bytearray(str(other2start[1]) + '(), ', log.format))
+                                elif other3button in str(prelist[11]):
+                                    brain.sdcard.appendfile(filename, bytearray(str(other3start[1]) + '(), ', log.format))
+                                elif other4button in str(prelist[11]):
+                                    brain.sdcard.appendfile(filename, bytearray(str(other4start[1]) + '(), ', log.format))
+                                elif other5button in str(prelist[11]):
+                                    brain.sdcard.appendfile(filename, bytearray(str(other5start[1]) + '(), ', log.format))
+                                elif other6button in str(prelist[11]):
+                                    brain.sdcard.appendfile(filename, bytearray(str(other6start[1]) + '(), ', log.format))
+                        
+                        if len(prelist2) >= 3:
+                            brain.sdcard.appendfile(filename, bytearray("wait(" + str(abs(int(prelist[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')) - int(prelist2[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')))) + ", MSEC), ", log.format))
+        except MemoryError: # If the preatonfile is too big to load into memory, it will read the file line by line and write to the new file.
+            preatonlist=[]
+            with open(Aton + "_pre.txt", 'r') as f:
+                for line in f:
+                    prelist=str(line).split(' ')
+                    print(prelist)
                     try:
-                        prelist2=str(preatonlist[i+1]).split(',')
-                    except IndexError:
-                        pass
+                        prelist2=str(next(f)).split(' ')
+                    except StopIteration:
+                        prelist2=[]
                     if len(prelist)>=12:
                         if "Controller" in str(prelist):
                             print("found controller")
                             if "Axis" in str(prelist):
                                 print("found axis")
                                 if "Controller_1_Axis3" in str(prelist):
-                                    brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(left[1]), str(prelist[11]).replace("'", ''), str(prelist[13]).replace("'", '')), log.format))
+                                    brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(left[1]), str(prelist[10]).replace("'", ''), str(prelist[12]).replace("'", '')), log.format))
                                 elif "Controller_1_Axis2" in str(prelist):
-                                    brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(right[1]), str(prelist[11]).replace("'", ''), str(prelist[13]).replace("'", '')), log.format))
+                                    brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(right[1]), str(prelist[10]).replace("'", ''), str(prelist[12]).replace("'", '')), log.format))
 
                             elif "Button" in str(prelist):
                                 print("found button")
@@ -613,66 +656,12 @@ class Recording:
                                         brain.sdcard.appendfile(filename, bytearray(str(other6start[1]) + '(), ', log.format))
                             
                             if len(prelist2) >= 3:
-                                brain.sdcard.appendfile(filename, bytearray("wait(" + str(abs(int(prelist[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')) - int(prelist2[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')))) + ", MSEC), ", log.format))
-            except MemoryError: # If the preatonfile is too big to load into memory, it will read the file line by line and write to the new file.
-                    preatonlist=[]
-                    with open(Aton + "_pre.txt", 'r') as f:
-                        for line in f:
-                            prelist=str(line).split(' ')
-                            print(prelist)
-                            try:
-                                prelist2=str(next(f)).split(' ')
-                            except StopIteration:
-                                prelist2=[]
-                            if len(prelist)>=12:
-                                if "Controller" in str(prelist):
-                                    print("found controller")
-                                    if "Axis" in str(prelist):
-                                        print("found axis")
-                                        if "Controller_1_Axis3" in str(prelist):
-                                            brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(left[1]), str(prelist[10]).replace("'", ''), str(prelist[12]).replace("'", '')), log.format))
-                                        elif "Controller_1_Axis2" in str(prelist):
-                                            brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(right[1]), str(prelist[10]).replace("'", ''), str(prelist[12]).replace("'", '')), log.format))
-
-                                    elif "Button" in str(prelist):
-                                        print("found button")
-                                        if "Released" in str(prelist):
-                                            if other1button in str(prelist[11]):
-                                                brain.sdcard.appendfile(filename, bytearray(str(other1stop[1]) + '(), ', log.format))
-                                            elif other2button in str(prelist[11]):
-                                                brain.sdcard.appendfile(filename, bytearray(str(other2stop[1]) + '(), ', log.format))
-                                            elif other3button in str(prelist[11]):
-                                                brain.sdcard.appendfile(filename, bytearray(str(other3stop[1]) + '(), ', log.format))
-                                            elif other4button in str(prelist[11]):
-                                                brain.sdcard.appendfile(filename, bytearray(str(other4stop[1]) + '(), ', log.format))
-                                            elif other5button in str(prelist[11]):
-                                                brain.sdcard.appendfile(filename, bytearray(str(other5stop[1]) + '(), ', log.format))
-                                            elif other6button in str(prelist[11]):
-                                                brain.sdcard.appendfile(filename, bytearray(str(other6stop[1]) + '(), ', log.format))
-                                        elif "Pressed" in str(prelist):
-                                            if other1button in str(prelist[11]):
-                                                brain.sdcard.appendfile(filename, bytearray(str(other1start[1]) + '(), ', log.format))
-                                            elif other2button in str(prelist[11]):
-                                                brain.sdcard.appendfile(filename, bytearray(str(other2start[1]) + '(), ', log.format))
-                                            elif other3button in str(prelist[11]):
-                                                brain.sdcard.appendfile(filename, bytearray(str(other3start[1]) + '(), ', log.format))
-                                            elif other4button in str(prelist[11]):
-                                                brain.sdcard.appendfile(filename, bytearray(str(other4start[1]) + '(), ', log.format))
-                                            elif other5button in str(prelist[11]):
-                                                brain.sdcard.appendfile(filename, bytearray(str(other5start[1]) + '(), ', log.format))
-                                            elif other6button in str(prelist[11]):
-                                                brain.sdcard.appendfile(filename, bytearray(str(other6start[1]) + '(), ', log.format))
-                                    
-                                    if len(prelist2) >= 3:
-                                        print(prelist[2].replace("[", '').replace("]", '').replace("'", '').replace("'", ''))
-                                        print(prelist2[2].replace("[", '').replace("]", '').replace("'", '').replace("'", ''))
-                                        brain.sdcard.appendfile(filename, bytearray("wait(" + str(abs(int(prelist[2].replace("[", '').replace("]", '').replace("'", '').replace("'", '').replace(",", '')) - int(prelist2[2].replace("[", '').replace("]", '').replace("'", '').replace("'", '').replace(",", '')))) + ", MSEC), ", log.format))
-            log.add("DA2", filename)
-            print("Encode done.")            
-                            
-        else:
-            print("Put in sdcard.")
-
+                                print(prelist[2].replace("[", '').replace("]", '').replace("'", '').replace("'", ''))
+                                print(prelist2[2].replace("[", '').replace("]", '').replace("'", '').replace("'", ''))
+                                brain.sdcard.appendfile(filename, bytearray("wait(" + str(abs(int(prelist[2].replace("[", '').replace("]", '').replace("'", '').replace("'", '').replace(",", '')) - int(prelist2[2].replace("[", '').replace("]", '').replace("'", '').replace("'", '').replace(",", '')))) + ", MSEC), ", log.format))
+        log.add("DA2", filename)
+        print("Encode done.")            
+                        
     
     def run(self, Aton):
         log.add("DA3", Aton + ".txt")
@@ -697,70 +686,58 @@ class Archive:
         speed=timer.time()
         archivelist=""
         try:
-            if brain.sdcard.is_inserted():
-                log.adding=False
-                reversecodes={value: key for key, value in log.codes.items()}
-                logfile=brain.sdcard.loadfile("Log.csv").decode(log.format)
-                loglist=logfile.split("\n")
-                for i in range(len(loglist)):
-                    logline=loglist[i].split(':')
+            log.adding=False
+            reversecodes={value: key for key, value in log.codes.items()}
+            logfile=brain.sdcard.loadfile("Log.csv").decode(log.format)
+            loglist=logfile.split("\n")
+            for i in range(len(loglist)):
+                logline=loglist[i].split(':')
+                if len(logline)>=4:
+                    loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
+                    archivelist=archivelist + str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n'
+            brain.sdcard.appendfile("loghistory.txt", bytearray(archivelist, log.format))
+            logfile=""
+            log.clear()
+            log.adding=True
+        except MemoryError: # If the log file is too big to load into memory, it will read the file line by line and write to the new file.
+            log.adding=False
+            reversecodes={value: key for key, value in log.codes.items()}
+            with open("Log.csv", 'r') as file:
+                for line in file:
+                    speed2=timer.time()
+                    logline=line.split(':')
                     if len(logline)>=4:
                         loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
-                        archivelist=archivelist + str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n'
-                brain.sdcard.appendfile("loghistory.txt", bytearray(archivelist, log.format))
-                logfile=""
-                log.clear()
-                log.adding=True
-            else:
-                print("Put in the sdcard.")
-        except MemoryError: # If the log file is too big to load into memory, it will read the file line by line and write to the new file.
-            if brain.sdcard.is_inserted():
-                log.adding=False
-                reversecodes={value: key for key, value in log.codes.items()}
-                with open("Log.csv", 'r') as file:
-                    for line in file:
-                        speed2=timer.time()
-                        logline=line.split(':')
-                        if len(logline)>=4:
-                            loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
-                            brain.sdcard.appendfile("loghistory.txt", bytearray(str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n', log.format))
-                        print("Archiving took: " + str(timer.time() - speed2) + " MSEC")
-                log.clear()
-                log.adding=True
-            else:
-                print("Put in the sdcard.")
+                        brain.sdcard.appendfile("loghistory.txt", bytearray(str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n', log.format))
+                    print("Archiving took: " + str(timer.time() - speed2) + " MSEC")
+            log.clear()
+            log.adding=True
         print("Archive took: " + str(timer.time() - speed) + " MSEC")
 
     
     def recording(self, name):
         try:
-            if brain.sdcard.is_inserted():
-                archname=(name - ".txt") + "history.txt"
-                reversecodes={value: key for key, value in log.codes.items()}
-                self.file=brain.sdcard.loadfile(name).decode(log.format)
-                self.list=self.file.split("\n")
-                for i in range(len(self.list)):
-                    line=self.list[i].split(':')
-                    if len(line)>=3:
-                        lines= ":" + str(line[1]) + ":" + str(line[2]) + ": "
-                        brain.sdcard.appendfile(archname, bytearray(str(reversecodes.get(lines)) + str(line[0]), log.format))
-                logfile=""
-                brain.sdcard.savefile(name)
-            else:
-                print("Put in the sdcard.")
+            archname=(name - ".txt") + "history.txt"
+            reversecodes={value: key for key, value in log.codes.items()}
+            self.file=brain.sdcard.loadfile(name).decode(log.format)
+            self.list=self.file.split("\n")
+            for i in range(len(self.list)):
+                line=self.list[i].split(':')
+                if len(line)>=3:
+                    lines= ":" + str(line[1]) + ":" + str(line[2]) + ": "
+                    brain.sdcard.appendfile(archname, bytearray(str(reversecodes.get(lines)) + str(line[0]), log.format))
+            logfile=""
+            brain.sdcard.savefile(name)
         except MemoryError: # Same thing as the last two exceptions.
             self.file=""
-            if brain.sdcard.is_inserted():
-                archname=(name - ".txt") + "history.txt"
-                reversecodes={value: key for key, value in log.codes.items()}
-                with open(name, 'r') as self.file:
-                    for line in self.file:
-                        logline=line.split(':')
-                        loglines= str(logline[1]) + str(logline[2])
-                        brain.sdcard.appendfile(archname, bytearray(str(reversecodes.get(loglines)) + str(logline[0]), log.format))                        
-                brain.sdcard.savefile(name)
-            else:
-                print("Put in the sdcard.")
+            archname=(name - ".txt") + "history.txt"
+            reversecodes={value: key for key, value in log.codes.items()}
+            with open(name, 'r') as self.file:
+                for line in self.file:
+                    logline=line.split(':')
+                    loglines= str(logline[1]) + str(logline[2])
+                    brain.sdcard.appendfile(archname, bytearray(str(reversecodes.get(loglines)) + str(logline[0]), log.format))                        
+            brain.sdcard.savefile(name)
     
     def recall(self, name):
         filename=name - "history"
@@ -853,86 +830,78 @@ class Log:
                     "DC1": ":Controller DATA: Axis Changed. Axis: ",
                 }
         # Setting up Log Files if they dont exist 
-        if brain.sdcard.is_inserted():
+        
+        log_lines=[]
+        loghistory_lines=[]
+        log_number=0
+        if not brain.sdcard.exists("Log.csv"):
+            brain.sdcard.savefile("Log.csv", bytearray("log Start: \n", self.format))
+            self.index=0
+        else:
+            try:
+                log_lines=brain.sdcard.loadfile("Log.csv").decode(self.format).split("\n")
+            except MemoryError: # If the log file is too big to load into memory, it will read the file line by line and count the number of lines to set the index.
+                print("Log.csv cannot be decoded.")
+                log_lines=[]
+                with open("Log.csv", 'r') as log_file:
+                    for line in log_file:
+                        log_number+=1
+                print("Log done")
+            except OSError: # same as the memory error but for an os error that works the same way.
+                print("Log.csv cannot be decoded trying step open.")
+                log_lines=[]
+                with open("Log.csv", 'r') as log_file:
+                    for line in log_file:
+                        log_number+=1
+                print("Log done")
+            if not brain.sdcard.exists("loghistory.txt"):
+                brain.sdcard.savefile("loghistory.txt", bytearray("", self.format))                   
+            else:
+                try:
+                    loghistory_lines=brain.sdcard.loadfile("loghistory.txt").decode(self.format).split("\n")
+                except MemoryError: # If the log history file is too big to load into memory, it will read the file line by line and count the number of lines to set the index.
+                    print("loghistory.txt cannot be decoded.")
+                    loghistory_lines=[]
+                    with open("loghistory.txt", 'r') as loghistory_file:
+                        for line in loghistory_file:
+                            log_number+=1
+                    print("loghistory done")
+                except OSError: # same as the memory error but for an os error that works the same way.
+                    print("loghistory.txt cannot be decoded trying step open.")
+                    loghistory_lines=[]
+                    with open("loghistory.txt", 'r') as loghistory_file:
+                        for line in loghistory_file:
+                            log_number+=1
+                    print("loghistory done")
+            self.index=len(log_lines) + len(loghistory_lines) + log_number - 1
             log_lines=[]
             loghistory_lines=[]
             log_number=0
-            if not brain.sdcard.exists("Log.csv"):
-                brain.sdcard.savefile("Log.csv", bytearray("log Start: \n", self.format))
-                self.index=0
-            else:
-                try:
-                    log_lines=brain.sdcard.loadfile("Log.csv").decode(self.format).split("\n")
-                except MemoryError: # If the log file is too big to load into memory, it will read the file line by line and count the number of lines to set the index.
-                    print("Log.csv cannot be decoded.")
-                    log_lines=[]
-                    with open("Log.csv", 'r') as log_file:
-                        for line in log_file:
-                            log_number+=1
-                    print("Log done")
-                except OSError: # same as the memory error but for an os error that works the same way.
-                    print("Log.csv cannot be decoded trying step open.")
-                    log_lines=[]
-                    with open("Log.csv", 'r') as log_file:
-                        for line in log_file:
-                            log_number+=1
-                    print("Log done")
-                if not brain.sdcard.exists("loghistory.txt"):
-                    brain.sdcard.savefile("loghistory.txt", bytearray("", self.format))                   
-                else:
-                    try:
-                        loghistory_lines=brain.sdcard.loadfile("loghistory.txt").decode(self.format).split("\n")
-                    except MemoryError: # If the log history file is too big to load into memory, it will read the file line by line and count the number of lines to set the index.
-                        print("loghistory.txt cannot be decoded.")
-                        loghistory_lines=[]
-                        with open("loghistory.txt", 'r') as loghistory_file:
-                            for line in loghistory_file:
-                                log_number+=1
-                        print("loghistory done")
-                    except OSError: # same as the memory error but for an os error that works the same way.
-                        print("loghistory.txt cannot be decoded trying step open.")
-                        loghistory_lines=[]
-                        with open("loghistory.txt", 'r') as loghistory_file:
-                            for line in loghistory_file:
-                                log_number+=1
-                        print("loghistory done")
-                self.index=len(log_lines) + len(loghistory_lines) + log_number - 1
-                log_lines=[]
-                loghistory_lines=[]
-                log_number=0
-        else:
-            self.index=0
 
     def unloadcache(self): # this is only ment for the recording.
-        if brain.sdcard.is_inserted():
-            if self.cache!="":
-                brain.sdcard.appendfile(self.recording.Aton, bytearray(self.cache, self.format))
-                brain.sdcard.appendfile("Log.csv", bytearray(self.cache, self.format))
-                self.cache=""
-                print("Unloaded cache")
-        else:
-            print("Put in sdcard.")
+        if self.cache!="":
+            brain.sdcard.appendfile(self.recording.Aton, bytearray(self.cache, self.format))
+            brain.sdcard.appendfile("Log.csv", bytearray(self.cache, self.format))
+            self.cache=""
+            print("Unloaded cache")
 
     def add(self, add_code, add_details):
         global record
         if not self.adding:
             return
 
-        entry = ", %s [%s] %s %s \n" % (self.index, log_time, self.codes.get(add_code), add_details)
-
-        if brain.sdcard.is_inserted():
-            print(entry)
-            if self.recording.record:
-                self.cache += entry
-                #print("Added to cache: " + str(self.index) + " Cache input: " + entry)
-            else:
-                if self.cache: #checks if cache has things in it.
-                    brain.sdcard.appendfile("Log.csv", bytearray(self.cache, self.format))
-                    self.cache = ""
-                brain.sdcard.appendfile("Log.csv", bytearray(entry, self.format))
-                print("Added to log: " + str(self.index))
+        entry = ", %s [%s] %s %s \n" % (self.index, log_time, self.codes.get(add_code), add_details)       
+        print(entry)
+        if self.recording.record:
+            self.cache += entry
+            #print(self.cache)
+            #print("Added to cache: " + str(self.index) + " Cache input: " + entry)
         else:
-            print("No SD Card Inserted. Cannot add log entry.")
+            if self.cache: #checks if cache has things in it.
+                brain.sdcard.appendfile("Log.csv", bytearray(self.cache, self.format))
+                self.cache = ""
+            brain.sdcard.appendfile("Log.csv", bytearray(entry, self.format))
+            #print("Added to log: " + str(self.index))
 
         self.index += 1
         
@@ -951,22 +920,15 @@ class Log:
 
     # Clearing the log file
     def clear(self):
-        if brain.sdcard.is_inserted():
-            brain.sdcard.savefile("Log.csv", bytearray("Log Start: \n", self.format))
-            brain.sdcard.savefile("index.txt", bytearray("0", self.format))
-        else:
-            print("No SD Card Inserted Cannot Clear Log")
+        brain.sdcard.savefile("Log.csv", bytearray("Log Start: \n", self.format))
     
     # Displaying log codes dictionary
     def table(self):
         print(self.codes)
 
     def read(self):
-        if brain.sdcard.is_inserted():
-            log_content=brain.sdcard.loadfile("Log.csv")
-            print(log_content.decode(self.format))
-        else:
-            print("No SD Card Inserted Cannot Read Log")
+        log_content=brain.sdcard.loadfile("Log.csv")
+        print(log_content.decode(self.format))
     
     def logstart(self, Right1, Left1, Right2=None, Left2=None, Right3=None, Left3=None, motor1=None, motor2=None, motor3=None, motor4=None, motor5=None, motor6=None, variable1=None, variable1name="", variable2=None, variable2name="", variable3=None, variable3name="", variable4=None, variable4name="", variable5=None, variable5name="", variable6=None, variable6name=""):
         while True:

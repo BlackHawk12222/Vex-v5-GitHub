@@ -194,8 +194,6 @@ if brain.sdcard.is_inserted():
         Clear=CLEAR
 
         def capture_setup():
-            Clear.log.add_codes("DZ0", ":Colorsort DATA: detected red.:")
-            Clear.log.add_codes("DZ1", ":Colorsort DATA: detected blue.:")
             Clear.log.archive.log()
             Clear.log.add("DS0", 0)
             Clear.log.logstart(Right1, left1, Right2, left2, Right3, left3, Intake, TopMotor, colorsorting, variable1=pusher_state, variable1name="pusher_state", variable2=loader_state, variable2name="loader_state")
@@ -219,8 +217,13 @@ if brain.sdcard.is_inserted():
                 controller_1.screen.set_cursor(3,1)
                 controller_1.screen.print("Right Encoded.")
                 recording_state=0
+        
+        def recallhistory():
+            Clear.log.archive.recall("loghistory.txt")
 
         controller_1.buttonRight.pressed(recordright)
+        controller_1.buttonUp.pressed(recallhistory)
+
         def aton():
             Clear.log.recording.run("Right")
 

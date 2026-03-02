@@ -740,27 +740,24 @@ class Archive:
             brain.sdcard.savefile(name)
     
     def recall(self, name):
-        filename=name - "history"
+        filename=(str(name).replace("history.txt", "recalled.txt"))
+        print("recalling")
         try:
             file=brain.sdcard.loadfile(name).decode(log.format)
             brain.sdcard.savefile(filename)
             filelist=file.split(',')
             for i in range(len(filelist)):
                 prelist=filelist[i].split(' ')
-                prelist2=filelist[i+1].split(' ')
-                if len(prelist) >= 2 and len(prelist2) >=1:
-                    brain.sdcard.appendfile(filename, bytearray(str(prelist2[0]) + str(prelist2[1]) + str(log.codes.get(prelist[2])), log.format))
+                if len(prelist) >= 2:
+                    brain.sdcard.appendfile(filename, bytearray(str(prelist[0]) + " " + str(prelist[1]) + " " + str(prelist[2]) + " " + str(log.codes.get(prelist[3])) + str(prelist[4 : len(prelist)-1]) + "\n", log.format))
+            print("Recall done.")
         except MemoryError: # Same thing as the last three exceptions.
             with open(name, 'r') as file:
                 for line in file:
                     prelist=line.split(' ')
-                    try:
-                        prelist2=next(file).split(' ')
-                    except StopIteration:
-                        pass
-                    if len(prelist) >= 2 and len(prelist2) >=1:
-                        brain.sdcard.appendfile(filename, bytearray(str(prelist2[0]) + str(prelist2[1]) + str(log.codes.get(prelist[2])), log.format))
-
+                    if len(prelist) >= 2:
+                        brain.sdcard.appendfile(filename, bytearray(str(prelist[0]) + " " + str(prelist[1]) + " " + str(prelist[2]) + " " + str(log.codes.get(prelist[3])) + str(prelist[4 : len(prelist)-1]) + "\n", log.format))
+            print("Recall done.")
 class Log:
     def __init__(self):
         self.capture=Capture()
@@ -932,9 +929,9 @@ class Log:
     
     def logstart(self, Right1, Left1, Right2=None, Left2=None, Right3=None, Left3=None, motor1=None, motor2=None, motor3=None, motor4=None, motor5=None, motor6=None, variable1=None, variable1name="", variable2=None, variable2name="", variable3=None, variable3name="", variable4=None, variable4name="", variable5=None, variable5name="", variable6=None, variable6name=""):
         while True:
-            speed=timer.time()
+            #speed=timer.time()
             for i in range(200):
-                speed2=timer.time()
+                #speed2=timer.time()
                 global record
                 self.capture.battery()
                 self.capture.controller(1, Right1, Right1, Left1, Left1)
@@ -986,10 +983,10 @@ class Log:
                 else:
                     record=True
                     pass
-                print("Log loop took: " + str(timer.time() - speed2) + " MSEC")
-            print(self.cache)
+                #print("Log loop took: " + str(timer.time() - speed2) + " MSEC")
+            #print(self.cache)
             self.unloadcache()
-            print("Log cycle took: " + str(timer.time() - speed) + " MSEC")
+            #print("Log cycle took: " + str(timer.time() - speed) + " MSEC")
 
 log=Log()
 

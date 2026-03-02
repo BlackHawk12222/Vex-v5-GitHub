@@ -932,7 +932,9 @@ class Log:
     
     def logstart(self, Right1, Left1, Right2=None, Left2=None, Right3=None, Left3=None, motor1=None, motor2=None, motor3=None, motor4=None, motor5=None, motor6=None, variable1=None, variable1name="", variable2=None, variable2name="", variable3=None, variable3name="", variable4=None, variable4name="", variable5=None, variable5name="", variable6=None, variable6name=""):
         while True:
+            speed=timer.time()
             for i in range(200):
+                speed2=timer.time()
                 global record
                 self.capture.battery()
                 self.capture.controller(1, Right1, Right1, Left1, Left1)
@@ -984,8 +986,10 @@ class Log:
                 else:
                     record=True
                     pass
+                print("Log loop took: " + str(timer.time() - speed2) + " MSEC")
             print(self.cache)
             self.unloadcache()
+            print("Log cycle took: " + str(timer.time() - speed) + " MSEC")
 
 log=Log()
 

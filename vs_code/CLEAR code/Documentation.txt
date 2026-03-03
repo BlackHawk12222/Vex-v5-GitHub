@@ -6,11 +6,11 @@ Here is the code in it current form for just CLEAR.py:
 
 # ---------------------------------------------------------------------------- #
 #                                                                              #
-# 	Module:       CLEAR.py                                                     #
-# 	Author:       Micah Bow                                                    #
-# 	Created:      1/27/2026, 12:42 PM                                          #
+# 	Module:       CLEAR.py                                                 #
+# 	Author:       Micah Bow                                                #
+# 	Created:      1/27/2026, 12:42 PM                                      #
 #   Last Edited:  2/23/2026, 10:00 PM                                          #
-# 	Description:  Capture, Logging, Encoding, Archiving, Recording.            #
+# 	Description:  Capture, Logging, Encoding, Archiving, Recording.        #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
@@ -1012,7 +1012,7 @@ The most fundamental part is the capture code its capabilities of capturing most
 
 Section three, Logging:
 
-The logging of the code is part of the capture and is the main object named Log. The log.add() function takes any code in the dictionary "codes" and produces a full string to log into an Sd card the logging always try's the print into the vex terminal but will only log into an Sd card if the card is in when the code starts. Then, the "codes" dictionary can add any code the user wants into the dictionary by a simple calling of a function every startup called log.add_codes(), this makes it a lot easier to adapt to robots with special features, This i why it is so easy to get the capture and logging to get anything that the person configuring the code wants.
+The logging of the code is part of the capture and is the main object named Log. The log.add() function takes any code in the dictionary "codes" and produces a full string to log into an Sd card the logging always try's the print into the vex terminal but will only log into an Sd card if the card is in when the code starts. Then, the "codes" dictionary can add any code the user wants into the dictionary by a simple calling of a function every startup called log.add_codes(), this makes it a lot easier to adapt to robots with special features, This i why it is so easy to get the capture and logging to get anything that the person configuring the code wants. There is also a remove codes if you want to remove codes you added, also you can change the codes so you can edit what you want it to say or reuse the same key for a different purpose. 
 
 Section four, Archive:
 
@@ -1034,48 +1034,23 @@ Next, the code it primarily makes objects in the python. The reason for doing th
 
 A new addition was made for it to have an ease of updating or changing the CLEAR code is using the import from python to change the class objects and functions without needing the main code for it the only code needed in the main is a import with CLEAR, define the name you want for CLEAR to call it, and tell it what you want to log if the coder wants just the basics covered they can use the start function in the log to do the drivetrain ( up to a six motor) up to six independent motors and six variables. you put them in the input for the respective variables and motor names and it does all the work for you and gives an easy way to do it for most robots especially simple robots.
 
+Another addition to the code is the new function log.logstart() this function is an easy and quick way to get CLEAR to work for the Capture, and Logging for the main code all you need to get it working is call it with your drivetrain motors and then by specifying the variables you want to use and but in the motors you want and then any variables you want up to six of them there name and there value to log.
+
+An important detail to note is that the main way to use this code in importing it from the Sd card so two lines are needed for it to work calling the import "import CLEAR" and naming the file imported "Clear= CLEAR" is necessary and any code called from CLEAR will need a Clear. at prefixed to it to call it properly. Also to make sure that the main code will work even when there is a bug or error importing or naming and if the Sd card is not there we will need error handling and an "if brain.sdcard.is_inserted():" to first see if the Sd card is in first and then a try and except for an import error and a name error to move on if the file CLEAR is not in the Sd card. 
+
 Section eight, P&S:
 
-The logging code was made for the purpose of logging and diagnosing problems with the robot.
+Now i will go into detail on how the capture works and its current capabilities.
 
-To start it can log in both the Sd card and the console.
-The capabilities is greater in the Sd card as the log is more permanent and can be retrieved and read by a computer capable of reading an Sd card the console is gone after a new program is started and a computer needs to be plugged in for it to work and as such the program will always use the Sd card when it is installed.
+there are four functions used in the default use of the Capture the log.capture.battery(), log.capture.controller(), log.capture.motor(), log.capture.drivetrain, and log.capture.variable().
 
-The first logging version had a basic add clear and read commands using an object in python to make it all organized
-and in one spot there were no issues with this code and it worked pretty well. The next log code added a record object attached to the log object to record the controllers and return a 1 or 0 if the button if is pressed or not also added a add and removal of codes that the log uses to log to the Sd card. Next the v03 added the logging object and made it loop forever seeing if temps are to high and controller buttons and there axis. There where a few problems in this code mainly it being very large and the spamming of buttons. v04 added logging for battery power monitoring for the motors and a better system to prevent spam. Now the problem was it would not give a double press and if you press two buttons at the same time it would spam again. Log v05 and log v06 where small changes of variables and better optimizations. A problem came from the multi threading because of it having 4 threads and doing the log.add at the same time leading to a attribute error on the index variable. Log v07 fixed most of the issues and the only thing left was the controller spam and added disconnect logging. Log v08 is the latest and biggest update in a long time. It fixed all the problems made it smaller and more optimized. Now we will show the final product in detail.
+First the battery function, There are no inputs for this function as there will always be one battery and the info with always be the same. It captures capacity, voltage, and current. If the capacity of the battery is 50% or lower with give a warning but if its lower than 25 it will give an error log. For the voltage if the voltage is lower than 12 volts it will give a warning and if lower than 11 volts it will give the error log. About the same as the voltage but if the amps is higher than 15 i twill warn and 18 will do the error log.
 
-The logging is a fairly big program and it’s goal is to have a universal logging program we can use with only a small amount of modification work on any vex v5 robot using smart motors.
-It all starts with the main object “Log” it holds all of the other objects and has the foundation of the code the __Init__ part has the fundamentals for the code it has the self.index variable the codes dictionary and checks for the log file and the index file and if they don’t exist make them.
+Next is the controller function, it can take both controllers with a simple input of 1 or 2 and you may input monitor motors to Capture how far the motors moved from the sticks. The function will Capture all the buttons and the stick position for both controllers and will log it all even if they are all pressed, to prevent spam it will only log when it is pressed and released and the sticks if they are different from the last time they where checked.
 
- For the index file it is a simple value stored in a .txt file and is fetched during the init and stores the value in the variable self.index. The dictionary is a standard list of codes that can be modified in a soft manner using the edit_codes, add_codes, and the delite_codes. Those are simply a way to re skin the dictionary attributes to the log object. 
+Then there is the motors they are like the battery as they will only log when there is soething of note so it will log the power and the temps, the only input is the motor you want to log.
+for the temps if the temps are 50% or more it will log a warning and if over 70% it will log an error. same for power but 11 and 20 repectively.
 
-The .add function is the most used one as it is how the logging goes the Sd card or the console. It works by seeing if the Sd card is inserted then if it is it will take the self.index variable the timer and the code you put in with the details at the end put it all into a string before putting that in the next line in the log and making self.index increment by 1 and but the new value in the index.txt file. If the Sd card is not inserted then it will do the same thing but print it to the console instead of in the Sd card increment the self.index and move on.
+Next now is the drivetarin this is about just the same as the motors but you need to do another '.' as you need to spesify if the drivetrain is a two, four, or six motor drivetrain and input he motor names if tehre right place in the input order. the logging is very simuler as the motor funtion and all the threshholds for the logging are the same butthe code used are diffrent and it will show which one is the probelm in the drivetrain.
 
-The read function is simple as it will take what's in the Sd card and print it to the console.
-
-The final part in the table function and it will print the codes dictionary into the console to see what is in there when the code runs.
-
-The object in the log object is called Logging it is meant as a way to do a quick and easy logging that will fit most if not all robots.
-The best way to do it is give a function that will check for things out of place like a disconnected motor, low battery etc. so all you need to do is call the function provide what object to monitor and you are done. There are four functions you can call from this object the motor, battery, controller, and variable. 
-
-There is also a __init__ function as there are a lot of variables that are needed for all of this to work smoothly.
-
-The motor function take the motor name and checks if the temps are to high, the power if to high and if it is disconnected. How it checks for temps is to see the temps and if it is over 70 it will add an error to the log for the critical temps but it its less than 70 but bigger than 50 it will add a warning to the Sd card saying it is hot.
-To prevent spam it take a set adds a id of the motor as the key and adds a value to it and if the value is the same as the one the warning or error set it to it will not add that error or warning again to the log. The power monitoring in very similar but uses the power in watts to find the power usage and add the errors or warnings if necessary.
-
-The battery function on the object checks for amps, voltage and capacity. How it does it all is similar it just checks it is to high or low and they all use a similar anti spam as the motors but use a single variable per part because there is only one battery.
-
-The controller variable if the largest  as there are four axis and twelve buttons to check for and each has a Boolean for it as the anti spam it goes and checks if a button is pressed or in an axis in not at zero and if so checks if the Boolean in true and if so log its press but if its false will skip it. For the axis it checks for a change to happen before logging it preventing spam.
-
-
-
-
-
-
-
-
-
-
-
-
- 
+last is the variables this one is pritty simple and with log the inintal value and any changes to the value and logs it the input needed are its name in quatation marks and the value by calling that variable.

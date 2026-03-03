@@ -18,7 +18,7 @@ controller_1=Controller(PRIMARY)
 controller_2=Controller(PARTNER)
 
 def none():
-    return(none)
+    return
 
 class Drivetrain:
     def __init__(self):
@@ -136,7 +136,6 @@ class Drivetrain:
             self.drivetrain_disconnected[bl_id]=0
     
     def six_motor(self, front_left_motor, front_right_motor, middle_left_motor, middle_right_motor, back_left_motor, back_right_motor):
-        #speed=log_time.time()
         fl_id = id(front_left_motor)
         fr_id = id(front_right_motor)
         ml_id = id(middle_left_motor)
@@ -210,7 +209,6 @@ class Drivetrain:
             self.drivetrain_disconnected[bl_id]=1
         elif back_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[bl_id]==1:
             self.drivetrain_disconnected[bl_id]=0
-        #print(str(log_time.time() - speed) + " Drivetrain Time")
 
 
 # capture for the log class
@@ -243,7 +241,6 @@ class Capture:
         self.axis4=0
         self.tolrance=3
         self.variables={}
-        global record
     
     def motor(self, motor):
         #speed=log_time.time()
@@ -317,7 +314,6 @@ class Capture:
         #print(str(log_time.time() - speed) + " Battery Time")
     
     def controller(self, controller, monitormotor1=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor2=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor3=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor4=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)):
-        #speed=log_time.time()
         # controller assignment
         if controller==1:
             Controller=controller_1
@@ -326,7 +322,6 @@ class Capture:
         else:
             return
 
-        
         if not log.recording.record: # Only logs when not recoding to save space on the recording file.
             if Controller.axis1.position()!=0 and self.axis1 != Controller.axis1.position():
                 degrees=monitormotor1.position(DEGREES)
@@ -336,25 +331,19 @@ class Capture:
             elif 0 == Controller.axis1.position() and self.axis1!=0:
                 degrees=monitormotor1.position(DEGREES)
                 monitormotor1.set_position(0, DEGREES)
-                #log.add("DC1", "Controller_%d_Axis1 %d Moved %d Degrees"%(controller, self.axis1, degrees))
                 log.add("DC1", "Controller_%d_Axis1 %d Moved %d Degrees"%(controller, 0, 0))
                 self.axis1=0
 
         if Controller.axis2.position()!=0 and self.axis2 != Controller.axis2.position():
-            #speed=log_time.time()
             degrees=monitormotor2.position(DEGREES)
             monitormotor2.set_position(0, DEGREES)
             log.add("DC1", "Controller_%d_Axis2 %d Moved %d Degrees"%(controller, Controller.axis2.position(), degrees))
             self.axis2=Controller.axis2.position()
-            #print(str(log_time.time() - speed) + " Controller Time")
         elif 0 == Controller.axis2.position() and self.axis2!=0:
-            #speed=log_time.time()
             degrees=monitormotor2.position(DEGREES)
             monitormotor2.set_position(0, DEGREES)
-            #log.add("DC1", "Controller_%d_Axis2 %d Moved %d Degrees"%(controller, self.axis2, degrees))
             log.add("DC1", "Controller_%d_Axis2 %d Moved %d Degrees"%(controller, 0, 0))
             self.axis2=0
-            #print(str(log_time.time() - speed) + " Controller Time")
 
         if Controller.axis3.position()!=0 and self.axis3 != Controller.axis3.position():
             degrees=monitormotor3.position(DEGREES)
@@ -364,7 +353,6 @@ class Capture:
         elif 0 == Controller.axis3.position() and self.axis3!=0:
             degrees=monitormotor3.position(DEGREES)
             monitormotor3.set_position(0, DEGREES)
-            #log.add("DC1", "Controller_%d_Axis3 %d Moved %d Degrees"%(controller, self.axis3, degrees))
             log.add("DC1", "Controller_%d_Axis3 %d Moved %d Degrees"%(controller, 0, 0))
             self.axis3=0
 
@@ -377,7 +365,6 @@ class Capture:
             elif 0 == Controller.axis4.position() and self.axis4!=0:
                 degrees=monitormotor4.position(DEGREES)
                 monitormotor4.set_position(0, DEGREES)
-                #log.add("DC1", "Controller_%d_Axis4 %d Moved %d Degrees"%(controller, self.axis4, degrees))
                 log.add("DC1", "Controller_%d_Axis4 %d Moved %d Degrees"%(controller, 0, 0))
                 self.axis4=0
 
@@ -465,18 +452,14 @@ class Capture:
         elif Controller.buttonR2.pressing()==False and self.button_R2==False:
             log.add("DC0", "Controller_%d_Button R2 Released"%(controller))
             self.button_R2=True
-        
-        #print(str(log_time.time() - speed) + " Controller Time")
 
     def variable(self, name, value):
-        #speed=log_time.time()
         valueid=id(name)
         if valueid not in self.variables:
             self.variables[valueid]=0
         if value != self.variables[valueid]:
             log.add("DV0", "Variable %s Value %s"%(name, value))
             self.variables[valueid] = value
-        #print(str(log_time.time() - speed) + " Variable Time")
 
 
 class Recording:
@@ -488,7 +471,6 @@ class Recording:
         self.postlist=[]
         self.File=""
         self.poststring=""      
-
 
     def start(self, Aton):
         filename=str(Aton) + "_pre.txt"
@@ -938,7 +920,6 @@ class Log:
                 if self.recording.record==False:
                     wait(200, MSEC)
                 else:
-                    record=True
                     pass
             self.unloadcache()
 

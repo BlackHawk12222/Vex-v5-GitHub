@@ -11,11 +11,17 @@
 
 from vex import *
 
+# Timer for log time
 brain=Brain()
-
 log_time= Timer()
+timer=Timer()
 controller_1=Controller(PRIMARY)
 controller_2=Controller(PARTNER)
+pusher_state = 0
+loader_state = 0
+controlleraxis2positionhistory = 0
+controlleraxis3positionhistory = 0
+recording_state=0
 
 def none():
     return(none)
@@ -53,15 +59,15 @@ class Drivetrain:
         elif right_motor.temperature()<=50 and left_motor.temperature()<=50 and (temp_state==1 or temp_state==2):
             self.drivetrain_temp_monitoring['pair'] = 0
         
-        if right_motor.power(PowerUnits.WATT)>20 or left_motor.power(PowerUnits.WATT)>20 and (power_state==0 or power_state==2):
+        if right_motor.power(PowerUnits.WATT)>40 or left_motor.power(PowerUnits.WATT)>40 and (power_state==0 or power_state==2):
             log.add("ED3", "Power %s"%(max(right_motor.power(PowerUnits.WATT), left_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['pair'] = 1
-        elif right_motor.power(PowerUnits.WATT)>12 or left_motor.power(PowerUnits.WATT)>12 and (power_state==0 or power_state==1):
+        elif right_motor.power(PowerUnits.WATT)>30 or left_motor.power(PowerUnits.WATT)>30 and (power_state==0 or power_state==1):
             log.add("WD3", "Power %s"%(max(right_motor.power(PowerUnits.WATT), left_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['pair'] = 2
-        elif right_motor.power(PowerUnits.WATT)<=12 and left_motor.power(PowerUnits.WATT)<=12 and (power_state==1 or power_state==2):
+        elif right_motor.power(PowerUnits.WATT)<=30 and left_motor.power(PowerUnits.WATT)<=30 and (power_state==1 or power_state==2):
             self.drivetrain_power_monitoring['pair'] = 0
-
+        
         if right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[right_id]==0:
             log.add("ED3", "Right Motor")
             self.drivetrain_disconnected[right_id]=1
@@ -102,13 +108,13 @@ class Drivetrain:
         elif (front_left_motor.temperature()<=50 and front_right_motor.temperature()<=50 and back_left_motor.temperature()<=50 and back_right_motor.temperature()<=50) and (temp_state==1 or temp_state==2):
             self.drivetrain_temp_monitoring['four_motor']=0
         
-        if front_left_motor.power(PowerUnits.WATT)>20 or front_right_motor.power(PowerUnits.WATT)>20 or back_left_motor.power(PowerUnits.WATT)>20 or back_right_motor.power(PowerUnits.WATT)>20 and (power_state==0 or power_state==2):
+        if front_left_motor.power(PowerUnits.WATT)>40 or front_right_motor.power(PowerUnits.WATT)>40 or back_left_motor.power(PowerUnits.WATT)>40 or back_right_motor.power(PowerUnits.WATT)>40 and (power_state==0 or power_state==2):
             log.add("ED3", "Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['four_motor']=1
-        elif front_left_motor.power(PowerUnits.WATT)>12 or front_right_motor.power(PowerUnits.WATT)>12 or back_left_motor.power(PowerUnits.WATT)>12 or back_right_motor.power(PowerUnits.WATT)>12 and (power_state==0 or power_state==1):  
+        elif front_left_motor.power(PowerUnits.WATT)>30 or front_right_motor.power(PowerUnits.WATT)>30 or back_left_motor.power(PowerUnits.WATT)>30 or back_right_motor.power(PowerUnits.WATT)>30 and (power_state==0 or power_state==1):  
             log.add("WD3", "Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['four_motor']=2
-        elif front_left_motor.power(PowerUnits.WATT)<=12 and front_right_motor.power(PowerUnits.WATT)<=12 and back_left_motor.power(PowerUnits.WATT)<=12 and back_right_motor.power(PowerUnits.WATT)<=12 and (power_state==1 or power_state==2):
+        elif front_left_motor.power(PowerUnits.WATT)<=30 and front_right_motor.power(PowerUnits.WATT)<=30 and back_left_motor.power(PowerUnits.WATT)<=30 and back_right_motor.power(PowerUnits.WATT)<=30 and (power_state==1 or power_state==2):
             self.drivetrain_power_monitoring['four_motor']=0
         
         if front_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[fr_id]==0:
@@ -136,7 +142,7 @@ class Drivetrain:
             self.drivetrain_disconnected[bl_id]=0
     
     def six_motor(self, front_left_motor, front_right_motor, middle_left_motor, middle_right_motor, back_left_motor, back_right_motor):
-        #speed=log_time.time()
+        #speed=timer.time()
         fl_id = id(front_left_motor)
         fr_id = id(front_right_motor)
         ml_id = id(middle_left_motor)
@@ -166,13 +172,13 @@ class Drivetrain:
         elif (front_left_motor.temperature(PERCENT)<=50 and front_right_motor.temperature(PERCENT)<=50 and middle_left_motor.temperature(PERCENT)<=50 and middle_right_motor.temperature(PERCENT)<=50 and back_left_motor.temperature(PERCENT)<=50 and back_right_motor.temperature(PERCENT)<=50) and (temp_state==1 or temp_state==2):
             self.drivetrain_temp_monitoring['six_motor']=0
         
-        if front_left_motor.power(PowerUnits.WATT)>20 or front_right_motor.power(PowerUnits.WATT)>20 or middle_left_motor.power(PowerUnits.WATT)>20 or middle_right_motor.power(PowerUnits.WATT)>20 or back_left_motor.power(PowerUnits.WATT)>20 or back_right_motor.power(PowerUnits.WATT)>20 and (power_state==0 or power_state==2):
+        if front_left_motor.power(PowerUnits.WATT)>40 or front_right_motor.power(PowerUnits.WATT)>40 or middle_left_motor.power(PowerUnits.WATT)>40 or middle_right_motor.power(PowerUnits.WATT)>40 or back_left_motor.power(PowerUnits.WATT)>40 or back_right_motor.power(PowerUnits.WATT)>40 and (power_state==0 or power_state==2):
             log.add("ED3", "Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), middle_left_motor.power(PowerUnits.WATT), middle_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['six_motor']=1
-        elif front_left_motor.power(PowerUnits.WATT)>12 or front_right_motor.power(PowerUnits.WATT)>12 or middle_left_motor.power(PowerUnits.WATT)>12 or middle_right_motor.power(PowerUnits.WATT)>12 or back_left_motor.power(PowerUnits.WATT)>12 or back_right_motor.power(PowerUnits.WATT)>12 and (power_state==0 or power_state==1):  
+        elif front_left_motor.power(PowerUnits.WATT)>30 or front_right_motor.power(PowerUnits.WATT)>30 or middle_left_motor.power(PowerUnits.WATT)>30 or middle_right_motor.power(PowerUnits.WATT)>30 or back_left_motor.power(PowerUnits.WATT)>30 or back_right_motor.power(PowerUnits.WATT)>30 and (power_state==0 or power_state==1):  
             log.add("WD3", "Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), middle_left_motor.power(PowerUnits.WATT), middle_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['six_motor']=2
-        elif front_left_motor.power(PowerUnits.WATT)<=12 and front_right_motor.power(PowerUnits.WATT)<=12 and middle_left_motor.power(PowerUnits.WATT)<=12 and middle_right_motor.power(PowerUnits.WATT)<=12 and back_left_motor.power(PowerUnits.WATT)<=12 and back_right_motor.power(PowerUnits.WATT)<=12 and (power_state==1 or power_state==2):
+        elif front_left_motor.power(PowerUnits.WATT)<=30 and front_right_motor.power(PowerUnits.WATT)<=30 and middle_left_motor.power(PowerUnits.WATT)<=30 and middle_right_motor.power(PowerUnits.WATT)<=30 and back_left_motor.power(PowerUnits.WATT)<=30 and back_right_motor.power(PowerUnits.WATT)<=30 and (power_state==1 or power_state==2):
             self.drivetrain_power_monitoring['six_motor']=0
 
         if front_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[fr_id]==0:
@@ -210,7 +216,7 @@ class Drivetrain:
             self.drivetrain_disconnected[bl_id]=1
         elif back_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[bl_id]==1:
             self.drivetrain_disconnected[bl_id]=0
-        #print(str(log_time.time() - speed) + " Drivetrain Time")
+        #print(str(timer.time() - speed) + " Drivetrain Time")
 
 
 # capture for the log class
@@ -246,7 +252,7 @@ class Capture:
         global record
     
     def motor(self, motor):
-        #speed=log_time.time()
+        #speed=timer.time()
         motor_id = id(motor) 
         
         # Initialize tracking
@@ -267,13 +273,13 @@ class Capture:
         elif motor.temperature()<=50 and (self.motor_temp_monitoring[motor_id]==2 or self.motor_temp_monitoring[motor_id]==1):
             self.motor_temp_monitoring[motor_id]=0
         
-        if motor.power(PowerUnits.WATT)>20 and (self.motor_power_monitoring[motor_id]==0 or self.motor_power_monitoring[motor_id]==2):
+        if motor.power(PowerUnits.WATT)>40 and (self.motor_power_monitoring[motor_id]==0 or self.motor_power_monitoring[motor_id]==2):
             log.add("EM2", "Motor %s Power %s"%(motor, motor.power(PowerUnits.WATT)))
             self.motor_power_monitoring[motor_id]=1
-        elif motor.power(PowerUnits.WATT)>12 and (self.motor_power_monitoring[motor_id]==0 or self.motor_power_monitoring[motor_id]==1):
+        elif motor.power(PowerUnits.WATT)>30 and (self.motor_power_monitoring[motor_id]==0 or self.motor_power_monitoring[motor_id]==1):
             log.add("WM1", "Motor %s Power %s"%(motor, motor.power(PowerUnits.WATT)))
             self.motor_power_monitoring[motor_id]=2
-        elif motor.power(PowerUnits.WATT)<=12 and (self.motor_power_monitoring[motor_id]==1 or self.motor_power_monitoring[motor_id]==2):
+        elif motor.power(PowerUnits.WATT)<=30 and (self.motor_power_monitoring[motor_id]==1 or self.motor_power_monitoring[motor_id]==2):
             self.motor_power_monitoring[motor_id]=0
         
         if motor.temperature(PERCENT)==2 and self.motor_disconnected[motor_id]==0:
@@ -282,10 +288,10 @@ class Capture:
         
         if motor.temperature(PERCENT)!=2 and self.motor_disconnected[motor_id]==1:
             self.motor_disconnected[motor_id]=0
-        #print(str(log_time.time() - speed) + " Motor Time")
+        #print(str(timer.time() - speed) + " Motor Time")
 
     def battery(self):
-        #speed=log_time.time()
+        #speed=timer.time()
         # Battery monitoring for voltage, capacity, and current.
         if brain.battery.voltage(VoltageUnits.VOLT)<11 and (self.battery_voltage_monitoring==0 or self.battery_voltage_monitoring==2):
             log.add("EB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
@@ -314,20 +320,18 @@ class Capture:
             self.battery_current_monitoring=2
         elif brain.battery.current(CurrentUnits.AMP)<=5 and (self.battery_current_monitoring==1 or self.battery_current_monitoring==2):
             self.battery_current_monitoring=0
-        #print(str(log_time.time() - speed) + " Battery Time")
+        #print(str(timer.time() - speed) + " Battery Time")
     
     def controller(self, controller, monitormotor1=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor2=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor3=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor4=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)):
-        #speed=log_time.time()
+        #speed=timer.time()
         # controller assignment
         if controller==1:
             Controller=controller_1
         elif controller==2:
             Controller=controller_2
-        else:
-            return
 
         
-        if not log.recording.record: # Only logs when not recoding to save space on the recording file.
+        if not log.recording.record or not record: # Only logs when not recoding to save space on the recording file.
             if Controller.axis1.position()!=0 and self.axis1 != Controller.axis1.position():
                 degrees=monitormotor1.position(DEGREES)
                 monitormotor1.set_position(0, DEGREES)
@@ -341,20 +345,20 @@ class Capture:
                 self.axis1=0
 
         if Controller.axis2.position()!=0 and self.axis2 != Controller.axis2.position():
-            #speed=log_time.time()
+            #speed=timer.time()
             degrees=monitormotor2.position(DEGREES)
             monitormotor2.set_position(0, DEGREES)
             log.add("DC1", "Controller_%d_Axis2 %d Moved %d Degrees"%(controller, Controller.axis2.position(), degrees))
             self.axis2=Controller.axis2.position()
-            #print(str(log_time.time() - speed) + " Controller Time")
+            #print(str(timer.time() - speed) + " Controller Time")
         elif 0 == Controller.axis2.position() and self.axis2!=0:
-            #speed=log_time.time()
+            #speed=timer.time()
             degrees=monitormotor2.position(DEGREES)
             monitormotor2.set_position(0, DEGREES)
             #log.add("DC1", "Controller_%d_Axis2 %d Moved %d Degrees"%(controller, self.axis2, degrees))
             log.add("DC1", "Controller_%d_Axis2 %d Moved %d Degrees"%(controller, 0, 0))
             self.axis2=0
-            #print(str(log_time.time() - speed) + " Controller Time")
+            #print(str(timer.time() - speed) + " Controller Time")
 
         if Controller.axis3.position()!=0 and self.axis3 != Controller.axis3.position():
             degrees=monitormotor3.position(DEGREES)
@@ -368,7 +372,7 @@ class Capture:
             log.add("DC1", "Controller_%d_Axis3 %d Moved %d Degrees"%(controller, 0, 0))
             self.axis3=0
 
-        if not log.recording.record:
+        if not log.recording.record or not record:
             if Controller.axis4.position()!=0 and self.axis4 != Controller.axis4.position():
                 degrees=monitormotor4.position(DEGREES)
                 monitormotor4.set_position(0, DEGREES)
@@ -466,42 +470,47 @@ class Capture:
             log.add("DC0", "Controller_%d_Button R2 Released"%(controller))
             self.button_R2=True
         
-        #print(str(log_time.time() - speed) + " Controller Time")
+        #print(str(timer.time() - speed) + " Controller Time")
 
     def variable(self, name, value):
-        #speed=log_time.time()
+        #speed=timer.time()
         valueid=id(name)
         if valueid not in self.variables:
             self.variables[valueid]=0
         if value != self.variables[valueid]:
             log.add("DV0", "Variable %s Value %s"%(name, value))
             self.variables[valueid] = value
-        #print(str(log_time.time() - speed) + " Variable Time")
-
+        #print(str(timer.time() - speed) + " Variable Time")
 
 class Recording:
     def __init__(self):
         self.record=False
-        self.log_timeecord=0
-        self.postlog_timeecord=0
+        self.timerecord=0
+        self.posttimerecord=0
         self.Aton=""
         self.postlist=[]
         self.File=""
         self.poststring=""      
+        global record
 
 
     def start(self, Aton):
+        global record
         filename=str(Aton) + "_pre.txt"
         if self.record == False:
             self.record= True
+            record=True
             brain.sdcard.savefile(filename, bytearray("\n", log.format))
             self.Aton=Aton + "_pre.txt"
             log.add("DA0", filename)
 
     def stop(self, Aton):
+        global record
+        
         filename=str(Aton) + "_pre.txt"
         preatonfile=""
         self.record=False
+        record=False
         try:
             log.unloadcache()
             preatonfile=brain.sdcard.loadfile(filename).decode(log.format)
@@ -514,7 +523,6 @@ class Recording:
             for i in range(len(self.postlist)):
                 self.poststring= self.poststring + str(self.postlist[i])
             brain.sdcard.savefile(filename, bytearray(str(self.poststring), log.format))
-        
         except MemoryError:
             preatonfile=""
             with open(filename, 'r') as f:
@@ -526,9 +534,11 @@ class Recording:
 
         log.add("DA1", filename)
 
-    def encode(self, Aton, right, left, other1start=none, other1stop=none, other1button=none, other2start=none, other2stop=none, other2button=none, other3start=none, other3stop=none, other3button=none, other4start=none, other4stop=none, other4button=none, other5start=none, other5stop=none, other5button=none, other6start=none, other6stop=none, other6button=none):   
+    def encode(self, Aton, right, left, other1start=none, other1stop=none, other1button=none, other2start=none, other2stop=none, other2button=none, other3start=none, other3stop=none, other3button=none, other4start=none, other4stop=none, other4button=none, other5start=none, other5stop=none, other5button=none, other6start=none, other6stop=none, other6button=none):
+        global record   
         filename=Aton + ".txt"
         self.record=False
+        record=False
         brain.sdcard.savefile(filename)
         prelist=[]
         left=str(left).split(' ')
@@ -595,7 +605,6 @@ class Recording:
                         
                         if len(prelist2) >= 3:
                             brain.sdcard.appendfile(filename, bytearray("wait(" + str(abs(int(prelist[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')) - int(prelist2[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')))) + ", MSEC), ", log.format))
-        
         except MemoryError: # If the preatonfile is too big to load into memory, it will read the file line by line and write to the new file.
             preatonlist=[]
             with open(Aton + "_pre.txt", 'r') as f:
@@ -651,6 +660,7 @@ class Recording:
                                 brain.sdcard.appendfile(filename, bytearray("wait(" + str(abs(int(prelist[2].replace("[", '').replace("]", '').replace("'", '').replace("'", '').replace(",", '')) - int(prelist2[2].replace("[", '').replace("]", '').replace("'", '').replace("'", '').replace(",", '')))) + ", MSEC), ", log.format))
         log.add("DA2", filename)
         print("Encode done.")            
+                        
     
     def run(self, Aton):
         log.add("DA3", Aton + ".txt")
@@ -665,13 +675,14 @@ class Recording:
                         if item:
                             exec(item)
 
-
 class Archive:
     def __init__(self):
         self.format="utf-8"
+        logfile=""
+        loglist=[]
     
     def log(self):
-        speed=log_time.time()
+        speed=timer.time()
         archivelist=""
         try:
             log.adding=False
@@ -692,18 +703,18 @@ class Archive:
             reversecodes={value: key for key, value in log.codes.items()}
             with open("Log.csv", 'r') as file:
                 for line in file:
-                    speed2=log_time.time()
+                    speed2=timer.time()
                     logline=line.split(':')
                     if len(logline)>=4:
                         loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
                         brain.sdcard.appendfile("loghistory.txt", bytearray(str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n', log.format))
-                    print("Archiving took: " + str(log_time.time() - speed2) + " MSEC")
+                    print("Archiving took: " + str(timer.time() - speed2) + " MSEC")
             log.clear()
             log.adding=True
-        print("Archive took: " + str(log_time.time() - speed) + " MSEC")
+        print("Archive took: " + str(timer.time() - speed) + " MSEC")
     
     def recording(self, recordingname):
-        speed=log_time.time()
+        speed=timer.time()
         archivelist=""
         try:
             reversecodes={value: key for key, value in log.codes.items()}
@@ -722,15 +733,15 @@ class Archive:
             reversecodes={value: key for key, value in log.codes.items()}
             with open("Log.csv", 'r') as file:
                 for line in file:
-                    speed2=log_time.time()
+                    speed2=timer.time()
                     logline=line.split(':')
                     if len(logline)>=4:
                         loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
                         brain.sdcard.appendfile("loghistory.txt", bytearray(str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n', log.format))
-                    print("Archiving took: " + str(log_time.time() - speed2) + " MSEC")
+                    print("Archiving took: " + str(timer.time() - speed2) + " MSEC")
             log.clear()
             log.adding=True
-        print("Archive took: " + str(log_time.time() - speed) + " MSEC")
+        print("Archive took: " + str(timer.time() - speed) + " MSEC")
     
     def recall(self, name):
         filename=(str(name).replace("history.txt", "recalled.txt"))
@@ -751,8 +762,6 @@ class Archive:
                     if len(prelist) >= 2:
                         brain.sdcard.appendfile(filename, bytearray(str(prelist[0]) + " " + str(prelist[1]) + " " + str(prelist[2]) + " " + str(log.codes.get(prelist[3])) + str(prelist[4 : len(prelist)-1]) + "\n", log.format))
             print("Recall done.")
-
-
 class Log:
     def __init__(self):
         self.capture=Capture()
@@ -768,6 +777,8 @@ class Log:
                     "ED2": ":Drivetrain ERROR: Motor(s) Very High Power. Power: ",
                     "ED3": ":Drivetrain ERROR: Motor(s) Disconnected. Name: ",
                     "WD0": ":Drivetrain WARNING: Motor(s) Hot. Temp: ",
+                    "WD1": ":Drivetrain WARNING: High Current Draw. Current: ",
+                    "WD2": ":Drivetrain WARNING: Low Voltage. Voltage: ",
                     "WD3": ":Drivetrain WARNING: High Power. Power: ",
                     "DD0": ":Drivetrain Data: Velocity Changed. New Velocity: ",
                     "EB0": ":Battery ERROR: Critically Low Voltage. Voltage: ",
@@ -775,7 +786,8 @@ class Log:
                     "EB2": ":Battery ERROR: Critically High Current. Current: ",
                     "WB0": ":Battery WARNING: Low Voltage. Voltage: ",
                     "WB1": ":Battery WARNING: Low Battery. capacity: ",
-                    "WB2": ":Battery WARNING: High Current. Current: ",
+                    "WA1": ":Aton WARNING: Left Aton Missing.:",
+                    "WA2": ":Aton WARNING: Right Aton Missing.:",
                     "DA0": ":Aton DATA: Recording Started.:",
                     "DA1": ":Aton DATA: Recording Stopped.:",
                     "DA2": ":Aton DATA: Recording Saved.:",
@@ -786,11 +798,16 @@ class Log:
                     "EM2": ":Motor ERROR: Motor Very High Power. Power: ",
                     "WM0": ":Motor WARNING: Motor Hot. Temp: ",
                     "WM1": ":Motor WARNING: Motor High Power. Power: ",
+                    "EE0": ":Exeption ERROR: Type Error. Problem in: ",
+                    "EE1": ":Exeption ERROR: Value Error. Problem in: ",
+                    "EE2": ":Exeption ERROR: Name Error. Problem in: ",
+                    "EE3": ":Exeption ERROR: Exeption Used. Problem in: ",
+                    "EE4": ":Exeption ERROR: Attribute Error. Problem in: ",
                     "DV0": ":Variable DATA: Variable Changed. Name: ",
                     "DC0": ":Controller DATA: Button Pressed. Button: ",
                     "DC1": ":Controller DATA: Axis Changed. Axis: ",
                 }
-        # Setting up Log Files if they dont exist ans setting index.
+        # Setting up Log Files if they dont exist 
         
         log_lines=[]
         loghistory_lines=[]
@@ -847,6 +864,7 @@ class Log:
             print("Unloaded cache")
 
     def add(self, add_code, add_details):
+        global record
         if not self.adding:
             return
 
@@ -854,11 +872,14 @@ class Log:
         print(entry)
         if self.recording.record:
             self.cache += entry
+            #print(self.cache)
+            #print("Added to cache: " + str(self.index) + " Cache input: " + entry)
         else:
             if self.cache: #checks if cache has things in it.
                 brain.sdcard.appendfile("Log.csv", bytearray(self.cache, self.format))
                 self.cache = ""
             brain.sdcard.appendfile("Log.csv", bytearray(entry, self.format))
+            #print("Added to log: " + str(self.index))
 
         self.index += 1
         
@@ -889,7 +910,9 @@ class Log:
     
     def logstart(self, Right1, Left1, Right2=None, Left2=None, Right3=None, Left3=None, motor1=None, motor2=None, motor3=None, motor4=None, motor5=None, motor6=None, variable1=None, variable1name="", variable2=None, variable2name="", variable3=None, variable3name="", variable4=None, variable4name="", variable5=None, variable5name="", variable6=None, variable6name=""):
         while True:
+            #speed=timer.time()
             for i in range(200):
+                #speed2=timer.time()
                 self.capture.battery()
                 self.capture.controller(1, Right1, Right1, Left1, Left1)
                 if Right2==None and Left2==None and Right3==None and Left3==None:
@@ -940,6 +963,12 @@ class Log:
                 else:
                     record=True
                     pass
+                #print("Log loop took: " + str(timer.time() - speed2) + " MSEC")
+            #print(self.cache)
             self.unloadcache()
+            #print("Log cycle took: " + str(timer.time() - speed) + " MSEC")
 
 log=Log()
+
+
+

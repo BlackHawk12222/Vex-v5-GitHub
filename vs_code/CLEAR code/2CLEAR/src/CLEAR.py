@@ -26,6 +26,7 @@ class Drivetrain:
         self.drivetrain_temp_monitoring={}
         self.drivetrain_power_monitoring={}
         self.drivetrain_disconnected={}
+        self.drivetrain_current_monitoring={}
     
     def two_motor(self, left_motor, right_motor):
         left_id = id(left_motor)
@@ -149,11 +150,14 @@ class Drivetrain:
                 self.drivetrain_temp_monitoring[motor_id] = 0
             if motor_id not in self.drivetrain_power_monitoring:
                 self.drivetrain_power_monitoring[motor_id] = 0
+            if motor_id not in self.drivetrain_current_monitoring:
+                self.drivetrain_power_monitoring[motor_id] = 0
             if motor_id not in self.drivetrain_disconnected:
                 self.drivetrain_disconnected[motor_id] = 0
         
         temp_state = self.drivetrain_temp_monitoring.get('six_motor', 0)
         power_state = self.drivetrain_power_monitoring.get('six_motor', 0)
+        current_state = self.drivetrain_current_monitoring.get('six_motor', 0)
         
         # Cheaks for the temps,  power, and cheaks for conecttions of the drivetrain.
         if (front_left_motor.temperature(PERCENT)>70 or front_right_motor.temperature(PERCENT)>70 or middle_left_motor.temperature(PERCENT)>70 or middle_right_motor.temperature(PERCENT)>70 or back_left_motor.temperature(PERCENT)>70 or back_right_motor.temperature(PERCENT)>70) and (temp_state==0 or temp_state==2):
@@ -173,6 +177,15 @@ class Drivetrain:
             self.drivetrain_power_monitoring['six_motor']=2
         elif front_left_motor.power(PowerUnits.WATT)<=12 and front_right_motor.power(PowerUnits.WATT)<=12 and middle_left_motor.power(PowerUnits.WATT)<=12 and middle_right_motor.power(PowerUnits.WATT)<=12 and back_left_motor.power(PowerUnits.WATT)<=12 and back_right_motor.power(PowerUnits.WATT)<=12 and (power_state==1 or power_state==2):
             self.drivetrain_power_monitoring['six_motor']=0
+
+        if front_left_motor.current(CurrentUnits.AMP)>2 or front_right_motor.current(CurrentUnits.AMP)>2 or middle_left_motor.current(CurrentUnits.AMP)>2 or middle_right_motor.current(CurrentUnits.AMP)>2 or back_left_motor.current(CurrentUnits.AMP)>2 or back_right_motor.current(CurrentUnits.AMP)>2 and (current_state==0 or current_state==2):
+            log.add("ED2", "Power %s"%(max(front_left_motor.current(CurrentUnits.AMP), front_right_motor.current(CurrentUnits.AMP), middle_left_motor.current(CurrentUnits.AMP), middle_right_motor.current(CurrentUnits.AMP), back_left_motor.current(CurrentUnits.AMP), back_right_motor.current(CurrentUnits.AMP))))
+            self.drivetrain_current_monitoring['six_motor']=1
+        elif front_left_motor.current(CurrentUnits.AMP)>1.5 or front_right_motor.current(CurrentUnits.AMP)>1.5 or middle_left_motor.current(CurrentUnits.AMP)>1.5 or middle_right_motor.current(CurrentUnits.AMP)>1.5 or back_left_motor.current(CurrentUnits.AMP)>1.5 or back_right_motor.current(CurrentUnits.AMP)>1.5 and (current_state==0 or current_state==1):
+            log.add("ED2", "Power %s"%(max(front_left_motor.current(CurrentUnits.AMP), front_right_motor.current(CurrentUnits.AMP), middle_left_motor.current(CurrentUnits.AMP), middle_right_motor.current(CurrentUnits.AMP), back_left_motor.current(CurrentUnits.AMP), back_right_motor.current(CurrentUnits.AMP))))
+            self.drivetrain_current_monitoring['six_motor']=2
+        elif front_left_motor.current(CurrentUnits.AMP)<=1.5 or front_right_motor.current(CurrentUnits.AMP)<=1.5 or middle_left_motor.current(CurrentUnits.AMP)<=1.5 or middle_right_motor.current(CurrentUnits.AMP)<=1.5 or back_left_motor.current(CurrentUnits.AMP)<=1.5 or back_right_motor.current(CurrentUnits.AMP)<=1.5 and (current_state==2 or current_state==1):
+            self.drivetrain_current_monitoring['six_motor']=0
 
         if front_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[fr_id]==0:
             log.add("ED3", "Front Right Motor")
@@ -218,7 +231,8 @@ class Capture:
         self.drivetrain=Drivetrain()
         self.motor_temp_monitoring={} 
         self.motor_power_monitoring={}  
-        self.motor_disconnected={}  
+        self.motor_disconnected={}
+        self.motor_current_monitoring={}  
         self.battery_voltage_monitoring=0
         self.battery_capacity_monitoring=0
         self.battery_current_monitoring=0
@@ -251,6 +265,8 @@ class Capture:
             self.motor_temp_monitoring[motor_id] = 0
         if motor_id not in self.motor_power_monitoring:
             self.motor_power_monitoring[motor_id] = 0
+        if motor_id not in self.motor_current_monitoring:
+            self.motor_current_monitoring[motor_id] = 0
         if motor_id not in self.motor_disconnected:
             self.motor_disconnected[motor_id] = 0
         
@@ -272,6 +288,15 @@ class Capture:
             self.motor_power_monitoring[motor_id]=2
         elif motor.power(PowerUnits.WATT)<=12 and (self.motor_power_monitoring[motor_id]==1 or self.motor_power_monitoring[motor_id]==2):
             self.motor_power_monitoring[motor_id]=0
+
+        if motor.current(CurrentUnits.AMP)>2 and (self.motor_current_monitoring[motor_id]==0 or self.motor_current_monitoring[motor_id]==2):
+            log.add("EM2", "Motor %s Power %s"%(motor, motor.power(PowerUnits.WATT)))
+            self.motor_current_monitoring[motor_id]=1
+        elif motor.current(CurrentUnits.AMP)>1.5 and (self.motor_current_monitoring[motor_id]==0 or self.motor_current_monitoring[motor_id]==1):
+            log.add("WM1", "Motor %s Power %s"%(motor, motor.power(PowerUnits.WATT)))
+            self.motor_current_monitoring[motor_id]=2
+        elif motor.current(CurrentUnits.AMP)<=1.5 and (self.motor_current_monitoring[motor_id]==1 or self.motor_current_monitoring[motor_id]==2):
+            self.motor_current_monitoring[motor_id]=0
         
         if motor.temperature(PERCENT)==2 and self.motor_disconnected[motor_id]==0:
             log.add("EM1", "Motor %s Disconnected"%(motor))

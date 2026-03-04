@@ -222,6 +222,7 @@ class Capture:
         self.battery_voltage_monitoring=0
         self.battery_capacity_monitoring=0
         self.battery_current_monitoring=0
+        self.battery_watt_monitoring=0
         self.button_a=True
         self.button_b=True
         self.button_x=True
@@ -243,7 +244,6 @@ class Capture:
         self.variables={}
     
     def motor(self, motor):
-        #speed=log_time.time()
         motor_id = id(motor) 
         
         # Initialize tracking
@@ -279,10 +279,8 @@ class Capture:
         
         if motor.temperature(PERCENT)!=2 and self.motor_disconnected[motor_id]==1:
             self.motor_disconnected[motor_id]=0
-        #print(str(log_time.time() - speed) + " Motor Time")
 
     def battery(self):
-        #speed=log_time.time()
         # Battery monitoring for voltage, capacity, and current.
         if brain.battery.voltage(VoltageUnits.VOLT)<11 and (self.battery_voltage_monitoring==0 or self.battery_voltage_monitoring==2):
             log.add("EB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
@@ -311,9 +309,17 @@ class Capture:
             self.battery_current_monitoring=2
         elif brain.battery.current(CurrentUnits.AMP)<=5 and (self.battery_current_monitoring==1 or self.battery_current_monitoring==2):
             self.battery_current_monitoring=0
-        #print(str(log_time.time() - speed) + " Battery Time")
+
+        if brain.battery.current(CurrentUnits.AMP) * brain.battery.voltage(VoltageUnits.VOLT)>200 and (self.battery_watt_monitoring==0 or self.battery_watt_monitoring==3):
+            log.add("EB3", "%s"%(int(brain.battery.current(CurrentUnits.AMP) * brain.battery.voltage(VoltageUnits.VOLT))))
+            self.battery_watt_monitoring=1
+        elif brain.battery.current(CurrentUnits.AMP) * brain.battery.voltage(VoltageUnits.VOLT)>150 and (self.battery_watt_monitoring==0 or self.battery_watt_monitoring==1):
+            log.add("WB3", "%s"%(int(brain.battery.current(CurrentUnits.AMP) * brain.battery.voltage(VoltageUnits.VOLT))))
+            self.battery_watt_monitoring=2
+        elif brain.battery.current(CurrentUnits.AMP) * brain.battery.voltage(VoltageUnits.VOLT)<=150 and (self.battery_watt_monitoring==1 or self.battery_watt_monitoring==2):
+            self.battery_watt_monitoring=0
     
-    def controller(self, controller, monitormotor1=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor2=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor3=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False), monitormotor4=Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)):
+    def controller(self, controller, monitormotor1=Motor(Ports.PORT21, GearSetting.RATIO_18_1, False), monitormotor2=Motor(Ports.PORT21, GearSetting.RATIO_18_1, False), monitormotor3=Motor(Ports.PORT21, GearSetting.RATIO_18_1, False), monitormotor4=Motor(Ports.PORT21, GearSetting.RATIO_18_1, False)):
         # controller assignment
         if controller==1:
             Controller=controller_1
@@ -755,9 +761,11 @@ class Log:
                     "EB0": ":Battery ERROR: Critically Low Voltage. Voltage: ",
                     "EB1": ":Battery ERROR: Critically Low Battery. Capacity: ",
                     "EB2": ":Battery ERROR: Critically High Current. Current: ",
+                    "EB3": ":Battery ERROR: Critically High Wattage. Wattage: ",
                     "WB0": ":Battery WARNING: Low Voltage. Voltage: ",
                     "WB1": ":Battery WARNING: Low Battery. capacity: ",
                     "WB2": ":Battery WARNING: High Current. Current: ",
+                    "WB3": ":Battery WARNING: High Wattage. Wattage: ",
                     "DA0": ":Aton DATA: Recording Started.:",
                     "DA1": ":Aton DATA: Recording Stopped.:",
                     "DA2": ":Aton DATA: Recording Saved.:",

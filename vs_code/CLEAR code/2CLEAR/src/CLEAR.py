@@ -3,7 +3,7 @@
 # 	Module:       CLEAR.py                                                     #
 # 	Author:       Micah Bow                                                    #
 # 	Created:      1/27/2026, 12:42 PM                                          #
-#   Last Edited:  2/23/2026, 10:00 PM                                          #
+#   Last Edited:  3/4/2026, 12:00 PM                                           #
 # 	Description:  Capture, Logging, Encoding, Archiving, Recording.            #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
@@ -14,8 +14,6 @@ from vex import *
 brain=Brain()
 
 log_time= Timer()
-controller_1=Controller(PRIMARY)
-controller_2=Controller(PARTNER)
 
 def none():
     return
@@ -38,11 +36,14 @@ class Drivetrain:
                 self.drivetrain_temp_monitoring[motor_id] = 0
             if motor_id not in self.drivetrain_power_monitoring:
                 self.drivetrain_power_monitoring[motor_id] = 0
+            if motor_id not in self.drivetrain_current_monitoring:
+                self.drivetrain_power_monitoring[motor_id] = 0
             if motor_id not in self.drivetrain_disconnected:
                 self.drivetrain_disconnected[motor_id] = 0
         
         temp_state = self.drivetrain_temp_monitoring.get('pair', 0)
         power_state = self.drivetrain_power_monitoring.get('pair', 0)
+        current_state= self.drivetrain_current_monitoring.get('pair', 0)
         
         # Cheaks for the temps,  power, and cheaks for conecttions of the drivetrain.
         if (right_motor.temperature()>70 or left_motor.temperature()>70) and (temp_state==0 or temp_state==2):
@@ -52,6 +53,7 @@ class Drivetrain:
             log.add("WD0", "Temp %s"%(max(right_motor.temperature(), left_motor.temperature())))
             self.drivetrain_temp_monitoring['pair'] = 2
         elif right_motor.temperature()<=50 and left_motor.temperature()<=50 and (temp_state==1 or temp_state==2):
+            log.add("WD0", "Temp %s"%(max(right_motor.temperature(), left_motor.temperature())))
             self.drivetrain_temp_monitoring['pair'] = 0
         
         if right_motor.power(PowerUnits.WATT)>20 or left_motor.power(PowerUnits.WATT)>20 and (power_state==0 or power_state==2):
@@ -61,7 +63,18 @@ class Drivetrain:
             log.add("WD1", "Power %s"%(max(right_motor.power(PowerUnits.WATT), left_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['pair'] = 2
         elif right_motor.power(PowerUnits.WATT)<=12 and left_motor.power(PowerUnits.WATT)<=12 and (power_state==1 or power_state==2):
+            log.add("DD1", "Power %s"%(max(right_motor.power(PowerUnits.WATT), left_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['pair'] = 0
+
+        if left_motor.current(CurrentUnits.AMP)>2 or right_motor.current(CurrentUnits.AMP)>2 and (current_state==0 or current_state==2):
+            log.add("ED4", " %s"%(max(left_motor.current(CurrentUnits.AMP), right_motor.current(CurrentUnits.AMP))))
+            self.drivetrain_current_monitoring['pair']=1
+        elif left_motor.current(CurrentUnits.AMP)>1.5 or right_motor.current(CurrentUnits.AMP)>1.5 and (current_state==0 or current_state==1):
+            log.add("WD2", " %s"%(max(left_motor.current(CurrentUnits.AMP), right_motor.current(CurrentUnits.AMP))))
+            self.drivetrain_current_monitoring['pair']=2
+        elif left_motor.current(CurrentUnits.AMP)<=1.5 or right_motor.current(CurrentUnits.AMP)<=1.5 and (current_state==2 or current_state==1):
+            log.add("DD2", " %s"%(max(left_motor.current(CurrentUnits.AMP), right_motor.current(CurrentUnits.AMP))))
+            self.drivetrain_current_monitoring['pair']=0
 
         if right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[right_id]==0:
             log.add("ED3", "Right Motor")
@@ -87,11 +100,14 @@ class Drivetrain:
                 self.drivetrain_temp_monitoring[motor_id] = 0
             if motor_id not in self.drivetrain_power_monitoring:
                 self.drivetrain_power_monitoring[motor_id] = 0
+            if motor_id not in self.drivetrain_current_monitoring:
+                self.drivetrain_power_monitoring[motor_id] = 0
             if motor_id not in self.drivetrain_disconnected:
                 self.drivetrain_disconnected[motor_id] = 0
         
         temp_state = self.drivetrain_temp_monitoring.get('four_motor', 0)
         power_state = self.drivetrain_power_monitoring.get('four_motor', 0)
+        current_state= self.drivetrain_current_monitoring.get('four_motor', 0)
         
         # Cheaks for the temps,  power, and cheaks for conecttions of the drivetrain.
         if (front_left_motor.temperature()>70 or front_right_motor.temperature()>70 or back_left_motor.temperature()>70 or back_right_motor.temperature()>70) and (temp_state==0 or temp_state==2):
@@ -101,6 +117,7 @@ class Drivetrain:
             log.add("WD0", "Temp %s"%(max(front_left_motor.temperature(), front_right_motor.temperature(), back_left_motor.temperature(), back_right_motor.temperature())))
             self.drivetrain_temp_monitoring['four_motor']=2
         elif (front_left_motor.temperature()<=50 and front_right_motor.temperature()<=50 and back_left_motor.temperature()<=50 and back_right_motor.temperature()<=50) and (temp_state==1 or temp_state==2):
+            log.add("WD0", "Temp %s"%(max(front_left_motor.temperature(), front_right_motor.temperature(), back_left_motor.temperature(), back_right_motor.temperature())))
             self.drivetrain_temp_monitoring['four_motor']=0
         
         if front_left_motor.power(PowerUnits.WATT)>20 or front_right_motor.power(PowerUnits.WATT)>20 or back_left_motor.power(PowerUnits.WATT)>20 or back_right_motor.power(PowerUnits.WATT)>20 and (power_state==0 or power_state==2):
@@ -110,7 +127,18 @@ class Drivetrain:
             log.add("WD1", "Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['four_motor']=2
         elif front_left_motor.power(PowerUnits.WATT)<=12 and front_right_motor.power(PowerUnits.WATT)<=12 and back_left_motor.power(PowerUnits.WATT)<=12 and back_right_motor.power(PowerUnits.WATT)<=12 and (power_state==1 or power_state==2):
+            log.add("DD1", "Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['four_motor']=0
+        
+        if front_left_motor.current(CurrentUnits.AMP)>2 or front_right_motor.current(CurrentUnits.AMP)>2 or back_left_motor.current(CurrentUnits.AMP)>2 or back_right_motor.current(CurrentUnits.AMP)>2 and (current_state==0 or current_state==2):
+            log.add("ED4", " %s"%(max(front_left_motor.current(CurrentUnits.AMP), front_right_motor.current(CurrentUnits.AMP),  back_left_motor.current(CurrentUnits.AMP), back_right_motor.current(CurrentUnits.AMP))))
+            self.drivetrain_current_monitoring['four_motor']=1
+        elif front_left_motor.current(CurrentUnits.AMP)>1.5 or front_right_motor.current(CurrentUnits.AMP)>1.5 or back_left_motor.current(CurrentUnits.AMP)>1.5 or back_right_motor.current(CurrentUnits.AMP)>1.5 and (current_state==0 or current_state==1):
+            log.add("WD2", " %s"%(max(front_left_motor.current(CurrentUnits.AMP), front_right_motor.current(CurrentUnits.AMP),  back_left_motor.current(CurrentUnits.AMP), back_right_motor.current(CurrentUnits.AMP))))
+            self.drivetrain_current_monitoring['four_motor']=2
+        elif front_left_motor.current(CurrentUnits.AMP)<=1.5 or front_right_motor.current(CurrentUnits.AMP)<=1.5 or back_left_motor.current(CurrentUnits.AMP)<=1.5 or back_right_motor.current(CurrentUnits.AMP)<=1.5 and (current_state==2 or current_state==1):
+            log.add("DD2", " %s"%(max(front_left_motor.current(CurrentUnits.AMP), front_right_motor.current(CurrentUnits.AMP),  back_left_motor.current(CurrentUnits.AMP), back_right_motor.current(CurrentUnits.AMP))))
+            self.drivetrain_current_monitoring['four_motor']=0
         
         if front_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[fr_id]==0:
             log.add("ED3", "Front Right Motor")
@@ -131,7 +159,7 @@ class Drivetrain:
             self.drivetrain_disconnected[br_id]=0
         
         if back_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[bl_id]==0:
-            log.add("ED3", "Back Left Motor")            
+            log.add("ED3", "Back Left Motor")
             self.drivetrain_disconnected[bl_id]=1
         elif back_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[bl_id]==1:
             self.drivetrain_disconnected[bl_id]=0
@@ -167,24 +195,27 @@ class Drivetrain:
             log.add("WD0", "Temp %s"%(max(front_left_motor.temperature(PERCENT), front_right_motor.temperature(PERCENT), middle_left_motor.temperature(PERCENT), middle_right_motor.temperature(PERCENT), back_left_motor.temperature(PERCENT), back_right_motor.temperature(PERCENT))))
             self.drivetrain_temp_monitoring['six_motor']=2
         elif (front_left_motor.temperature(PERCENT)<=50 and front_right_motor.temperature(PERCENT)<=50 and middle_left_motor.temperature(PERCENT)<=50 and middle_right_motor.temperature(PERCENT)<=50 and back_left_motor.temperature(PERCENT)<=50 and back_right_motor.temperature(PERCENT)<=50) and (temp_state==1 or temp_state==2):
+            log.add("WD0", "Temp %s"%(max(front_left_motor.temperature(PERCENT), front_right_motor.temperature(PERCENT), middle_left_motor.temperature(PERCENT), middle_right_motor.temperature(PERCENT), back_left_motor.temperature(PERCENT), back_right_motor.temperature(PERCENT))))
             self.drivetrain_temp_monitoring['six_motor']=0
         
         if front_left_motor.power(PowerUnits.WATT)>20 or front_right_motor.power(PowerUnits.WATT)>20 or middle_left_motor.power(PowerUnits.WATT)>20 or middle_right_motor.power(PowerUnits.WATT)>20 or back_left_motor.power(PowerUnits.WATT)>20 or back_right_motor.power(PowerUnits.WATT)>20 and (power_state==0 or power_state==2):
-            log.add("ED2", "Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), middle_left_motor.power(PowerUnits.WATT), middle_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
+            log.add("ED2", "Power Peak %s Total Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), middle_left_motor.power(PowerUnits.WATT), middle_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT)), str(front_left_motor.power(PowerUnits.WATT) + front_right_motor.power(PowerUnits.WATT) + middle_left_motor.power(PowerUnits.WATT) + middle_right_motor.power(PowerUnits.WATT) + back_left_motor.power(PowerUnits.WATT) + back_right_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['six_motor']=1
         elif front_left_motor.power(PowerUnits.WATT)>12 or front_right_motor.power(PowerUnits.WATT)>12 or middle_left_motor.power(PowerUnits.WATT)>12 or middle_right_motor.power(PowerUnits.WATT)>12 or back_left_motor.power(PowerUnits.WATT)>12 or back_right_motor.power(PowerUnits.WATT)>12 and (power_state==0 or power_state==1):  
-            log.add("WD1", "Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), middle_left_motor.power(PowerUnits.WATT), middle_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT))))
+            log.add("WD1", "Power Peak %s Total Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), middle_left_motor.power(PowerUnits.WATT), middle_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT)), str(front_left_motor.power(PowerUnits.WATT) + front_right_motor.power(PowerUnits.WATT) + middle_left_motor.power(PowerUnits.WATT) + middle_right_motor.power(PowerUnits.WATT) + back_left_motor.power(PowerUnits.WATT) + back_right_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['six_motor']=2
         elif front_left_motor.power(PowerUnits.WATT)<=12 and front_right_motor.power(PowerUnits.WATT)<=12 and middle_left_motor.power(PowerUnits.WATT)<=12 and middle_right_motor.power(PowerUnits.WATT)<=12 and back_left_motor.power(PowerUnits.WATT)<=12 and back_right_motor.power(PowerUnits.WATT)<=12 and (power_state==1 or power_state==2):
+            log.add("DD1", "Power Peak %s Total Power %s"%(max(front_left_motor.power(PowerUnits.WATT), front_right_motor.power(PowerUnits.WATT), middle_left_motor.power(PowerUnits.WATT), middle_right_motor.power(PowerUnits.WATT), back_left_motor.power(PowerUnits.WATT), back_right_motor.power(PowerUnits.WATT)), str(front_left_motor.power(PowerUnits.WATT) + front_right_motor.power(PowerUnits.WATT) + middle_left_motor.power(PowerUnits.WATT) + middle_right_motor.power(PowerUnits.WATT) + back_left_motor.power(PowerUnits.WATT) + back_right_motor.power(PowerUnits.WATT))))
             self.drivetrain_power_monitoring['six_motor']=0
 
         if front_left_motor.current(CurrentUnits.AMP)>2 or front_right_motor.current(CurrentUnits.AMP)>2 or middle_left_motor.current(CurrentUnits.AMP)>2 or middle_right_motor.current(CurrentUnits.AMP)>2 or back_left_motor.current(CurrentUnits.AMP)>2 or back_right_motor.current(CurrentUnits.AMP)>2 and (current_state==0 or current_state==2):
-            log.add("ED2", "Power %s"%(max(front_left_motor.current(CurrentUnits.AMP), front_right_motor.current(CurrentUnits.AMP), middle_left_motor.current(CurrentUnits.AMP), middle_right_motor.current(CurrentUnits.AMP), back_left_motor.current(CurrentUnits.AMP), back_right_motor.current(CurrentUnits.AMP))))
+            log.add("ED4", " Peak Amps %s Total Amps %s"%(max(front_left_motor.current(CurrentUnits.AMP), front_right_motor.current(CurrentUnits.AMP), middle_left_motor.current(CurrentUnits.AMP), middle_right_motor.current(CurrentUnits.AMP), back_left_motor.current(CurrentUnits.AMP), back_right_motor.current(CurrentUnits.AMP)), str(front_left_motor.current(CurrentUnits.AMP) + front_right_motor.current(CurrentUnits.AMP) + middle_left_motor.current(CurrentUnits.AMP) + middle_right_motor.current(CurrentUnits.AMP) + back_left_motor.current(CurrentUnits.AMP) + back_right_motor.current(CurrentUnits.AMP))))
             self.drivetrain_current_monitoring['six_motor']=1
         elif front_left_motor.current(CurrentUnits.AMP)>1.5 or front_right_motor.current(CurrentUnits.AMP)>1.5 or middle_left_motor.current(CurrentUnits.AMP)>1.5 or middle_right_motor.current(CurrentUnits.AMP)>1.5 or back_left_motor.current(CurrentUnits.AMP)>1.5 or back_right_motor.current(CurrentUnits.AMP)>1.5 and (current_state==0 or current_state==1):
-            log.add("ED2", "Power %s"%(max(front_left_motor.current(CurrentUnits.AMP), front_right_motor.current(CurrentUnits.AMP), middle_left_motor.current(CurrentUnits.AMP), middle_right_motor.current(CurrentUnits.AMP), back_left_motor.current(CurrentUnits.AMP), back_right_motor.current(CurrentUnits.AMP))))
+            log.add("WD2", " Peak Amps %s Total Amps %s"%(max(front_left_motor.current(CurrentUnits.AMP), front_right_motor.current(CurrentUnits.AMP), middle_left_motor.current(CurrentUnits.AMP), middle_right_motor.current(CurrentUnits.AMP), back_left_motor.current(CurrentUnits.AMP), back_right_motor.current(CurrentUnits.AMP)), str(front_left_motor.current(CurrentUnits.AMP) + front_right_motor.current(CurrentUnits.AMP) + middle_left_motor.current(CurrentUnits.AMP) + middle_right_motor.current(CurrentUnits.AMP) + back_left_motor.current(CurrentUnits.AMP) + back_right_motor.current(CurrentUnits.AMP))))
             self.drivetrain_current_monitoring['six_motor']=2
         elif front_left_motor.current(CurrentUnits.AMP)<=1.5 or front_right_motor.current(CurrentUnits.AMP)<=1.5 or middle_left_motor.current(CurrentUnits.AMP)<=1.5 or middle_right_motor.current(CurrentUnits.AMP)<=1.5 or back_left_motor.current(CurrentUnits.AMP)<=1.5 or back_right_motor.current(CurrentUnits.AMP)<=1.5 and (current_state==2 or current_state==1):
+            log.add("DD2", " Peak Amps %s Total Amps %s"%(max(front_left_motor.current(CurrentUnits.AMP), front_right_motor.current(CurrentUnits.AMP), middle_left_motor.current(CurrentUnits.AMP), middle_right_motor.current(CurrentUnits.AMP), back_left_motor.current(CurrentUnits.AMP), back_right_motor.current(CurrentUnits.AMP)), str(front_left_motor.current(CurrentUnits.AMP) + front_right_motor.current(CurrentUnits.AMP) + middle_left_motor.current(CurrentUnits.AMP) + middle_right_motor.current(CurrentUnits.AMP) + back_left_motor.current(CurrentUnits.AMP) + back_right_motor.current(CurrentUnits.AMP))))
             self.drivetrain_current_monitoring['six_motor']=0
 
         if front_right_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[fr_id]==0:
@@ -232,11 +263,16 @@ class Capture:
         self.motor_temp_monitoring={} 
         self.motor_power_monitoring={}  
         self.motor_disconnected={}
-        self.motor_current_monitoring={}  
+        self.motor_current_monitoring={}
+        self.variables={}  
         self.battery_voltage_monitoring=0
         self.battery_capacity_monitoring=0
         self.battery_current_monitoring=0
         self.battery_watt_monitoring=0
+        self.axis1=0
+        self.axis2=0
+        self.axis3=0
+        self.axis4=0
         self.button_a=True
         self.button_b=True
         self.button_x=True
@@ -249,13 +285,8 @@ class Capture:
         self.button_L2=True
         self.button_R1=True
         self.button_R2=True
-        self.value_history=-1
-        self.axis1=0
-        self.axis2=0
-        self.axis3=0
-        self.axis4=0
-        self.tolrance=3
-        self.variables={}
+
+
     
     def motor(self, motor):
         motor_id = id(motor) 
@@ -278,24 +309,27 @@ class Capture:
             log.add("WM0", "Motor %s Temp %s"%(motor, motor.temperature(PERCENT)))
             self.motor_temp_monitoring[motor_id]=2
         elif motor.temperature()<=50 and (self.motor_temp_monitoring[motor_id]==2 or self.motor_temp_monitoring[motor_id]==1):
+            log.add("DM0", "Motor %s Temp %s"%(motor, motor.temperature(PERCENT)))
             self.motor_temp_monitoring[motor_id]=0
         
         if motor.power(PowerUnits.WATT)>20 and (self.motor_power_monitoring[motor_id]==0 or self.motor_power_monitoring[motor_id]==2):
             log.add("EM2", "Motor %s Power %s"%(motor, motor.power(PowerUnits.WATT)))
             self.motor_power_monitoring[motor_id]=1
         elif motor.power(PowerUnits.WATT)>12 and (self.motor_power_monitoring[motor_id]==0 or self.motor_power_monitoring[motor_id]==1):
-            log.add("WM1", "Motor %s Power %s"%(motor, motor.power(PowerUnits.WATT)))
+            log.add("WM2", "Motor %s Power %s"%(motor, motor.power(PowerUnits.WATT)))
             self.motor_power_monitoring[motor_id]=2
         elif motor.power(PowerUnits.WATT)<=12 and (self.motor_power_monitoring[motor_id]==1 or self.motor_power_monitoring[motor_id]==2):
+            log.add("DM1", "Motor %s Power %s"%(motor, motor.power(PowerUnits.WATT)))
             self.motor_power_monitoring[motor_id]=0
 
         if motor.current(CurrentUnits.AMP)>2 and (self.motor_current_monitoring[motor_id]==0 or self.motor_current_monitoring[motor_id]==2):
-            log.add("EM2", "Motor %s Power %s"%(motor, motor.power(PowerUnits.WATT)))
+            log.add("EM3", "Motor %s Power %s"%(motor, motor.power(PowerUnits.WATT)))
             self.motor_current_monitoring[motor_id]=1
         elif motor.current(CurrentUnits.AMP)>1.5 and (self.motor_current_monitoring[motor_id]==0 or self.motor_current_monitoring[motor_id]==1):
-            log.add("WM1", "Motor %s Power %s"%(motor, motor.power(PowerUnits.WATT)))
+            log.add("WM3", "Motor %s Power %s"%(motor, motor.power(PowerUnits.WATT)))
             self.motor_current_monitoring[motor_id]=2
         elif motor.current(CurrentUnits.AMP)<=1.5 and (self.motor_current_monitoring[motor_id]==1 or self.motor_current_monitoring[motor_id]==2):
+            log.add("DM2", "Motor %s Power %s"%(motor, motor.power(PowerUnits.WATT)))
             self.motor_current_monitoring[motor_id]=0
         
         if motor.temperature(PERCENT)==2 and self.motor_disconnected[motor_id]==0:
@@ -314,25 +348,26 @@ class Capture:
             log.add("WB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
             self.battery_voltage_monitoring=2
         elif brain.battery.voltage(VoltageUnits.VOLT)>=12 and (self.battery_voltage_monitoring==1 or self.battery_voltage_monitoring==2):
+            log.add("DB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
             self.battery_voltage_monitoring=0
         
         if brain.battery.capacity()<25 and (self.battery_capacity_monitoring==0 or self.battery_capacity_monitoring==2):
             log.add("EB1", "%s"%(brain.battery.capacity()))
             self.battery_capacity_monitoring=1
-        
         elif brain.battery.capacity()<50 and (self.battery_capacity_monitoring==0):
             log.add("WB1", "%s"%(brain.battery.capacity()))
             self.battery_capacity_monitoring=2
         elif brain.battery.capacity()>=50 and (self.battery_capacity_monitoring==1 or self.battery_capacity_monitoring==2):
             self.battery_capacity_monitoring=0
         
-        if brain.battery.current(CurrentUnits.AMP)>15 and (self.battery_current_monitoring==0 or self.battery_current_monitoring==2):
+        if brain.battery.current(CurrentUnits.AMP)>18 and (self.battery_current_monitoring==0 or self.battery_current_monitoring==2):
             log.add("EB2", "%s"%(brain.battery.current(CurrentUnits.AMP)))
             self.battery_current_monitoring=1
-        elif brain.battery.current(CurrentUnits.AMP)>10 and (self.battery_current_monitoring==0 or self.battery_current_monitoring==1):
+        elif brain.battery.current(CurrentUnits.AMP)>13 and (self.battery_current_monitoring==0 or self.battery_current_monitoring==1):
             log.add("WB2", "%s"%(brain.battery.current(CurrentUnits.AMP)))
             self.battery_current_monitoring=2
         elif brain.battery.current(CurrentUnits.AMP)<=5 and (self.battery_current_monitoring==1 or self.battery_current_monitoring==2):
+            log.add("DB1","%s"%(brain.battery.current(CurrentUnits.AMP)))
             self.battery_current_monitoring=0
 
         if brain.battery.current(CurrentUnits.AMP) * brain.battery.voltage(VoltageUnits.VOLT)>200 and (self.battery_watt_monitoring==0 or self.battery_watt_monitoring==3):
@@ -342,16 +377,11 @@ class Capture:
             log.add("WB3", "%s"%(int(brain.battery.current(CurrentUnits.AMP) * brain.battery.voltage(VoltageUnits.VOLT))))
             self.battery_watt_monitoring=2
         elif brain.battery.current(CurrentUnits.AMP) * brain.battery.voltage(VoltageUnits.VOLT)<=150 and (self.battery_watt_monitoring==1 or self.battery_watt_monitoring==2):
+            log.add("DB2", "%s"%(int(brain.battery.current(CurrentUnits.AMP) * brain.battery.voltage(VoltageUnits.VOLT))))
             self.battery_watt_monitoring=0
     
     def controller(self, controller, monitormotor1=Motor(Ports.PORT21, GearSetting.RATIO_18_1, False), monitormotor2=Motor(Ports.PORT21, GearSetting.RATIO_18_1, False), monitormotor3=Motor(Ports.PORT21, GearSetting.RATIO_18_1, False), monitormotor4=Motor(Ports.PORT21, GearSetting.RATIO_18_1, False)):
-        # controller assignment
-        if controller==1:
-            Controller=controller_1
-        elif controller==2:
-            Controller=controller_2
-        else:
-            return
+        Controller=controller
 
         if not log.recording.record: # Only logs when not recoding to save space on the recording file.
             if Controller.axis1.position()!=0 and self.axis1 != Controller.axis1.position():
@@ -780,9 +810,13 @@ class Log:
                     "ED1": ":Drivetrain ERROR: Motor(s) Criticaly Hot. Temp: ",
                     "ED2": ":Drivetrain ERROR: Motor(s) Very High Power. Power: ",
                     "ED3": ":Drivetrain ERROR: Motor(s) Disconnected. Name: ",
+                    "ED4": ":Drivetrain ERROR: Motor(s) Very High Current. Current: ",
                     "WD0": ":Drivetrain WARNING: Motor(s) Hot. Temp: ",
                     "WD1": ":Drivetrain WARNING: High Power. Power: ",
-                    "DD0": ":Drivetrain Data: Velocity Changed. New Velocity: ",
+                    "WD2": ":Drivetrain WARNING: High Current. Current: ",
+                    "DD0": ":Drivetrain DATA: Temps Back To Normal. Temp: ",
+                    "DD1": ":Drivetrain DATA: Power Back To Normal. Power: ",
+                    "DD2": ":Drivetrain DATA: Current Back To Normal. Current: ",
                     "EB0": ":Battery ERROR: Critically Low Voltage. Voltage: ",
                     "EB1": ":Battery ERROR: Critically Low Battery. Capacity: ",
                     "EB2": ":Battery ERROR: Critically High Current. Current: ",
@@ -791,16 +825,24 @@ class Log:
                     "WB1": ":Battery WARNING: Low Battery. capacity: ",
                     "WB2": ":Battery WARNING: High Current. Current: ",
                     "WB3": ":Battery WARNING: High Wattage. Wattage: ",
-                    "DA0": ":Aton DATA: Recording Started.:",
-                    "DA1": ":Aton DATA: Recording Stopped.:",
-                    "DA2": ":Aton DATA: Recording Saved.:",
-                    "DA3": ":Aton DATA: Recording Loaded.:",
-                    "DS0": ":System DATA: Init setup complete.:",
+                    "DB0": ":Battery DATA: Voltage Back To Normal. Voltage: ",
+                    "DB1": ":Battery DATA: Current Back To Normal. Current: ",
+                    "DB2": ":Battery DATA: Wattage Back To Normal. Wattage: ",
+                    "DA0": ":Aton DATA: Recording Started.: ",
+                    "DA1": ":Aton DATA: Recording Stopped.: ",
+                    "DA2": ":Aton DATA: Recording Saved.: ",
+                    "DA3": ":Aton DATA: Recording Loaded.: ",
+                    "DS0": ":System DATA: Init setup complete.: ",
                     "EM0": ":Motor ERROR: Motor Criticaly Hot. Temp: ",
                     "EM1": ":Motor ERROR: Motor Disconnected. Name: ",
                     "EM2": ":Motor ERROR: Motor Very High Power. Power: ",
+                    "EM3": ":Motor ERROR: Motor Very High Current. Current: ",
                     "WM0": ":Motor WARNING: Motor Hot. Temp: ",
                     "WM1": ":Motor WARNING: Motor High Power. Power: ",
+                    "WM1": ":Motor WARNING: Motor High Current. Current: ",
+                    "DM0": ":Motor DATA: Motor Temps Back To Normal. Temps:",
+                    "DM1": ":Motor DATA: Motor Power Back To Normal. Power:",
+                    "DM1": ":Motor DATA: Motor Current Back To Normal. Current:",
                     "DV0": ":Variable DATA: Variable Changed. Name: ",
                     "DC0": ":Controller DATA: Button Pressed. Button: ",
                     "DC1": ":Controller DATA: Axis Changed. Axis: ",
@@ -902,11 +944,11 @@ class Log:
         log_content=brain.sdcard.loadfile("Log.csv")
         print(log_content.decode(self.format))
     
-    def logstart(self, Right1, Left1, Right2=None, Left2=None, Right3=None, Left3=None, motor1=None, motor2=None, motor3=None, motor4=None, motor5=None, motor6=None, variable1=None, variable1name="", variable2=None, variable2name="", variable3=None, variable3name="", variable4=None, variable4name="", variable5=None, variable5name="", variable6=None, variable6name=""):
+    def logstart(self, Right1, Left1, Right2=None, Left2=None, Right3=None, Left3=None, motor1=None, motor2=None, motor3=None, motor4=None, motor5=None, motor6=None, variable1=None, variable1name="", variable2=None, variable2name="", variable3=None, variable3name="", variable4=None, variable4name="", variable5=None, variable5name="", variable6=None, variable6name="", controller_primary=Controller(PRIMARY)):
         while True:
             for i in range(200):
                 self.capture.battery()
-                self.capture.controller(1, Right1, Right1, Left1, Left1)
+                self.capture.controller(controller_primary, Right1, Right1, Left1, Left1)
                 if Right2==None and Left2==None and Right3==None and Left3==None:
                     self.capture.drivetrain.two_motor(Right1, Left1)
                 elif Right3==None and Left3==None:

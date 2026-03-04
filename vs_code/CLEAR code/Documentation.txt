@@ -1048,9 +1048,9 @@ First the battery function, There are no inputs for this function as there will 
 
 Next is the controller function, it can take both controllers with a simple input of 1 or 2 and you may input monitor motors to Capture how far the motors moved from the sticks. The function will Capture all the buttons and the stick position for both controllers and will log it all even if they are all pressed, to prevent spam it will only log when it is pressed and released and the sticks if they are different from the last time they where checked.
 
-Then there is the motors they are like the battery as they will only log when there is soething of note so it will log the power and the temps, the only input is the motor you want to log.
-for the temps if the temps are 50% or more it will log a warning and if over 70% it will log an error. same for power but 11 and 20 repectively.
+Then there is the motors they are like the battery as they will only log when there is something of note so it will log the power and the temps, the only input is the motor you want to log.
+for the temps if the temps are 50% or more it will log a warning and if over 70% it will log an error. same for power but 11 and 20 respectively.
 
-Next now is the drivetarin this is about just the same as the motors but you need to do another '.' as you need to spesify if the drivetrain is a two, four, or six motor drivetrain and input he motor names if tehre right place in the input order. the logging is very simuler as the motor funtion and all the threshholds for the logging are the same butthe code used are diffrent and it will show which one is the probelm in the drivetrain.
+Next now is the drivetrain this is about just the same as the motors but you need to do another '.' as you need to specify if the drivetrain is a two, four, or six motor drivetrain and input he motor names if there right place in the input order. the logging is very similar as the motor function and all the thresholds for the logging are the same but the code used are different and it will show which one is the problem in the drivetrain.
 
-last is the variables this one is pritty simple and with log the inintal value and any changes to the value and logs it the input needed are its name in quatation marks and the value by calling that variable.
+last is the variables this one is pretty simple and with log the initial value and any changes to the value and logs it the input needed are its name in quotation marks and the value by calling that variable.

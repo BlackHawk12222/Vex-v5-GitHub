@@ -847,7 +847,7 @@ class Log:
                     "DC0": ":Controller DATA: Button Pressed. Button: ",
                     "DC1": ":Controller DATA: Axis Changed. Axis: ",
                 }
-        # Setting up Log Files if they dont exist ans setting index.
+        # Setting up Log Files if they dont exist and setting index.
         
         log_lines=[]
         loghistory_lines=[]

@@ -382,136 +382,137 @@ class Capture:
     
     def controller(self, controller, monitormotor1=Motor(Ports.PORT21, GearSetting.RATIO_18_1, False), monitormotor2=Motor(Ports.PORT21, GearSetting.RATIO_18_1, False), monitormotor3=Motor(Ports.PORT21, GearSetting.RATIO_18_1, False), monitormotor4=Motor(Ports.PORT21, GearSetting.RATIO_18_1, False)):
         Controller=controller
+        controller=1
 
         if not log.recording.record: # Only logs when not recoding to save space on the recording file.
             if Controller.axis1.position()!=0 and self.axis1 != Controller.axis1.position():
                 degrees=monitormotor1.position(DEGREES)
                 monitormotor1.set_position(0, DEGREES)
-                log.add("DC1", "Controller_%d_Axis1 %d Moved %d Degrees"%(controller, Controller.axis1.position(), degrees))
+                log.add("DC1", "Controller_%s_Axis1 %d Moved %d Degrees"%(str(controller), Controller.axis1.position(), degrees))
                 self.axis1=Controller.axis1.position()
             elif 0 == Controller.axis1.position() and self.axis1!=0:
                 degrees=monitormotor1.position(DEGREES)
                 monitormotor1.set_position(0, DEGREES)
-                log.add("DC1", "Controller_%d_Axis1 %d Moved %d Degrees"%(controller, 0, 0))
+                log.add("DC1", "Controller_%s_Axis1 %d Moved %d Degrees"%(str(controller), 0, 0))
                 self.axis1=0
 
         if Controller.axis2.position()!=0 and self.axis2 != Controller.axis2.position():
             degrees=monitormotor2.position(DEGREES)
             monitormotor2.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis2 %d Moved %d Degrees"%(controller, Controller.axis2.position(), degrees))
+            log.add("DC1", "Controller_%s_Axis2 %d Moved %d Degrees"%(str(controller), Controller.axis2.position(), degrees))
             self.axis2=Controller.axis2.position()
         elif 0 == Controller.axis2.position() and self.axis2!=0:
             degrees=monitormotor2.position(DEGREES)
             monitormotor2.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis2 %d Moved %d Degrees"%(controller, 0, 0))
+            log.add("DC1", "Controller_%s_Axis2 %d Moved %d Degrees"%(str(controller), 0, 0))
             self.axis2=0
 
         if Controller.axis3.position()!=0 and self.axis3 != Controller.axis3.position():
             degrees=monitormotor3.position(DEGREES)
             monitormotor3.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis3 %d Moved %d Degrees"%(controller, Controller.axis3.position(), degrees))
+            log.add("DC1", "Controller_%s_Axis3 %d Moved %d Degrees"%(str(controller), Controller.axis3.position(), degrees))
             self.axis3=Controller.axis3.position()
         elif 0 == Controller.axis3.position() and self.axis3!=0:
             degrees=monitormotor3.position(DEGREES)
             monitormotor3.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%d_Axis3 %d Moved %d Degrees"%(controller, 0, 0))
+            log.add("DC1", "Controller_%s_Axis3 %d Moved %d Degrees"%(str(controller), 0, 0))
             self.axis3=0
 
         if not log.recording.record:
             if Controller.axis4.position()!=0 and self.axis4 != Controller.axis4.position():
                 degrees=monitormotor4.position(DEGREES)
                 monitormotor4.set_position(0, DEGREES)
-                log.add("DC1", "Controller_%d_Axis4 %d Moved %d Degrees"%(controller, Controller.axis4.position(), degrees))
+                log.add("DC1", "Controller_%s_Axis4 %d Moved %d Degrees"%(str(controller), Controller.axis4.position(), degrees))
                 self.axis4=Controller.axis4.position()
             elif 0 == Controller.axis4.position() and self.axis4!=0:
                 degrees=monitormotor4.position(DEGREES)
                 monitormotor4.set_position(0, DEGREES)
-                log.add("DC1", "Controller_%d_Axis4 %d Moved %d Degrees"%(controller, 0, 0))
+                log.add("DC1", "Controller_%s_Axis4 %d Moved %d Degrees"%(str(controller), 0, 0))
                 self.axis4=0
 
         if Controller.buttonA.pressing() and self.button_a==True:
-            log.add("DC0", "Controller_%d_Button A Pressed"%(controller))
+            log.add("DC0", "Controller_%s_Button A Pressed"%(str(controller)))
             self.button_a=False
         elif Controller.buttonA.pressing()==False and self.button_a==False:
-            log.add("DC0", "Controller_%d_Button A Released"%(controller))
+            log.add("DC0", "Controller_%s_Button A Released"%(str(controller)))
             self.button_a=True
 
 
         if Controller.buttonB.pressing() and self.button_b==True:
-            log.add("DC0", "Controller_%d_Button B Pressed"%(controller))
+            log.add("DC0", "Controller_%s_Button B Pressed"%(str(Controller)))
             self.button_b=False
         elif Controller.buttonB.pressing()==False and self.button_b==False:
-            log.add("DC0", "Controller_%d_Button B Released"%(controller))
+            log.add("DC0", "Controller_%s_Button B Released"%(str(controller)))
             self.button_b=True
 
         if Controller.buttonX.pressing() and self.button_x==True:
-            log.add("DC0", "Controller_%d_Button X Pressed"%(controller))
+            log.add("DC0", "Controller_%s_Button X Pressed"%(str(controller)))
             self.button_x=False
         elif Controller.buttonX.pressing()==False and self.button_x==False:
-            log.add("DC0", "Controller_%d_Button X Released"%(controller))
+            log.add("DC0", "Controller_%s_Button X Released"%(str(controller)))
             self.button_x=True
 
         if Controller.buttonY.pressing() and self.button_y==True:
-            log.add("DC0", "Controller_%d_Button Y Pressed"%(controller))
+            log.add("DC0", "Controller_%s_Button Y Pressed"%(str(controller)))
             self.button_y=False
         elif Controller.buttonY.pressing()==False and self.button_y==False:
-            log.add("DC0", "Controller_%d_Button Y Released"%(controller))
+            log.add("DC0", "Controller_%s_Button Y Released"%(str(controller)))
             self.button_y=True
 
         if Controller.buttonUp.pressing() and self.button_up==True:
-            log.add("DC0", "Controller_%d_Button UP Pressed"%(controller))
+            log.add("DC0", "Controller_%s_Button UP Pressed"%(str(controller)))
             self.button_up=False
         elif Controller.buttonUp.pressing()==False and self.button_up==False:
-            log.add("DC0", "Controller_%d_Button UP Released"%(controller))
+            log.add("DC0", "Controller_%s_Button UP Released"%(str(controller)))
             self.button_up=True
 
         if Controller.buttonDown.pressing() and self.button_down==True:
-            log.add("DC0", "Controller_%d_Button DOWN Pressed"%(controller))
+            log.add("DC0", "Controller_%s_Button DOWN Pressed"%(str(controller)))
             self.button_down=False
         elif Controller.buttonDown.pressing()==False and self.button_down==False:
-            log.add("DC0", "Controller_%d_Button DOWN Released"%(controller))
+            log.add("DC0", "Controller_%s_Button DOWN Released"%(str(controller)))
             self.button_down=True
 
         if Controller.buttonLeft.pressing() and self.button_left==True:
-            log.add("DC0", "Controller_%d_Button LEFT Pressed"%(controller))
+            log.add("DC0", "Controller_%s_Button LEFT Pressed"%(str(controller)))
             self.button_left=False
         elif Controller.buttonLeft.pressing()==False and self.button_left==False:
-            log.add("DC0", "Controller_%d_Button LEFT Released"%(controller))
+            log.add("DC0", "Controller_%s_Button LEFT Released"%(str(controller)))
             self.button_left=True
 
         if Controller.buttonRight.pressing() and self.button_right==True:
-            log.add("DC0", "Controller_%d_Button RIGHT Pressed"%(controller))
+            log.add("DC0", "Controller_%s_Button RIGHT Pressed"%(str(controller)))
             self.button_right=False
         elif Controller.buttonRight.pressing()==False and self.button_right==False:
-            log.add("DC0", "Controller_%d_Button RIGHT Released"%(controller))
+            log.add("DC0", "Controller_%s_Button RIGHT Released"%(str(controller)))
             self.button_right=True
 
         if Controller.buttonL1.pressing() and self.button_L1==True:
-            log.add("DC0", "Controller_%d_Button L1 Pressed"%(controller))
+            log.add("DC0", "Controller_%s_Button L1 Pressed"%(str(controller)))
             self.button_L1=False
         elif Controller.buttonL1.pressing()==False and self.button_L1==False:
-            log.add("DC0", "Controller_%d_Button L1 Released"%(controller))
+            log.add("DC0", "Controller_%s_Button L1 Released"%(str(controller)))
             self.button_L1=True
 
         if Controller.buttonL2.pressing() and self.button_L2==True:
-            log.add("DC0", "Controller_%d_Button L2 Pressed"%(controller))
+            log.add("DC0", "Controller_%s_Button L2 Pressed"%(str(controller)))
             self.button_L2=False
         elif Controller.buttonL2.pressing()==False and self.button_L2==False:
-            log.add("DC0", "Controller_%d_Button L2 Released"%(controller))
+            log.add("DC0", "Controller_%s_Button L2 Released"%(str(controller)))
             self.button_L2=True
 
         if Controller.buttonR1.pressing() and self.button_R1==True:
-            log.add("DC0", "Controller_%d_Button R1 Pressed"%(controller))
+            log.add("DC0", "Controller_%s_Button R1 Pressed"%(str(controller)))
             self.button_R1=False
         elif Controller.buttonR1.pressing()==False and self.button_R1==False:
-            log.add("DC0", "Controller_%d_Button R1 Released"%(controller))
+            log.add("DC0", "Controller_%s_Button R1 Released"%(str(controller)))
             self.button_R1=True
 
         if Controller.buttonR2.pressing() and self.button_R2==True:
-            log.add("DC0", "Controller_%d_Button R2 Pressed"%(controller))
+            log.add("DC0", "Controller_%s_Button R2 Pressed"%(str(controller)))
             self.button_R2=False
         elif Controller.buttonR2.pressing()==False and self.button_R2==False:
-            log.add("DC0", "Controller_%d_Button R2 Released"%(controller))
+            log.add("DC0", "Controller_%s_Button R2 Released"%(str(controller)))
             self.button_R2=True
 
     def variable(self, name, value):

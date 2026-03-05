@@ -179,7 +179,7 @@ class Drivetrain:
             if motor_id not in self.drivetrain_power_monitoring:
                 self.drivetrain_power_monitoring[motor_id] = 0
             if motor_id not in self.drivetrain_current_monitoring:
-                self.drivetrain_power_monitoring[motor_id] = 0
+                self.drivetrain_current_monitoring[motor_id] = 0
             if motor_id not in self.drivetrain_disconnected:
                 self.drivetrain_disconnected[motor_id] = 0
         
@@ -382,7 +382,6 @@ class Capture:
     
     def controller(self, controller, monitormotor1=Motor(Ports.PORT21, GearSetting.RATIO_18_1, False), monitormotor2=Motor(Ports.PORT21, GearSetting.RATIO_18_1, False), monitormotor3=Motor(Ports.PORT21, GearSetting.RATIO_18_1, False), monitormotor4=Motor(Ports.PORT21, GearSetting.RATIO_18_1, False)):
         Controller=controller
-        controller=1
 
         if not log.recording.record: # Only logs when not recoding to save space on the recording file.
             if Controller.axis1.position()!=0 and self.axis1 != Controller.axis1.position():

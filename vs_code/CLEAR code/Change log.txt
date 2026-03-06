@@ -2,4 +2,7 @@ Start of change log:
 
 v0.1:
 
-Lots of bug fixes.
+Fixed spam of drivetrain current and error temps capture/log.
+Fixed type error when using motor logging.
+Fixed motor current giving wrong or none as the main string.
+

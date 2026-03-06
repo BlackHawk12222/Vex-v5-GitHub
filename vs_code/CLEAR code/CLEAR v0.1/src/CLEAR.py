@@ -743,6 +743,19 @@ class Archive:
                     print("Archiving took: " + str(log_time.time() - speed2) + " MSEC")
             log.clear()
             log.adding=True
+        except OSError: # If the log file is too big to load into memory, it will read the file line by line and write to the new file.
+            log.adding=False
+            reversecodes={value: key for key, value in log.codes.items()}
+            with open("Log.csv", 'r') as file:
+                for line in file:
+                    speed2=log_time.time()
+                    logline=line.split(':')
+                    if len(logline)>=4:
+                        loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
+                        brain.sdcard.appendfile("loghistory.txt", bytearray(str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n', log.format))
+                    print("Archiving took: " + str(log_time.time() - speed2) + " MSEC")
+            log.clear()
+            log.adding=True
         print("Archive took: " + str(log_time.time() - speed) + " MSEC")
     
     def recording(self, recordingname):

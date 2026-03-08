@@ -913,7 +913,7 @@ class Log:
                         for line in loghistory_file:
                             log_number+=1
                     print("loghistory done")
-                    
+
             historyindex=int(brain.sdcard.loadfile("index.txt"))
             self.index=len(log_lines) + len(loghistory_lines) + log_number + historyindex - 1
             log_lines=[]
@@ -970,7 +970,8 @@ class Log:
     
     def logstart(self, Right1, Left1, Right2=None, Left2=None, Right3=None, Left3=None, motor1=None, motor2=None, motor3=None, motor4=None, motor5=None, motor6=None, variable1=None, variable1name="", variable2=None, variable2name="", variable3=None, variable3name="", variable4=None, variable4name="", variable5=None, variable5name="", variable6=None, variable6name="", controller_primary=Controller(PRIMARY)):
         addedfuntion=brain.sdcard.loadfile("Logstart.txt")
-        
+        if brain.sdcard.filesize("loghistory.txt") >= 100000:
+            log.archive.index_history()
         while True:
             for i in range(200):
                 self.capture.battery()
@@ -1025,6 +1026,7 @@ class Log:
                 else:
                     pass
             self.unloadcache()
+    
     def add_logstart(self, funtion):
         if brain.sdcard.exists("Logstart.txt"):
             brain.sdcard.savefile("Logstart.txt")

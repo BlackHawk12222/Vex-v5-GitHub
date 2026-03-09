@@ -6,3 +6,10 @@ Fixed spam of drivetrain current and error temps capture/log.
 Fixed type error when using motor logging.
 Fixed motor current giving wrong or none as the main string.
 
+v0.2:
+
+Added function log.addlogstart() to add extra functions to the log.logstart().
+Added function log.archive.index_history() to get the index and delete the old things.
+Added function log.archive.index_history() to the log.logstart() in the startup and uses it if the size of the history is to big to be practical (100 KB).
+
+

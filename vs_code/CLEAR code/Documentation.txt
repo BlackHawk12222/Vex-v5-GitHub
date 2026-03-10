@@ -1057,6 +1057,15 @@ Section nine, How to use it:
 How to use it in its simplest form is using the log.logstart() but first we need to get the import of the file naming it and error handling incase of the file not exist or cant load right.
 the main way to do it is to in a function (name does not matter) put an "if brain.sdcard.is_inserted():" as the first thing then a try: and the error handling for the import error and a name error then in the try add import CLEAR then Clear= CLEAR to get the file on a variable then do the log stuff you want the recommended way is the log.logstart() function but you will need to write it as Clear.log.logstart() because of it being imported. For the inputs for the function there are only two inputs required the right then the left drivetrain motors if you have more than a 2 motor drivetrain then add them in a 123 right left pattern like "right1 left1 right2 left2". Then, if you want any other motors in it add them by adding motor1=, motor2=, etc. to the motor(s) you want to log. The next input is the controller it can do both controllers by saying controller1= and then the name of the main controller then controller2= for the secondary controller. Finally the variables you want to add to it you need its value and it name to be inputted for it to work so like variable1=x variable1name="x". then out of the function add Thead() and put the function in it without the parenthesis. At the end of it should look like this:
 
+if brain.sdcard.is_inserted():
+    try:
+        import CLEAR
+        Clear=CLEAR
+
+        def capture_setup():
+            Clear.log.logstart(Right1, left1, Right2, left2, Right3, left3, motor1=enter up to six motors, variable1=enter up to six variables, variable1name="enter name of variables")
+	# NOTE: for the stuff that can take up to six of things it should go like motor1=x motor2=y etc. NOT: motor1=(x, y, etc.)
+        Thread(capture_setup)
 
 
 

@@ -196,6 +196,7 @@ if brain.sdcard.is_inserted():
         def capture_setup():
             Clear.log.archive.log()
             Clear.log.add("DS0", 0)
+            Clear.log.add_logstart("log.capture.variable('rightspeed', rightspeed)")
             Clear.log.logstart(Right1, left1, Right2, left2, Right3, left3, Intake, TopMotor, colorsorting, variable1=pusher_state, variable1name="pusher_state", variable2=loader_state, variable2name="loader_state")
         Thread(capture_setup)
 

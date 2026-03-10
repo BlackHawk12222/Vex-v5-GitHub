@@ -997,9 +997,6 @@ class Log:
 log=Log()
 
 
-
-
-
 End of code CLEAR.
 
 Section one, Intro:
@@ -1028,13 +1025,13 @@ The encoding is simple in idea but a pain to make it work as it takes the logs s
 
 Section seven, Other:
 
-In the code (See section zero) you will see a lot of "try:", and "except MemoryError:" this is because the size of the files in the Sd card can very easily fill up the memory allocated to the program and lead to a memory error so in this case the file will be read and possess or use the file line by line this makes it still work but will make things slower as it is pulling from the Sd card and not the memory. Also in the Log objects init function you will also see a "except OSError:" the true reason why is unknown to us but it comes of the memory being completely filled before it can get all the library's from python and showing an OS error 27 so it works the same as the memory error so it does not fill up all the memory on startup and force stop the program.
+In the code (See section zero) you will see a lot of "try:", and "except MemoryError:" this is because the size of the files in the Sd card can very easily fill up the memory allocated to the program and lead to a memory error so in this case the file will be read and possess or use the file line by line this makes it still work but will make things slower as it is pulling from the Sd card and not the memory. Also in the Log objects __init__ function you will also see a "except OSError:" the true reason why is unknown to us but it comes of the memory being completely filled before it can get all the library's from python and showing an OS error 27 so it works the same as the memory error so it does not fill up all the memory on startup and force stop the program.
 
 Next, the code it primarily makes objects in the python. The reason for doing this is two big reasons. First is the wanting to learn to use objects to better understand python and use it to are advantage to learn and grow in are skills. the Final reason is for it to be able to be used with other robots in a clean and quick way that looks and feels like the vex code objects and help it for more beginner coders and makes it easy to make it do just about anything within the CLEAR codes goals.
 
 A new addition was made for it to have an ease of updating or changing the CLEAR code is using the import from python to change the class objects and functions without needing the main code for it the only code needed in the main is a import with CLEAR, define the name you want for CLEAR to call it, and tell it what you want to log if the coder wants just the basics covered they can use the start function in the log to do the drivetrain ( up to a six motor) up to six independent motors and six variables. you put them in the input for the respective variables and motor names and it does all the work for you and gives an easy way to do it for most robots especially simple robots.
 
-Another addition to the code is the new function log.logstart() this function is an easy and quick way to get CLEAR to work for the Capture, and Logging for the main code all you need to get it working is call it with your drivetrain motors and then by specifying the variables you want to use and but in the motors you want and then any variables you want up to six of them there name and there value to log.
+Another addition to the code is the new function log.logstart() this function is an easy and quick way to get CLEAR to work for the Capture, and Logging for the main code all you need to get it working is call it with your drivetrain motors and then by specifying the variables you want to use and but in the motors you want and then any variables you want up to six of them there name and there value to log. There is also an added function that allows to add to the log.logstart() by putting it into the Sd card and executing it using the exec() function. This allows people to use the log.logstart() that need to log special things or extra motors or variables that don't fit in the normal function.
 
 An important detail to note is that the main way to use this code in importing it from the Sd card so two lines are needed for it to work calling the import "import CLEAR" and naming the file imported "Clear= CLEAR" is necessary and any code called from CLEAR will need a Clear. at prefixed to it to call it properly. Also to make sure that the main code will work even when there is a bug or error importing or naming and if the Sd card is not there we will need error handling and an "if brain.sdcard.is_inserted():" to first see if the Sd card is in first and then a try and except for an import error and a name error to move on if the file CLEAR is not in the Sd card. 
 
@@ -1049,8 +1046,8 @@ First the battery function, There are no inputs for this function as there will 
 Next is the controller function, it can take both controllers with a simple input of 1 or 2 and you may input monitor motors to Capture how far the motors moved from the sticks. The function will Capture all the buttons and the stick position for both controllers and will log it all even if they are all pressed, to prevent spam it will only log when it is pressed and released and the sticks if they are different from the last time they where checked.
 
 Then there is the motors they are like the battery as they will only log when there is something of note so it will log the power and the temps, the only input is the motor you want to log.
-for the temps if the temps are 50% or more it will log a warning and if over 70% it will log an error. same for power but 11 and 20 respectively.
+for the temps if the temps are 50% or more it will log a warning and if over 70% it will log an error. same for power but 11 and 20 respectively. After the value that the motor is checking for reaches normal values again it will log that to make the log more readable and give some more useful data
 
-Next now is the drivetrain this is about just the same as the motors but you need to do another '.' as you need to specify if the drivetrain is a two, four, or six motor drivetrain and input he motor names if there right place in the input order. the logging is very similar as the motor function and all the thresholds for the logging are the same but the code used are different and it will show which one is the problem in the drivetrain.
+Next now is the drivetrain this is about the same as the motors but you need to do another '.' as you need to specify if the drivetrain is a two, four, or six motor drivetrain and input the motor names if there right place in the input order. the logging is very similar as the motor function and all the thresholds for the logging are the same but the code used are different and it will show which one is the problem in the drivetrain. Then the read out is a little different as it will not just show the peak use of the data but the total as well making it much more useful for drivetrain related issues.
 
 last is the variables this one is pretty simple and with log the initial value and any changes to the value and logs it the input needed are its name in quotation marks and the value by calling that variable.

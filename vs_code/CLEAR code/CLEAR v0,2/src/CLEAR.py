@@ -898,7 +898,10 @@ class Log:
                 brain.sdcard.savefile("loghistory.txt", bytearray("", self.format))                   
             else:
                 try:
-                    loghistory_lines=brain.sdcard.loadfile("loghistory.txt").decode(self.format).split("\n")
+                    try:
+                        loghistory_lines=brain.sdcard.loadfile("loghistory.txt").decode(self.format).split("\n")
+                    except AttributeError:
+                        pass
                 except MemoryError: # If the log history file is too big to load into memory, it will read the file line by line and count the number of lines to set the index.
                     print("loghistory.txt cannot be decoded.")
                     loghistory_lines=[]
@@ -913,8 +916,10 @@ class Log:
                         for line in loghistory_file:
                             log_number+=1
                     print("loghistory done")
+            if not brain.sdcard.exists("index.txt"):
+                brain.sdcard.savefile("index.txt", bytearray("0", self.format))
 
-            historyindex=int(brain.sdcard.loadfile("index.txt"))
+            historyindex=int(brain.sdcard.loadfile("index.txt").decode(self.format))
             self.index=len(log_lines) + len(loghistory_lines) + log_number + historyindex - 1
             log_lines=[]
             loghistory_lines=[]
@@ -1020,8 +1025,6 @@ class Log:
 
                 if variable6!=None:
                     self.capture.variable(variable6name, variable6)
-
-                exec(addedfuntion)
 
                 if self.recording.record==False:
                     wait(200, MSEC)

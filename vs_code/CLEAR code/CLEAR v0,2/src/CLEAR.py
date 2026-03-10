@@ -980,7 +980,7 @@ class Log:
         addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
         self.archive.log()
         self.add("DS0", 0)
-        if brain.sdcard.filesize("loghistory.txt") >= 100000:
+        if brain.sdcard.filesize("loghistory.txt") >= 200000:
             log.archive.index_history()
 
         while True:

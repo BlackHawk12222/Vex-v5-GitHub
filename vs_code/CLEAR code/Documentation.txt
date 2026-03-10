@@ -1051,3 +1051,14 @@ for the temps if the temps are 50% or more it will log a warning and if over 70%
 Next now is the drivetrain this is about the same as the motors but you need to do another '.' as you need to specify if the drivetrain is a two, four, or six motor drivetrain and input the motor names if there right place in the input order. the logging is very similar as the motor function and all the thresholds for the logging are the same but the code used are different and it will show which one is the problem in the drivetrain. Then the read out is a little different as it will not just show the peak use of the data but the total as well making it much more useful for drivetrain related issues.
 
 last is the variables this one is pretty simple and with log the initial value and any changes to the value and logs it the input needed are its name in quotation marks and the value by calling that variable.
+
+Section nine, How to use it:
+
+How to use it in its simplest form is using the log.logstart() but first we need to get the import of the file naming it and error handling incase of the file not exist or cant load right.
+the main way to do it is to in a function (name does not matter) put an "if brain.sdcard.is_inserted():" as the first thing then a try: and the error handling for the import error and a name error then in the try add import CLEAR then Clear= CLEAR to get the file on a variable then do the log stuff you want the recommended way is the log.logstart() function but you will need to write it as Clear.log.logstart() because of it being imported. For the inputs for the function there are only two inputs required the right then the left drivetrain motors if you have more than a 2 motor drivetrain then add them in a 123 right left pattern like "right1 left1 right2 left2". Then, if you want any other motors in it add them by adding motor1=, motor2=, etc. to the motor(s) you want to log. The next input is the controller it can do both controllers by saying controller1= and then the name of the main controller then controller2= for the secondary controller. Finally the variables you want to add to it you need its value and it name to be inputted for it to work so like variable1=x variable1name="x". then out of the function add Thead() and put the function in it without the parenthesis. At the end of it should look like this:
+
+
+
+
+
+

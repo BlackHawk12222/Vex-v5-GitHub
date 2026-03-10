@@ -976,16 +976,20 @@ class Log:
         log_content=brain.sdcard.loadfile("Log.csv")
         print(log_content.decode(self.format))
     
-    def logstart(self, Right1, Left1, Right2=None, Left2=None, Right3=None, Left3=None, motor1=None, motor2=None, motor3=None, motor4=None, motor5=None, motor6=None, variable1=None, variable1name="", variable2=None, variable2name="", variable3=None, variable3name="", variable4=None, variable4name="", variable5=None, variable5name="", variable6=None, variable6name="", controller_primary=Controller(PRIMARY)):
+    def logstart(self, Right1, Left1, Right2=None, Left2=None, Right3=None, Left3=None, motor1=None, motor2=None, motor3=None, motor4=None, motor5=None, motor6=None, variable1=None, variable1name="", variable2=None, variable2name="", variable3=None, variable3name="", variable4=None, variable4name="", variable5=None, variable5name="", variable6=None, variable6name="", controller1=Controller(PRIMARY), controller2=None):
         addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
-        
+        self.archive.log()
+        self.add("DS0", 0)
         if brain.sdcard.filesize("loghistory.txt") >= 100000:
             log.archive.index_history()
 
         while True:
             for i in range(200):
                 self.capture.battery()
-                self.capture.controller(controller_primary, Right1, Right1, Left1, Left1)
+                self.capture.controller(controller1, Right1, Right1, Left1, Left1)
+                if controller2!= None:
+                    self.capture.controller(controller2, Right1, Right1, Left1, Left1)
+                
                 if Right2==None and Left2==None and Right3==None and Left3==None:
                     self.capture.drivetrain.two_motor(Right1, Left1)
                 elif Right3==None and Left3==None:

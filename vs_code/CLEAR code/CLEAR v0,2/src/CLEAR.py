@@ -977,7 +977,10 @@ class Log:
         print(log_content.decode(self.format))
     
     def logstart(self, Right1, Left1, Right2=None, Left2=None, Right3=None, Left3=None, motor1=None, motor2=None, motor3=None, motor4=None, motor5=None, motor6=None, variable1=None, variable1name="", variable2=None, variable2name="", variable3=None, variable3name="", variable4=None, variable4name="", variable5=None, variable5name="", variable6=None, variable6name="", controller1=Controller(PRIMARY), controller2=None):
-        addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
+        try:    
+            addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
+        except AttributeError:
+            pass
         self.archive.log()
         self.add("DS0", 0)
         if brain.sdcard.filesize("loghistory.txt") >= 200000:
@@ -1033,8 +1036,11 @@ class Log:
                 if variable6!=None:
                     self.capture.variable(variable6name, variable6)
                 
-                exec(addedfuntion)
-
+                try:
+                    exec(addedfuntion)
+                except Exception as e:
+                    print("ERROR exec in logstart Error: ", e)
+                
                 if self.recording.record==False:
                     wait(200, MSEC)
                 else:

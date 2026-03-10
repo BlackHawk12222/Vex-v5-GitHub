@@ -11,5 +11,12 @@ v0.2:
 Added function log.addlogstart() to add extra functions to the log.logstart().
 Added function log.archive.index_history() to get the index and delete the old things.
 Added function log.archive.index_history() to the log.logstart() in the startup and uses it if the size of the history is to big to be practical (100 KB).
-
-
+Changed size for index_history activation to 200KB.
+Changed variable input controller_primary in logstart to controller1.
+Added variable input in logstart(): controller2
+Added archive.log to logstart().
+Added a DS0 code when starting the logstart() function.
+Changed log.capture.variable to try and get boolens to work with it (Unsucesful).
+Added error handleing for decoding the addedfuntion variable in log start.
+Added controller2 capture if controller 2 is not None.
+Added error handleing for exec in logstart().

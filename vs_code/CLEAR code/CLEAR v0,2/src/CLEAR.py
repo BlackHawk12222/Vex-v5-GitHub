@@ -517,7 +517,10 @@ class Capture:
     def variable(self, name, value):
         valueid=id(name)
         if valueid not in self.variables:
-            self.variables[valueid]=0
+            if value != True and value != False:
+                self.variables[valueid]=0
+            else:
+                self.variables[valueid]=False
         if value != self.variables[valueid]:
             log.add("DV0", "Variable %s Value %s"%(name, value))
             self.variables[valueid] = value

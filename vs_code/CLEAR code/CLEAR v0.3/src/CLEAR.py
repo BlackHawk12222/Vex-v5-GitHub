@@ -517,10 +517,10 @@ class Capture:
     def variable(self, name, value):
         valueid=id(name)
         if valueid not in self.variables:
-            if value != True and value != False:
-                self.variables[valueid]=0
-            else:
+            if type(value)==bool:
                 self.variables[valueid]=False
+            else:
+                self.variables[valueid]=0
         if value != self.variables[valueid]:
             log.add("DV0", "Variable %s Value %s"%(name, value))
             self.variables[valueid] = value
@@ -830,6 +830,7 @@ class Log:
         self.adding=True
         self.format="utf-8"
         self.cache=""
+        brain.sdcard.savefile("Logstart.txt")
         # Predefined Log Codes dictionary
         self.codes={
                     "ED1": ":Drivetrain ERROR: Motor(s) Criticaly Hot. Temp: ",
@@ -976,7 +977,7 @@ class Log:
         log_content=brain.sdcard.loadfile("Log.csv")
         print(log_content.decode(self.format))
     
-    def logstart(self, Right1, Left1, Right2=None, Left2=None, Right3=None, Left3=None, motor1=None, motor2=None, motor3=None, motor4=None, motor5=None, motor6=None, variable1=None, variable1name="", variable2=None, variable2name="", variable3=None, variable3name="", variable4=None, variable4name="", variable5=None, variable5name="", variable6=None, variable6name="", controller1=Controller(PRIMARY), controller2=None):
+    def logstart(self, Right1, Left1, Right2=None, Left2=None, Right3=None, Left3=None, motor1=None, motor2=None, motor3=None, motor4=None, motor5=None, motor6=None, controller1=Controller(PRIMARY), controller2=None):
         try:    
             addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
         except AttributeError:
@@ -1017,27 +1018,10 @@ class Log:
 
                 if motor6!=None:
                     self.capture.motor(motor6)
-
-                if variable1!=None:
-                    self.capture.variable(variable1name, variable1)
-
-                if variable2!=None:
-                    self.capture.variable(variable2name, variable2)
-
-                if variable3!=None:
-                    self.capture.variable(variable3name, variable3)
-
-                if variable4!=None:
-                    self.capture.variable(variable4name, variable4)
-
-                if variable5!=None:
-                    self.capture.variable(variable5name, variable5)
-
-                if variable6!=None:
-                    self.capture.variable(variable6name, variable6)
                 
                 try:
                     exec(addedfuntion)
+                    pass
                 except Exception as e:
                     print("ERROR exec in logstart Error: ", e)
                 
@@ -1048,8 +1032,6 @@ class Log:
             self.unloadcache()
     
     def add_logstart(self, funtion):
-        if brain.sdcard.exists("Logstart.txt"):
-            brain.sdcard.savefile("Logstart.txt")
         brain.sdcard.appendfile("Logstart.txt" , bytearray(funtion + ", ", self.format))
 
 

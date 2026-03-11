@@ -20,3 +20,10 @@ Changed log.capture.variable to try and get boolens to work with it (Unsucesful)
 Added error handleing for decoding the addedfuntion variable in log start.
 Added controller2 capture if controller 2 is not None.
 Added error handleing for exec in logstart().
+
+v0.3:
+
+Fixed variables capture.
+Added support for Booleans in variables.
+Fixed exec in log.logstart().
+

@@ -867,7 +867,7 @@ class Log:
                     "DS1": ":System DATA: Archive Log complete. Time: ",
                     "DS2": ":System DATA: Index Log History complete. Time: ",
                     "DS3": ":System DATA: Archive Recording complete. Time: ",
-                    "DS3": ":System DATA: Loop Speed. Time: ",
+                    "DS4": ":System DATA: Loop Speed. Time: ",
                     "EM0": ":Motor ERROR: Motor Criticaly Hot. Temp: ",
                     "EM1": ":Motor ERROR: Motor Disconnected. Name: ",
                     "EM2": ":Motor ERROR: Motor Very High Power. Power: ",
@@ -1012,6 +1012,7 @@ class Log:
             for i in range(200):
                 self.capture.battery()
                 self.capture.controller(controller1, Right1, Right1, Left1, Left1)
+
                 if controller2!=None:
                     self.capture.controller(controller2, Right1, Right1, Left1, Left1)
                 
@@ -1051,7 +1052,7 @@ class Log:
                 else:
                     pass
             self.unloadcache()
-            if self.recording.record==False and (log_time.time() - speed) > 40200:
+            if self.recording.record==False and (log_time.time() - speed) > 40300:
                 log.add("WS0", str(log_time.time() - speed))
             else:
                 log.add("DS4", str(log_time.time() - speed))

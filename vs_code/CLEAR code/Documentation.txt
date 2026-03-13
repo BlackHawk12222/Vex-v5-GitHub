@@ -118,6 +118,12 @@ def record():
     except AttributeError:
         print("CLEAR.py not found. Make sure it is in the sdcard and try again.")
 
+Section ten, Performance:
+
+During the state competition when we where talking about the logging one of the judges asked about its performance we unfortunately could not fully answer this question other than its fairly light. Now we can say with full confidence that the software is light weight and will minimally impact the performance of the robot when logging.
+
+How we test for the performance is seeing how much time it takes to complete it because we can't see the utilization of the CPU in the brain. Next, the setup we used is a logging of a six motor drivetrain three other motors and two variables and one controller to test what the performance its for a basic robot we would make is. For the full loop which is logging all the things 200 times over the time when logging is about 40250 msec it varies a lot about +- 50 msec now every loop in the main loop has a 200msec wait to make it work at about 5 Hz so we spend about 250msec busy so in percent that's about 0.62% of the time busy and on top of that it uses the Thread function so it runs in the background and will never affect the true performance of the main program and will run its things when the brain is idle and we can't even feel any lag that what is normal. So this lead us to believe that it is nearly indistinguishable than a brain without it.
+
 
 
 

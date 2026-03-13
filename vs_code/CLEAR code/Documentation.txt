@@ -112,6 +112,7 @@ def record():
 
         def driver():
             pass
+	    #Enter driver based functions you want here
         
         comp=Competition(driver, aton)
     except ImportError:

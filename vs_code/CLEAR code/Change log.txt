@@ -30,4 +30,10 @@ Added brain readout.
 Added logging for archive time.
 Added logging for indexing history time
 Changed order of start up for log.logstart()
+Added proformance logging for the log.logstart() loop.
+Fixed spam of motors and drivetrain errors.
+
+v0.4:
+
+Changed controller axis logging to reduce spam when not recording.
 

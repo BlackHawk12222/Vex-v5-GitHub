@@ -351,14 +351,15 @@ class Capture:
             log.add("DB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
             self.battery_voltage_monitoring=0
         
-        if brain.battery.capacity()<25 and (self.battery_capacity_monitoring==0 or self.battery_capacity_monitoring==2):
+        if brain.battery.capacity()<25 and self.battery_capacity_monitoring!=brain.battery.capacity():
             log.add("EB1", "%s"%(brain.battery.capacity()))
-            self.battery_capacity_monitoring=1
-        elif brain.battery.capacity()<50 and (self.battery_capacity_monitoring==0):
+            self.battery_capacity_monitoring=brain.battery.capacity()
+        elif brain.battery.capacity()<50 and self.battery_capacity_monitoring!=brain.battery.capacity():
             log.add("WB1", "%s"%(brain.battery.capacity()))
-            self.battery_capacity_monitoring=2
-        elif brain.battery.capacity()>=50 and (self.battery_capacity_monitoring==1 or self.battery_capacity_monitoring==2):
-            self.battery_capacity_monitoring=0
+            self.battery_capacity_monitoring=brain.battery.capacity()
+        elif brain.battery.capacity()>=50 and self.battery_capacity_monitoring!=brain.battery.capacity():
+            log.add("DB3", "%s"%(brain.battery.capacity()))
+            self.battery_capacity_monitoring=brain.battery.capacity()
         
         if brain.battery.current(CurrentUnits.AMP)>18 and (self.battery_current_monitoring==0 or self.battery_current_monitoring==2):
             log.add("EB2", "%s"%(brain.battery.current(CurrentUnits.AMP)))
@@ -384,7 +385,7 @@ class Capture:
         Controller=controller
 
         if not log.recording.record: # Only logs when not recoding to save space on the recording file.
-            if Controller.axis1.position()!=0 and self.axis1 != Controller.axis1.position():
+            if Controller.axis1.position()!=0 and not (self.axis1 >= Controller.axis1.position() - log.tolrance and self.axis1 <= Controller.axis1.position() + log.tolrance):
                 degrees=monitormotor1.position(DEGREES)
                 monitormotor1.set_position(0, DEGREES)
                 log.add("DC1", "%s_Axis1 %d Moved %d Degrees"%(str(controller), Controller.axis1.position(), degrees))
@@ -395,30 +396,54 @@ class Capture:
                 log.add("DC1", "%s_Axis1 %d Moved %d Degrees"%(str(controller), 0, 0))
                 self.axis1=0
 
-        if Controller.axis2.position()!=0 and self.axis2 != Controller.axis2.position():
-            degrees=monitormotor2.position(DEGREES)
-            monitormotor2.set_position(0, DEGREES)
-            log.add("DC1", "%s_Axis2 %d Moved %d Degrees"%(str(controller), Controller.axis2.position(), degrees))
-            self.axis2=Controller.axis2.position()
-        elif 0 == Controller.axis2.position() and self.axis2!=0:
-            degrees=monitormotor2.position(DEGREES)
-            monitormotor2.set_position(0, DEGREES)
-            log.add("DC1", "%s_Axis2 %d Moved %d Degrees"%(str(controller), 0, 0))
-            self.axis2=0
+        if log.recording.record:
+            if Controller.axis2.position()!=0 and self.axis2 != Controller.axis2.position():
+                degrees=monitormotor2.position(DEGREES)
+                monitormotor2.set_position(0, DEGREES)
+                log.add("DC1", "%s_Axis2 %d Moved %d Degrees"%(str(controller), Controller.axis2.position(), degrees))
+                self.axis2=Controller.axis2.position()
+            elif 0 == Controller.axis2.position() and self.axis2!=0:
+                degrees=monitormotor2.position(DEGREES)
+                monitormotor2.set_position(0, DEGREES)
+                log.add("DC1", "%s_Axis2 %d Moved %d Degrees"%(str(controller), 0, 0))
+                self.axis1=0
+        else:
+            if Controller.axis2.position()!=0 and not (self.axis2 >= Controller.axis2.position() - log.tolrance and self.axis2 <= Controller.axis2.position() + log.tolrance):
+                degrees=monitormotor2.position(DEGREES)
+                monitormotor2.set_position(0, DEGREES)
+                log.add("DC1", "%s_Axis2 %d Moved %d Degrees"%(str(controller), Controller.axis2.position(), degrees))
+                self.axis2=Controller.axis2.position()
+            elif 0 == Controller.axis2.position() and self.axis2!=0:
+                degrees=monitormotor2.position(DEGREES)
+                monitormotor2.set_position(0, DEGREES)
+                log.add("DC1", "%s_Axis2 %d Moved %d Degrees"%(str(controller), 0, 0))
+                self.axis2=0
 
-        if Controller.axis3.position()!=0 and self.axis3 != Controller.axis3.position():
-            degrees=monitormotor3.position(DEGREES)
-            monitormotor3.set_position(0, DEGREES)
-            log.add("DC1", "%s_Axis3 %d Moved %d Degrees"%(str(controller), Controller.axis3.position(), degrees))
-            self.axis3=Controller.axis3.position()
-        elif 0 == Controller.axis3.position() and self.axis3!=0:
-            degrees=monitormotor3.position(DEGREES)
-            monitormotor3.set_position(0, DEGREES)
-            log.add("DC1", "%s_Axis3 %d Moved %d Degrees"%(str(controller), 0, 0))
-            self.axis3=0
+        if log.recording.record:
+            if Controller.axis3.position()!=0 and self.axis3 != Controller.axis3.position():
+                degrees=monitormotor3.position(DEGREES)
+                monitormotor3.set_position(0, DEGREES)
+                log.add("DC1", "%s_Axis3 %d Moved %d Degrees"%(str(controller), Controller.axis3.position(), degrees))
+                self.axis3=Controller.axis3.position()
+            elif 0 == Controller.axis3.position() and self.axis3!=0:
+                degrees=monitormotor3.position(DEGREES)
+                monitormotor3.set_position(0, DEGREES)
+                log.add("DC1", "%s_Axis3 %d Moved %d Degrees"%(str(controller), 0, 0))
+                self.axis3=0
+        else:
+            if Controller.axis3.position()!=0 and not (self.axis3 >= Controller.axis3.position() - log.tolrance and self.axis3 <= Controller.axis3.position() + log.tolrance):
+                degrees=monitormotor3.position(DEGREES)
+                monitormotor3.set_position(0, DEGREES)
+                log.add("DC1", "%s_Axis3 %d Moved %d Degrees"%(str(controller), Controller.axis3.position(), degrees))
+                self.axis3=Controller.axis3.position()
+            elif 0 == Controller.axis3.position() and self.axis3!=0:
+                degrees=monitormotor3.position(DEGREES)
+                monitormotor3.set_position(0, DEGREES)
+                log.add("DC1", "%s_Axis3 %d Moved %d Degrees"%(str(controller), 0, 0))
+                self.axis3=0
 
         if not log.recording.record:
-            if Controller.axis4.position()!=0 and self.axis4 != Controller.axis4.position():
+            if Controller.axis4.position()!=0 and not (self.axis4 >= Controller.axis4.position() - log.tolrance and self.axis4 <= Controller.axis4.position() + log.tolrance):
                 degrees=monitormotor4.position(DEGREES)
                 monitormotor4.set_position(0, DEGREES)
                 log.add("DC1", "%s_Axis4 %d Moved %d Degrees"%(str(controller), Controller.axis4.position(), degrees))
@@ -834,6 +859,7 @@ class Log:
         self.cache=""
         self.brainscreen=False
         self.row=0
+        self.tolrance=3
         brain.sdcard.savefile("Logstart.txt")
         # Predefined Log Codes dictionary
         self.codes={
@@ -858,6 +884,7 @@ class Log:
                     "DB0": ":Battery DATA: Voltage Back To Normal. Voltage: ",
                     "DB1": ":Battery DATA: Current Back To Normal. Current: ",
                     "DB2": ":Battery DATA: Wattage Back To Normal. Wattage: ",
+                    "DB3": ":Battery DATA: Capacity Changed. Capacity: ",
                     "DA0": ":Aton DATA: Recording Started.: ",
                     "DA1": ":Aton DATA: Recording Stopped.: ",
                     "DA2": ":Aton DATA: Recording Saved.: ",

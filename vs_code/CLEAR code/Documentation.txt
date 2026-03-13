@@ -45,7 +45,7 @@ An important detail to note is that the main way to use this code in importing i
 
 A cool thing for people without a brain readout is the use of the brain readout in the log.logstart() helping when you cant use the terminal or for finding a repeatable problem faster.
 
-Section eight, P&S:
+Section eight, Functions and there uses:
 
 Now i will go into detail on how the capture works and its current capabilities.
 
@@ -75,7 +75,8 @@ if brain.sdcard.is_inserted():
         def capture_setup():
 	    Clear.log.add_logstart("log.capture.variable('variable', variable)")
             Clear.log.logstart(Right1, left1, Right2, left2, Right3, left3, motor1=enter up to six motors)
-	# NOTE: for the stuff that can take up to six of things it should go like motor1=x motor2=y etc. NOT: motor1=(x, y, etc.)
+	    # NOTE: for the stuff that can take up to six of things it should go like motor1=x motor2=y etc. NOT: motor1=(x, y, etc.)
+	    # NOTE2: There are a few extra things you can config for changing if you want to print to the brain screen or not index the log history. Syntax: brainscreen=True, indexhistory=False.
         Thread(capture_setup)
 
 All of that can use the logging, capture, and the archive for the code to use the Recording and encoding we need another function in the main code. The way to do this is very simple there are two ways to do it record and then encode or record and encode on two separate inputs we recommend the first option. All you need to do is in a function (again name does not matter) is the same if and error handling but don't import as you do need the previous code to be there for the recording and encoding to work. add the Clear.log.recording.start() then add the name of the recording in the input then after what you want in a recording is done add the Clear.log.record.stop() and also add the name of the recording (you may add the stop as a toggle or as a separate function). After you stopped the recording then you will put in Clear.log.recording.encode() now in the inputs you add the right side drive function then the left then any function to need from the recording as its function then its stop function then its button (the max you can add is six) and it should look like this with some controller print to show if it is recording and when its done:
@@ -122,7 +123,7 @@ Section ten, Performance:
 
 During the state competition when we where talking about the logging one of the judges asked about its performance we unfortunately could not fully answer this question other than its fairly light. Now we can say with full confidence that the software is light weight and will minimally impact the performance of the robot when logging.
 
-How we test for the performance is seeing how much time it takes to complete it because we can't see the utilization of the CPU in the brain. Next, the setup we used is a logging of a six motor drivetrain three other motors and two variables and one controller to test what the performance its for a basic robot we would make is. For the full loop which is logging all the things 200 times over the time when logging is about 40250 msec it varies a lot about +- 50 msec now every loop in the main loop has a 200msec wait to make it work at about 5 Hz so we spend about 250msec busy so in percent that's about 0.62% of the time busy and on top of that it uses the Thread function so it runs in the background and will never affect the true performance of the main program and will run its things when the brain is idle and we can't even feel any lag that what is normal. So this lead us to believe that it is nearly indistinguishable than a brain without it.
+How we test for the performance is seeing how much time it takes to complete it because we can't see the utilization of the CPU in the brain. Next, the setup we used is a logging of a six motor drivetrain three other motors and two variables and one controller to test what the performance its for a basic robot we would make is. For the full loop which is logging all the things 200 times over the time when logging is about 40250 msec it varies a lot about +- 50 msec now every loop in the main loop has a 200msec wait to make it work at about 5 Hz so we spend about 250msec busy so in percent that's about 0.62% of the time busy and on top of that it uses the Thread function so it runs in the background and will never affect the true performance of the main program and will run its things when the brain is idle and on top of all of that we can't even feel any difference in lag for inputs. So this lead us to believe that it is indistinguishable than a brain without it. However this is not for recording witch is a different Hz and tries to use the max usage to get the best accuracy for the recording. Even then it still is in a Thread so it will not affect the main thread but if there is any other Thread it will not work until after the recording is done.
 
 
 

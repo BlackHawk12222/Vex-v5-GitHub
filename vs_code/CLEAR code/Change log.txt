@@ -26,4 +26,8 @@ v0.3:
 Fixed variables capture.
 Added support for Booleans in variables.
 Fixed exec in log.logstart().
+Added brain readout.
+Added logging for archive time.
+Added logging for indexing history time
+Changed order of start up for log.logstart()
 

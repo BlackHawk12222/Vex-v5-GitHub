@@ -387,131 +387,131 @@ class Capture:
             if Controller.axis1.position()!=0 and self.axis1 != Controller.axis1.position():
                 degrees=monitormotor1.position(DEGREES)
                 monitormotor1.set_position(0, DEGREES)
-                log.add("DC1", "Controller_%s_Axis1 %d Moved %d Degrees"%(str(controller), Controller.axis1.position(), degrees))
+                log.add("DC1", "%s_Axis1 %d Moved %d Degrees"%(str(controller), Controller.axis1.position(), degrees))
                 self.axis1=Controller.axis1.position()
             elif 0 == Controller.axis1.position() and self.axis1!=0:
                 degrees=monitormotor1.position(DEGREES)
                 monitormotor1.set_position(0, DEGREES)
-                log.add("DC1", "Controller_%s_Axis1 %d Moved %d Degrees"%(str(controller), 0, 0))
+                log.add("DC1", "%s_Axis1 %d Moved %d Degrees"%(str(controller), 0, 0))
                 self.axis1=0
 
         if Controller.axis2.position()!=0 and self.axis2 != Controller.axis2.position():
             degrees=monitormotor2.position(DEGREES)
             monitormotor2.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%s_Axis2 %d Moved %d Degrees"%(str(controller), Controller.axis2.position(), degrees))
+            log.add("DC1", "%s_Axis2 %d Moved %d Degrees"%(str(controller), Controller.axis2.position(), degrees))
             self.axis2=Controller.axis2.position()
         elif 0 == Controller.axis2.position() and self.axis2!=0:
             degrees=monitormotor2.position(DEGREES)
             monitormotor2.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%s_Axis2 %d Moved %d Degrees"%(str(controller), 0, 0))
+            log.add("DC1", "%s_Axis2 %d Moved %d Degrees"%(str(controller), 0, 0))
             self.axis2=0
 
         if Controller.axis3.position()!=0 and self.axis3 != Controller.axis3.position():
             degrees=monitormotor3.position(DEGREES)
             monitormotor3.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%s_Axis3 %d Moved %d Degrees"%(str(controller), Controller.axis3.position(), degrees))
+            log.add("DC1", "%s_Axis3 %d Moved %d Degrees"%(str(controller), Controller.axis3.position(), degrees))
             self.axis3=Controller.axis3.position()
         elif 0 == Controller.axis3.position() and self.axis3!=0:
             degrees=monitormotor3.position(DEGREES)
             monitormotor3.set_position(0, DEGREES)
-            log.add("DC1", "Controller_%s_Axis3 %d Moved %d Degrees"%(str(controller), 0, 0))
+            log.add("DC1", "%s_Axis3 %d Moved %d Degrees"%(str(controller), 0, 0))
             self.axis3=0
 
         if not log.recording.record:
             if Controller.axis4.position()!=0 and self.axis4 != Controller.axis4.position():
                 degrees=monitormotor4.position(DEGREES)
                 monitormotor4.set_position(0, DEGREES)
-                log.add("DC1", "Controller_%s_Axis4 %d Moved %d Degrees"%(str(controller), Controller.axis4.position(), degrees))
+                log.add("DC1", "%s_Axis4 %d Moved %d Degrees"%(str(controller), Controller.axis4.position(), degrees))
                 self.axis4=Controller.axis4.position()
             elif 0 == Controller.axis4.position() and self.axis4!=0:
                 degrees=monitormotor4.position(DEGREES)
                 monitormotor4.set_position(0, DEGREES)
-                log.add("DC1", "Controller_%s_Axis4 %d Moved %d Degrees"%(str(controller), 0, 0))
+                log.add("DC1", "%s_Axis4 %d Moved %d Degrees"%(str(controller), 0, 0))
                 self.axis4=0
 
         if Controller.buttonA.pressing() and self.button_a==True:
-            log.add("DC0", "Controller_%s_Button A Pressed"%(str(controller)))
+            log.add("DC0", "%s_Button A Pressed"%(str(controller)))
             self.button_a=False
         elif Controller.buttonA.pressing()==False and self.button_a==False:
-            log.add("DC0", "Controller_%s_Button A Released"%(str(controller)))
+            log.add("DC0", "%s_Button A Released"%(str(controller)))
             self.button_a=True
 
 
         if Controller.buttonB.pressing() and self.button_b==True:
-            log.add("DC0", "Controller_%s_Button B Pressed"%(str(Controller)))
+            log.add("DC0", "%s_Button B Pressed"%(str(Controller)))
             self.button_b=False
         elif Controller.buttonB.pressing()==False and self.button_b==False:
-            log.add("DC0", "Controller_%s_Button B Released"%(str(controller)))
+            log.add("DC0", "%s_Button B Released"%(str(controller)))
             self.button_b=True
 
         if Controller.buttonX.pressing() and self.button_x==True:
-            log.add("DC0", "Controller_%s_Button X Pressed"%(str(controller)))
+            log.add("DC0", "%s_Button X Pressed"%(str(controller)))
             self.button_x=False
         elif Controller.buttonX.pressing()==False and self.button_x==False:
-            log.add("DC0", "Controller_%s_Button X Released"%(str(controller)))
+            log.add("DC0", "%s_Button X Released"%(str(controller)))
             self.button_x=True
 
         if Controller.buttonY.pressing() and self.button_y==True:
-            log.add("DC0", "Controller_%s_Button Y Pressed"%(str(controller)))
+            log.add("DC0", "%s_Button Y Pressed"%(str(controller)))
             self.button_y=False
         elif Controller.buttonY.pressing()==False and self.button_y==False:
-            log.add("DC0", "Controller_%s_Button Y Released"%(str(controller)))
+            log.add("DC0", "%s_Button Y Released"%(str(controller)))
             self.button_y=True
 
         if Controller.buttonUp.pressing() and self.button_up==True:
-            log.add("DC0", "Controller_%s_Button UP Pressed"%(str(controller)))
+            log.add("DC0", "%s_Button UP Pressed"%(str(controller)))
             self.button_up=False
         elif Controller.buttonUp.pressing()==False and self.button_up==False:
-            log.add("DC0", "Controller_%s_Button UP Released"%(str(controller)))
+            log.add("DC0", "%s_Button UP Released"%(str(controller)))
             self.button_up=True
 
         if Controller.buttonDown.pressing() and self.button_down==True:
-            log.add("DC0", "Controller_%s_Button DOWN Pressed"%(str(controller)))
+            log.add("DC0", "%s_Button DOWN Pressed"%(str(controller)))
             self.button_down=False
         elif Controller.buttonDown.pressing()==False and self.button_down==False:
-            log.add("DC0", "Controller_%s_Button DOWN Released"%(str(controller)))
+            log.add("DC0", "%s_Button DOWN Released"%(str(controller)))
             self.button_down=True
 
         if Controller.buttonLeft.pressing() and self.button_left==True:
-            log.add("DC0", "Controller_%s_Button LEFT Pressed"%(str(controller)))
+            log.add("DC0", "%s_Button LEFT Pressed"%(str(controller)))
             self.button_left=False
         elif Controller.buttonLeft.pressing()==False and self.button_left==False:
-            log.add("DC0", "Controller_%s_Button LEFT Released"%(str(controller)))
+            log.add("DC0", "%s_Button LEFT Released"%(str(controller)))
             self.button_left=True
 
         if Controller.buttonRight.pressing() and self.button_right==True:
-            log.add("DC0", "Controller_%s_Button RIGHT Pressed"%(str(controller)))
+            log.add("DC0", "%s_Button RIGHT Pressed"%(str(controller)))
             self.button_right=False
         elif Controller.buttonRight.pressing()==False and self.button_right==False:
-            log.add("DC0", "Controller_%s_Button RIGHT Released"%(str(controller)))
+            log.add("DC0", "%s_Button RIGHT Released"%(str(controller)))
             self.button_right=True
 
         if Controller.buttonL1.pressing() and self.button_L1==True:
-            log.add("DC0", "Controller_%s_Button L1 Pressed"%(str(controller)))
+            log.add("DC0", "%s_Button L1 Pressed"%(str(controller)))
             self.button_L1=False
         elif Controller.buttonL1.pressing()==False and self.button_L1==False:
-            log.add("DC0", "Controller_%s_Button L1 Released"%(str(controller)))
+            log.add("DC0", "%s_Button L1 Released"%(str(controller)))
             self.button_L1=True
 
         if Controller.buttonL2.pressing() and self.button_L2==True:
-            log.add("DC0", "Controller_%s_Button L2 Pressed"%(str(controller)))
+            log.add("DC0", "%s_Button L2 Pressed"%(str(controller)))
             self.button_L2=False
         elif Controller.buttonL2.pressing()==False and self.button_L2==False:
-            log.add("DC0", "Controller_%s_Button L2 Released"%(str(controller)))
+            log.add("DC0", "%s_Button L2 Released"%(str(controller)))
             self.button_L2=True
 
         if Controller.buttonR1.pressing() and self.button_R1==True:
-            log.add("DC0", "Controller_%s_Button R1 Pressed"%(str(controller)))
+            log.add("DC0", "%s_Button R1 Pressed"%(str(controller)))
             self.button_R1=False
         elif Controller.buttonR1.pressing()==False and self.button_R1==False:
-            log.add("DC0", "Controller_%s_Button R1 Released"%(str(controller)))
+            log.add("DC0", "%s_Button R1 Released"%(str(controller)))
             self.button_R1=True
 
         if Controller.buttonR2.pressing() and self.button_R2==True:
-            log.add("DC0", "Controller_%s_Button R2 Pressed"%(str(controller)))
+            log.add("DC0", "%s_Button R2 Pressed"%(str(controller)))
             self.button_R2=False
         elif Controller.buttonR2.pressing()==False and self.button_R2==False:
-            log.add("DC0", "Controller_%s_Button R2 Released"%(str(controller)))
+            log.add("DC0", "%s_Button R2 Released"%(str(controller)))
             self.button_R2=True
 
     def variable(self, name, value):
@@ -605,9 +605,9 @@ class Recording:
                         print("found controller")
                         if "Axis" in str(prelist):
                             print("found axis")
-                            if "Controller_1_Axis3" in str(prelist):
+                            if "Axis3" in str(prelist):
                                 brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(left[1]), str(prelist[11]).replace("'", ''), str(prelist[13]).replace("'", '')), log.format))
-                            elif "Controller_1_Axis2" in str(prelist):
+                            elif "Axis2" in str(prelist):
                                 brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(right[1]), str(prelist[11]).replace("'", ''), str(prelist[13]).replace("'", '')), log.format))
 
                         elif "Button" in str(prelist):
@@ -657,9 +657,9 @@ class Recording:
                             print("found controller")
                             if "Axis" in str(prelist):
                                 print("found axis")
-                                if "Controller_1_Axis3" in str(prelist):
+                                if "1_Axis3" in str(prelist):
                                     brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(left[1]), str(prelist[10]).replace("'", ''), str(prelist[12]).replace("'", '')), log.format))
-                                elif "Controller_1_Axis2" in str(prelist):
+                                elif "1_Axis2" in str(prelist):
                                     brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(right[1]), str(prelist[10]).replace("'", ''), str(prelist[12]).replace("'", '')), log.format))
 
                             elif "Button" in str(prelist):
@@ -759,7 +759,7 @@ class Archive:
                     print("Archiving took: " + str(log_time.time() - speed2) + " MSEC")
             log.clear()
             log.adding=True
-        print("Archive took: " + str(log_time.time() - speed) + " MSEC")
+        log.add("DS1", str(log_time.time() - speed) + " MSEC")
     
     def recording(self, recordingname):
         speed=log_time.time()
@@ -789,15 +789,17 @@ class Archive:
                     print("Archiving took: " + str(log_time.time() - speed2) + " MSEC")
             log.clear()
             log.adding=True
-        print("Archive took: " + str(log_time.time() - speed) + " MSEC")
+        log.add("DS3", str(log_time.time() - speed) + " MSEC")
     
     def index_history(self):
+        speed=log_time.time()
         index=0
         with open("loghistory.txt", 'r') as file:
             for line in file:
                 index+=1
         brain.sdcard.savefile("index.txt", bytearray(str(index), log.format))
         brain.sdcard.savefile("loghistory.txt")
+        log.add("DS2", str(log_time.time() - speed) + " MSEC")
 
 
     def recall(self, name):
@@ -830,6 +832,8 @@ class Log:
         self.adding=True
         self.format="utf-8"
         self.cache=""
+        self.brainscreen=False
+        self.row=0
         brain.sdcard.savefile("Logstart.txt")
         # Predefined Log Codes dictionary
         self.codes={
@@ -858,7 +862,12 @@ class Log:
                     "DA1": ":Aton DATA: Recording Stopped.: ",
                     "DA2": ":Aton DATA: Recording Saved.: ",
                     "DA3": ":Aton DATA: Recording Loaded.: ",
+                    "WS0": ":System WARNING: Loop Slowish. Time: ",
                     "DS0": ":System DATA: Init setup complete.: ",
+                    "DS1": ":System DATA: Archive Log complete. Time: ",
+                    "DS2": ":System DATA: Index Log History complete. Time: ",
+                    "DS3": ":System DATA: Archive Recording complete. Time: ",
+                    "DS3": ":System DATA: Loop Speed. Time: ",
                     "EM0": ":Motor ERROR: Motor Criticaly Hot. Temp: ",
                     "EM1": ":Motor ERROR: Motor Disconnected. Name: ",
                     "EM2": ":Motor ERROR: Motor Very High Power. Power: ",
@@ -949,7 +958,15 @@ class Log:
                 brain.sdcard.appendfile("Log.csv", bytearray(self.cache, self.format))
                 self.cache = ""
             brain.sdcard.appendfile("Log.csv", bytearray(entry, self.format))
-
+        if self.brainscreen:
+            if self.row>=20:
+                brain.screen.clear_screen()
+                brain.screen.set_cursor(1,1)
+                self.row=0
+            brain.screen.print(entry)
+            brain.screen.new_line()
+            self.row+=1
+            
         self.index += 1
         
     def add_codes(self, code_add, Decoded_text):
@@ -977,28 +994,32 @@ class Log:
         log_content=brain.sdcard.loadfile("Log.csv")
         print(log_content.decode(self.format))
     
-    def logstart(self, Right1, Left1, Right2=None, Left2=None, Right3=None, Left3=None, motor1=None, motor2=None, motor3=None, motor4=None, motor5=None, motor6=None, controller1=Controller(PRIMARY), controller2=None):
+    def logstart(self, Right1, Left1, Right2=None, Left2=None, Right3=None, Left3=None, motor1=None, motor2=None, motor3=None, motor4=None, motor5=None, motor6=None, controller1=Controller(PRIMARY), controller2=None, brainread=False, indexhistory=True):
+        if brainread:
+            brain.screen.set_font(FontType.MONO12)
+            self.brainscreen=True
         try:    
             addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
         except AttributeError:
             pass
         self.archive.log()
-        self.add("DS0", 0)
-        if brain.sdcard.filesize("loghistory.txt") >= 200000:
+        if brain.sdcard.filesize("loghistory.txt") >= 250000 and indexhistory==True:
             log.archive.index_history()
-
+        self.add("DS0", 0)
+        
         while True:
+            speed=log_time.time()
             for i in range(200):
                 self.capture.battery()
                 self.capture.controller(controller1, Right1, Right1, Left1, Left1)
-                if controller2!= None:
+                if controller2!=None:
                     self.capture.controller(controller2, Right1, Right1, Left1, Left1)
                 
-                if Right2==None and Left2==None and Right3==None and Left3==None:
+                if Right2==None and Right3==None:
                     self.capture.drivetrain.two_motor(Right1, Left1)
-                elif Right3==None and Left3==None:
+                elif Right3==None:
                     self.capture.drivetrain.four_motor(Right1, Left1, Right2, Left2)
-                elif Right3!=None and Left3!=None:
+                else:
                     self.capture.drivetrain.six_motor(Right1, Left1, Right2, Left2, Right3, Left3)
 
                 if motor1!=None:
@@ -1030,6 +1051,10 @@ class Log:
                 else:
                     pass
             self.unloadcache()
+            if self.recording.record==False and (log_time.time() - speed) > 40200:
+                log.add("WS0", str(log_time.time() - speed))
+            else:
+                log.add("DS4", str(log_time.time() - speed))
     
     def add_logstart(self, funtion):
         brain.sdcard.appendfile("Logstart.txt" , bytearray(funtion + ", ", self.format))

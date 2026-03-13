@@ -43,6 +43,8 @@ Another addition to the code is the new function log.logstart() this function is
 
 An important detail to note is that the main way to use this code in importing it from the Sd card so two lines are needed for it to work calling the import "import CLEAR" and naming the file imported "Clear= CLEAR" is necessary and any code called from CLEAR will need a Clear. at prefixed to it to call it properly. Also to make sure that the main code will work even when there is a bug or error importing or naming and if the Sd card is not there we will need error handling and an "if brain.sdcard.is_inserted():" to first see if the Sd card is in first and then a try and except for an import error and a name error to move on if the file CLEAR is not in the Sd card. 
 
+A cool thing for people without a brain readout is the use of the brain readout in the log.logstart() helping when you cant use the terminal or for finding a repeatable problem faster.
+
 Section eight, P&S:
 
 Now i will go into detail on how the capture works and its current capabilities.

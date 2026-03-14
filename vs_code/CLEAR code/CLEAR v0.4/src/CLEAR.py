@@ -3,7 +3,7 @@
 # 	Module:       CLEAR.py                                                     #
 # 	Author:       Micah Bow                                                    #
 # 	Created:      1/27/2026, 12:42 PM                                          #
-#   Last Edited:  3/4/2026, 12:00 PM                                           #
+#   Last Edited:  3/14/2026, 2:00 PM                                           #
 # 	Description:  Capture, Logging, Encoding, Archiving, Recording.            #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
@@ -12,11 +12,10 @@
 from vex import *
 
 brain=Brain()
-
 log_time= Timer()
 
 def none():
-    return
+    pass
 
 class Drivetrain:
     def __init__(self):
@@ -981,10 +980,8 @@ class Log:
         if self.recording.record:
             self.cache += entry
         else:
-            if self.cache: #checks if cache has things in it.
-                brain.sdcard.appendfile("Log.csv", bytearray(self.cache, self.format))
-                self.cache = ""
             brain.sdcard.appendfile("Log.csv", bytearray(entry, self.format))
+
         if self.brainscreen:
             if self.row>=20:
                 brain.screen.clear_screen()
@@ -1007,7 +1004,7 @@ class Log:
 
     def edit_codes(self, code_edit, new_decoded_text):
         if code_edit in self.codes:
-            self.codes.update({code_edit : "%s"%( new_decoded_text)})
+            self.codes.update({code_edit : "%s"%(new_decoded_text)})
 
     # Clearing the log file
     def clear(self):
@@ -1079,7 +1076,7 @@ class Log:
                 else:
                     pass
             self.unloadcache()
-            if self.recording.record==False and (log_time.time() - speed) > 40300:
+            if self.recording.record==False and (log_time.time() - speed) > 40400:
                 log.add("WS0", str(log_time.time() - speed))
             else:
                 log.add("DS4", str(log_time.time() - speed))

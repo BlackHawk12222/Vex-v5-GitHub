@@ -1,11 +1,5 @@
 #region VEXcode Generated Robot Configuration
 from vex import *
-#try:
-#    from CLEAR import *#type:ignore
-#except ImportError:
-#        print("CLEAR.py not found. Make sure it is in the sdcard and try again.")
-
-#import urandom #type:ignore
 
 # Brain should be defined by default
 brain=Brain()
@@ -31,16 +25,6 @@ Intake = Motor(Ports.PORT14, GearSetting.RATIO_6_1, True)
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
-
-
-# Make random actually random
-#def initializeRandomSeed():
-#    wait(100, MSEC)
-#    random = brain.battery.voltage(MV) + brain.battery.current(CurrentUnits.AMP) * 100 + brain.timer.system_high_res()
-#    urandom.seed(int(random))
-      
-# Set random seed 
-#initializeRandomSeed()
 
 def play_vexcode_sound(sound_name):
     print("VEXPlaySound:" + sound_name)

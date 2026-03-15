@@ -36,4 +36,7 @@ Fixed spam of motors and drivetrain errors.
 v0.4:
 
 Changed controller axis logging to reduce spam when not recording.
+Added doc strings.
+Changed logstart() to use *args and **kwargs.
+
 

@@ -812,6 +812,7 @@ class Log():
                         print("Archiving took: " + str(log_time.time() - speed2) + " MSEC")
                 log.clear()
                 log.adding=True
+            self.index_history()
             log.add("DS1", str(log_time.time() - speed) + " MSEC")
         
         def recording(self, recordingname):
@@ -847,15 +848,14 @@ class Log():
             log.add("DS3", str(log_time.time() - speed) + " MSEC")
         
         def index_history(self):
-            """Gets lines of loghistory puts number in file, then clears loghistory. No inputs here"""
-
+            """Gets lines of loghistory puts number in file. No inputs here"""
             speed=log_time.time()
             index=0
             with open("loghistory.txt", 'r') as file:
                 for line in file:
                     index+=1
             brain.sdcard.savefile("index.txt", bytearray(str(index), log.format))
-            brain.sdcard.savefile("loghistory.txt")
+            brain.sdcard.appendfile("Aged_loghistory", bytearray())
             log.add("DS2", str(log_time.time() - speed) + " MSEC")
 
 
@@ -938,7 +938,7 @@ class Log():
                     "DM1": ":Motor DATA: Motor Power Back To Normal. Power:",
                     "DM2": ":Motor DATA: Motor Current Back To Normal. Current:",
                     "DV0": ":Variable DATA: Variable Changed. Name: ",
-                    "DC0": ":Controller DATA: Button Pressed. Button: ",
+                    "DC0": ":Controller DATA: Button Changed. Button: ",
                     "DC1": ":Controller DATA: Axis Changed. Axis: ",
                 }
         # Setting up Log Files if they dont exist and setting index.
@@ -967,32 +967,13 @@ class Log():
                         log_number+=1
                 print("Log done")
             if not brain.sdcard.exists("loghistory.txt"):
-                brain.sdcard.savefile("loghistory.txt", bytearray("", self.format))                   
-            else:
-                try:
-                    try:
-                        loghistory_lines=brain.sdcard.loadfile("loghistory.txt").decode(self.format).split("\n")
-                    except AttributeError:
-                        pass
-                except MemoryError: # If the log history file is too big to load into memory, it will read the file line by line and count the number of lines to set the index.
-                    print("loghistory.txt cannot be decoded.")
-                    loghistory_lines=[]
-                    with open("loghistory.txt", 'r') as loghistory_file:
-                        for line in loghistory_file:
-                            log_number+=1
-                    print("loghistory done")
-                except OSError: # same as the memory error but for an os error that works the same way.
-                    print("loghistory.txt cannot be decoded trying step open.")
-                    loghistory_lines=[]
-                    with open("loghistory.txt", 'r') as loghistory_file:
-                        for line in loghistory_file:
-                            log_number+=1
-                    print("loghistory done")
+                brain.sdcard.savefile("loghistory.txt")
+            
             if not brain.sdcard.exists("index.txt"):
                 brain.sdcard.savefile("index.txt", bytearray("0", self.format))
 
             historyindex=int(brain.sdcard.loadfile("index.txt").decode(self.format))
-            self.index=len(log_lines) + len(loghistory_lines) + log_number + historyindex - 1
+            self.index=len(log_lines) + log_number + historyindex - 1
             log_lines=[]
             loghistory_lines=[]
             log_number=0
@@ -1059,23 +1040,25 @@ class Log():
         log_content=brain.sdcard.loadfile("Log.csv")
         print(log_content.decode(self.format))
     
-    def logstart(self, Right1, Left1, Right2=None, Left2=None, Right3=None, Left3=None, motor1=None, motor2=None, motor3=None, motor4=None, motor5=None, motor6=None, controller1=Controller(PRIMARY), controller2=None, brainread=False, indexhistory=True):
+    def logstart(self, Right1, Left1, *drivemotors, controller1=Controller(PRIMARY), controller2=None, brainread=False, indexhistory=True, **othermotors):
         """Main way to use CLEAR. Enter drivetrain motors going right, left from front to back. \n Then add genaric smart motors by entering "motor1=___, motor2=___, etc.". \n Optional: Enter controller1 and controller2 like "controller1=___, etc.". \n Next, if you want brain read enter "brainread=True" and if you want to not index the history when it gets to big by entering "indexhistory=False" \n Last thing is using the "add_logstart()" function for variables and other things."""
-        
+
         if brainread:
             brain.screen.set_font(FontType.MONO12)
             self.brainscreen=True
+
         try:    
             addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
         except AttributeError:
             pass
+
         self.archive.log()
-        if brain.sdcard.filesize("loghistory.txt") >= 250000 and indexhistory==True:
-            log.archive.index_history()
+
         self.add("DS0", 0)
         
         while True:
             speed=log_time.time()
+            
             for i in range(200):
                 self.capture.battery()
                 self.capture.controller(controller1, Right1, Right1, Left1, Left1)
@@ -1083,34 +1066,18 @@ class Log():
                 if controller2!=None:
                     self.capture.controller(controller2, Right1, Right1, Left1, Left1)
                 
-                if Right2==None and Right3==None:
+                if len(drivemotors)==0:
                     self.capture.drivetrain.two_motor(Right1, Left1)
-                elif Right3==None:
-                    self.capture.drivetrain.four_motor(Right1, Left1, Right2, Left2)
+                elif len(drivemotors)==2:
+                    self.capture.drivetrain.four_motor(Right1, Left1, *drivemotors)
                 else:
-                    self.capture.drivetrain.six_motor(Right1, Left1, Right2, Left2, Right3, Left3)
+                    self.capture.drivetrain.six_motor(Right1, Left1, *drivemotors)
 
-                if motor1!=None:
-                    self.capture.motor(motor1)
-
-                if motor2!=None:
-                    self.capture.motor(motor2)
-
-                if motor3!=None:
-                    self.capture.motor(motor3)
-
-                if motor4!=None:
-                    self.capture.motor(motor4)
-
-                if motor5!=None:
-                    self.capture.motor(motor5)
-
-                if motor6!=None:
-                    self.capture.motor(motor6)
+                for key, value in othermotors.items():
+                    self.capture.motor(value)
                 
                 try:
                     exec(addedfuntion)
-                    pass
                 except Exception as e:
                     print("ERROR exec in logstart Error: ", e)
                 
@@ -1118,7 +1085,9 @@ class Log():
                     wait(200, MSEC)
                 else:
                     pass
+
             self.unloadcache()
+
             if self.recording.record==False and (log_time.time() - speed) > 40400:
                 log.add("WS0", str(log_time.time() - speed))
             else:

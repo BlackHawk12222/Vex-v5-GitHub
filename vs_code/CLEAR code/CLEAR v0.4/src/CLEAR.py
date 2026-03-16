@@ -12,7 +12,7 @@
 from vex import *
 
 brain=Brain()
-log_time= Timer()
+log_time= Timer() # Main timer used.
 
     
 def none():
@@ -21,7 +21,6 @@ def none():
 class Log():
     """Main object for the CLEAR import. \n To start logging use the "logstart()" function in this object to do the main logging if you need help with its inputs use help() over the "logstart()" function."""
 
-    # capture for the log class
     class Capture:
         """Main object for capturing data of the robot and seeing if it needs to be logged."""
 
@@ -29,7 +28,7 @@ class Log():
             """Capture for the drivetrain of robots has options for two, four, or six motor drivetrains."""
 
             def __init__(self):
-                # Sets used for tracking of the drivetrain.
+                # Sets used for tracking of the drivetrain by motor.
                 self.drivetrain_temp_monitoring={}
                 self.drivetrain_power_monitoring={}
                 self.drivetrain_disconnected={}
@@ -41,7 +40,7 @@ class Log():
                 left_id = id(left_motor)
                 right_id = id(right_motor)
                 
-                # Initialize tracking
+                # Adds motors if not in sets.
                 for motor_id in [left_id, right_id]:
                     if motor_id not in self.drivetrain_temp_monitoring:
                         self.drivetrain_temp_monitoring[motor_id] = 0
@@ -56,7 +55,7 @@ class Log():
                 power_state = self.drivetrain_power_monitoring.get('pair', 0)
                 current_state= self.drivetrain_current_monitoring.get('pair', 0)
                 
-                # Cheaks for the temps,  power, and cheaks for conecttions of the drivetrain.
+                # Cheaks for the temps,  power, and cheaks for connections of the drivetrain.
                 if (right_motor.temperature()>70 or left_motor.temperature()>70) and (temp_state==0 or temp_state==2):
                     log.add("ED1", "Temp %s"%(max(right_motor.temperature(), left_motor.temperature())))
                     self.drivetrain_temp_monitoring['pair'] = 1
@@ -107,7 +106,7 @@ class Log():
                 bl_id = id(back_left_motor)
                 br_id = id(back_right_motor)
                 
-                # Initialize tracking
+                # Adds motors if not in sets.
                 for motor_id in [fl_id, fr_id, bl_id, br_id]:
                     if motor_id not in self.drivetrain_temp_monitoring:
                         self.drivetrain_temp_monitoring[motor_id] = 0
@@ -187,7 +186,7 @@ class Log():
                 bl_id = id(back_left_motor)
                 br_id = id(back_right_motor)
                 
-                # Initialize tracking
+                # Adds motors if not in sets.
                 for motor_id in [fl_id, fr_id, ml_id, mr_id, bl_id, br_id]:
                     if motor_id not in self.drivetrain_temp_monitoring:
                         self.drivetrain_temp_monitoring[motor_id] = 0
@@ -271,11 +270,17 @@ class Log():
 
         def __init__(self):
             self.drivetrain=self.Drivetrain()
+
+            # Sets for other motors By there id.
             self.motor_temp_monitoring={} 
             self.motor_power_monitoring={}  
             self.motor_disconnected={}
             self.motor_current_monitoring={}
-            self.variables={}  
+
+            # set for variables id.
+            self.variables={}
+            
+            # Variables used to not have spam in log.  
             self.battery_voltage_monitoring=0
             self.battery_capacity_monitoring=0
             self.battery_current_monitoring=0
@@ -304,7 +309,7 @@ class Log():
 
             motor_id = id(motor) 
             
-            # Initialize tracking
+            # Setup id to sets if not there.
             if motor_id not in self.motor_temp_monitoring:
                 self.motor_temp_monitoring[motor_id] = 0
             if motor_id not in self.motor_power_monitoring:
@@ -401,7 +406,7 @@ class Log():
             
             Controller=controller
 
-            if not log.recording.record: # Only logs when not recoding to save space on the recording file.
+            if not log.recording.record:  # Only logs when not recoding to save space on the recording file.
                 if Controller.axis1.position()!=0 and not (self.axis1 >= Controller.axis1.position() - log.tolrance and self.axis1 <= Controller.axis1.position() + log.tolrance):
                     degrees=monitormotor1.position(DEGREES)
                     monitormotor1.set_position(0, DEGREES)
@@ -413,7 +418,7 @@ class Log():
                     log.add("DC1", "%s_Axis1 %d Moved %d Degrees"%(str(controller), 0, 0))
                     self.axis1=0
 
-            if log.recording.record:
+            if log.recording.record:  # Uses more accurete logging when recording.
                 if Controller.axis2.position()!=0 and self.axis2 != Controller.axis2.position():
                     degrees=monitormotor2.position(DEGREES)
                     monitormotor2.set_position(0, DEGREES)
@@ -436,7 +441,7 @@ class Log():
                     log.add("DC1", "%s_Axis2 %d Moved %d Degrees"%(str(controller), 0, 0))
                     self.axis2=0
 
-            if log.recording.record:
+            if log.recording.record:  # Uses more accurete logging when recording.
                 if Controller.axis3.position()!=0 and self.axis3 != Controller.axis3.position():
                     degrees=monitormotor3.position(DEGREES)
                     monitormotor3.set_position(0, DEGREES)
@@ -459,7 +464,7 @@ class Log():
                     log.add("DC1", "%s_Axis3 %d Moved %d Degrees"%(str(controller), 0, 0))
                     self.axis3=0
 
-            if not log.recording.record:
+            if not log.recording.record:  # Only logs when not recoding to save space on the recording file.
                 if Controller.axis4.position()!=0 and not (self.axis4 >= Controller.axis4.position() - log.tolrance and self.axis4 <= Controller.axis4.position() + log.tolrance):
                     degrees=monitormotor4.position(DEGREES)
                     monitormotor4.set_position(0, DEGREES)
@@ -470,6 +475,8 @@ class Log():
                     monitormotor4.set_position(0, DEGREES)
                     log.add("DC1", "%s_Axis4 %d Moved %d Degrees"%(str(controller), 0, 0))
                     self.axis4=0
+
+            # Button logging for controller.
 
             if Controller.buttonA.pressing() and self.button_a==True:
                 log.add("DC0", "%s_Button A Pressed"%(str(controller)))
@@ -559,11 +566,15 @@ class Log():
             """Capture for int, float, and bool variables. Enter name of variable in a string and then the variable you wish to log."""
 
             valueid=id(name)
+
+            # Adds id if not in set.
             if valueid not in self.variables:
+
                 if type(value)==bool:
                     self.variables[valueid]=False
                 else:
                     self.variables[valueid]=0
+            
             if value != self.variables[valueid]:
                 log.add("DV0", "Variable %s Value %s"%(name, value))
                 self.variables[valueid] = value
@@ -573,18 +584,16 @@ class Log():
         """Main class for recording."""
 
         def __init__(self):
-            self.record=False
-            self.log_timeecord=0
-            self.postlog_timeecord=0
-            self.Aton=""
-            self.postlist=[]
-            self.File=""
-            self.poststring=""      
+            self.record=False  # Bool to see if recording
+            self.Aton=""  # Used for name of file recording
+            self.postlist=[] # Used for prossesing files.
+            self.poststring="" # Used to store list to string.     
 
         def start(self, Aton):
             """Starts recording. Enter name of file to start recording in."""
 
             filename=str(Aton) + "_pre.txt"
+
             if self.record == False:
                 self.record= True
                 brain.sdcard.savefile(filename, bytearray("\n", log.format))
@@ -597,6 +606,7 @@ class Log():
             filename=str(Aton) + "_pre.txt"
             preatonfile=""
             self.record=False
+
             try:
                 log.unloadcache()
                 preatonfile=brain.sdcard.loadfile(filename).decode(log.format)
@@ -625,7 +635,9 @@ class Log():
             filename=Aton + ".txt"
             self.record=False
             brain.sdcard.savefile(filename)
-            prelist=[]
+            prelist=[]  # Used for general prosessing
+
+            # Takes funtions input and makes them useable for encoding.
             left=str(left).split(' ')
             right=str(right).split(' ')
             other1start=str(other1start).split(' ')
@@ -640,6 +652,7 @@ class Log():
             other4stop=str(other4stop).split(' ')
             other5stop=str(other5stop).split(' ')
             other6stop=str(other6stop).split(' ')
+
             try:
                 preatonfile=brain.sdcard.loadfile(Aton + "_pre.txt")
                 preatonlist=preatonfile.decode(log.format).split("\n")
@@ -649,10 +662,13 @@ class Log():
                         prelist2=str(preatonlist[i+1]).split(',')
                     except IndexError:
                         pass
+
                     if len(prelist)>=12:
+
                         if "Controller" in str(prelist):
                             print("found controller")
                             if "Axis" in str(prelist):
+
                                 print("found axis")
                                 if "Axis3" in str(prelist):
                                     brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(left[1]), str(prelist[11]).replace("'", ''), str(prelist[13]).replace("'", '')), log.format))
@@ -662,6 +678,7 @@ class Log():
                             elif "Button" in str(prelist):
                                 print("found button")
                                 if "Released" in str(prelist):
+
                                     if other1button in str(prelist[11]):
                                         brain.sdcard.appendfile(filename, bytearray(str(other1stop[1]) + '(), ', log.format))
                                     elif other2button in str(prelist[11]):
@@ -674,7 +691,9 @@ class Log():
                                         brain.sdcard.appendfile(filename, bytearray(str(other5stop[1]) + '(), ', log.format))
                                     elif other6button in str(prelist[11]):
                                         brain.sdcard.appendfile(filename, bytearray(str(other6stop[1]) + '(), ', log.format))
+
                                 elif "Pressed" in str(prelist):
+
                                     if other1button in str(prelist[11]):
                                         brain.sdcard.appendfile(filename, bytearray(str(other1start[1]) + '(), ', log.format))
                                     elif other2button in str(prelist[11]):
@@ -688,6 +707,7 @@ class Log():
                                     elif other6button in str(prelist[11]):
                                         brain.sdcard.appendfile(filename, bytearray(str(other6start[1]) + '(), ', log.format))
                             
+                            # Gets the wait between actions.
                             if len(prelist2) >= 3:
                                 brain.sdcard.appendfile(filename, bytearray("wait(" + str(abs(int(prelist[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')) - int(prelist2[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')))) + ", MSEC), ", log.format))
             
@@ -702,9 +722,12 @@ class Log():
                         except StopIteration:
                             prelist2=[]
                         if len(prelist)>=12:
+
                             if "Controller" in str(prelist):
+
                                 print("found controller")
                                 if "Axis" in str(prelist):
+
                                     print("found axis")
                                     if "1_Axis3" in str(prelist):
                                         brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(left[1]), str(prelist[10]).replace("'", ''), str(prelist[12]).replace("'", '')), log.format))
@@ -712,8 +735,10 @@ class Log():
                                         brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(right[1]), str(prelist[10]).replace("'", ''), str(prelist[12]).replace("'", '')), log.format))
 
                                 elif "Button" in str(prelist):
+
                                     print("found button")
                                     if "Released" in str(prelist):
+
                                         if other1button in str(prelist[11]):
                                             brain.sdcard.appendfile(filename, bytearray(str(other1stop[1]) + '(), ', log.format))
                                         elif other2button in str(prelist[11]):
@@ -726,7 +751,9 @@ class Log():
                                             brain.sdcard.appendfile(filename, bytearray(str(other5stop[1]) + '(), ', log.format))
                                         elif other6button in str(prelist[11]):
                                             brain.sdcard.appendfile(filename, bytearray(str(other6stop[1]) + '(), ', log.format))
+
                                     elif "Pressed" in str(prelist):
+
                                         if other1button in str(prelist[11]):
                                             brain.sdcard.appendfile(filename, bytearray(str(other1start[1]) + '(), ', log.format))
                                         elif other2button in str(prelist[11]):
@@ -740,10 +767,10 @@ class Log():
                                         elif other6button in str(prelist[11]):
                                             brain.sdcard.appendfile(filename, bytearray(str(other6start[1]) + '(), ', log.format))
                                 
+                                # Gets the wait between actions.
                                 if len(prelist2) >= 3:
-                                    print(prelist[2].replace("[", '').replace("]", '').replace("'", '').replace("'", ''))
-                                    print(prelist2[2].replace("[", '').replace("]", '').replace("'", '').replace("'", ''))
                                     brain.sdcard.appendfile(filename, bytearray("wait(" + str(abs(int(prelist[2].replace("[", '').replace("]", '').replace("'", '').replace("'", '').replace(",", '')) - int(prelist2[2].replace("[", '').replace("]", '').replace("'", '').replace("'", '').replace(",", '')))) + ", MSEC), ", log.format))
+            
             log.archive.recording(Aton + "_pre.txt")
             log.add("DA2", filename)
             print("Encode done.")            
@@ -865,6 +892,8 @@ class Log():
                 print("Recall done.")
         
         def recall_recording(self, name):
+            """Restores recording file to an uncompressed state. Enter full name of the archived file."""
+
             recording=brain.sdcard.loadfile(name).decode(log.format).split('\n')
             filename=name.replace("_archived.txt", ".txt")
             brain.sdcard.savefile(filename)
@@ -883,13 +912,15 @@ class Log():
         self.recording=self.Recording()
         self.archive=self.Archive()
         self.index=0
-        self.adding=True
-        self.format="utf-8"
+        self.row=0  # Used for brain screen printing.
+        self.adding=True  # Used to pause logging.
+        self.format="utf-8"  # General format for all files in the code.
         self.cache=""
-        self.brainscreen=False
-        self.row=0
-        self.tolrance=3
-        brain.sdcard.savefile("Logstart.txt")
+        self.brainscreen=False  # Used to see if need to print to brain screen.
+        self.tolrance=3  # tolerance for controller stick diffrence when not recording.
+
+        brain.sdcard.savefile("Logstart.txt")  # Clears Logstart file for refresh of instructions in it.
+
         # Predefined Log Codes dictionary
         self.codes={
             """Main dictionary for CLEAR"""
@@ -940,8 +971,8 @@ class Log():
                     "DC0": ":Controller DATA: Button Changed. Button: ",
                     "DC1": ":Controller DATA: Axis Changed. Axis: ",
                 }
-        # Setting up Log Files if they dont exist and setting index.
         
+        # Setting up Log Files if they dont exist and setting index.
         log_lines=[]
         loghistory_lines=[]
         log_number=0
@@ -958,7 +989,7 @@ class Log():
                     for line in log_file:
                         log_number+=1
                 print("Log done")
-            except OSError: # same as the memory error but for an os error that works the same way.
+            except OSError: # Same as the memory error but for an os error that works the same way.
                 print("Log.csv cannot be decoded trying step open.")
                 log_lines=[]
                 with open("Log.csv", 'r') as log_file:
@@ -972,12 +1003,15 @@ class Log():
                 brain.sdcard.savefile("index.txt", bytearray("0", self.format))
 
             historyindex=int(brain.sdcard.loadfile("index.txt").decode(self.format))
+
             self.index=len(log_lines) + log_number + historyindex - 1
+
+            # Clears lists to free memory.
             log_lines=[]
             loghistory_lines=[]
             log_number=0
 
-    def unloadcache(self): # this is only ment for the recording.
+    def unloadcache(self): # This is only ment for the recording.
         """When cache has items in it put them in the Log and the recording file. No inputs here."""
         if self.cache!="":
             brain.sdcard.appendfile(self.recording.Aton, bytearray(self.cache, self.format))
@@ -986,7 +1020,13 @@ class Log():
             print("Unloaded cache")
 
     def add(self, add_code, add_details):
-        """Main funtion for Log takes code and the added details gets runtime and index then prints it, puts them in Log or cache, and see if it needs to print to brain screen. Enter code then the details you want as a string."""
+        """
+        Main funtion for Log.
+        Takes code and the added details gets runtime and index. 
+        Then, prints it, puts them in Log or cache, and see if it needs to print to brain screen. 
+        Enter code then the details you want as a string.
+        """
+        
         if not self.adding:
             return
 
@@ -997,11 +1037,13 @@ class Log():
         else:
             brain.sdcard.appendfile("Log.csv", bytearray(entry, self.format))
 
-        if self.brainscreen:
-            if self.row>=20:
+        if self.brainscreen:  # Checks if pinting to brainscreen is enabled.
+
+            if self.row>=20:  # Checks if at end of screen row
                 brain.screen.clear_screen()
                 brain.screen.set_cursor(1,1)
                 self.row=0
+            
             brain.screen.print(entry)
             brain.screen.new_line()
             self.row+=1
@@ -1040,12 +1082,20 @@ class Log():
         print(log_content.decode(self.format))
     
     def logstart(self, Right1, Left1, *drivemotors, controller1=Controller(PRIMARY), controller2=None, brainread=False, indexhistory=True, **othermotors):
-        """Main way to use CLEAR. Enter drivetrain motors going right, left from front to back. \n Then add genaric smart motors by entering "motor1=___, motor2=___, etc.". \n Optional: Enter controller1 and controller2 like "controller1=___, etc.". \n Next, if you want brain read enter "brainread=True" and if you want to not index the history when it gets to big by entering "indexhistory=False" \n Last thing is using the "add_logstart()" function for variables and other things."""
+        """
+        Main way to use CLEAR. Enter drivetrain motors going right, left from front to back. 
+        Then, add genaric smart motors by entering "motor1=___, motor2=___, etc.". 
+        Optional: Enter controller1 and controller2 like "controller1=___, etc.". 
+        Next, if you want brain read enter "brainread=True". 
+        If you want to not index the history when it gets to big by entering "indexhistory=False".
+        Last thing is using the "add_logstart()" function for variables and other things.
+        """
 
         if brainread:
             brain.screen.set_font(FontType.MONO12)
             self.brainscreen=True
 
+        # Loads extra funtions from file.
         try:    
             addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
         except AttributeError:
@@ -1053,18 +1103,21 @@ class Log():
 
         self.archive.log()
 
+        # Logs system start.
         self.add("DS0", 0)
         
         while True:
             speed=log_time.time()
             
             for i in range(200):
+
                 self.capture.battery()
                 self.capture.controller(controller1, Right1, Right1, Left1, Left1)
 
                 if controller2!=None:
                     self.capture.controller(controller2, Right1, Right1, Left1, Left1)
                 
+                # Checks for how much motors there are and does the proper funtion.
                 if len(drivemotors)==0:
                     self.capture.drivetrain.two_motor(Right1, Left1)
                 elif len(drivemotors)==2:

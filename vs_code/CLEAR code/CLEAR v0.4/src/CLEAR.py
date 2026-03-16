@@ -240,7 +240,7 @@ class Log():
                     self.drivetrain_disconnected[fr_id]=0
                 
                 if front_left_motor.temperature(PERCENT)==2 and self.drivetrain_disconnected[fl_id]==0:
-                    log.add("ED3", "FrontLeft Motor")            
+                    log.add("ED3", "Front Left Motor")            
                     self.drivetrain_disconnected[fl_id]=1
                 elif front_left_motor.temperature(PERCENT)!=2 and self.drivetrain_disconnected[fl_id]==1:
                     self.drivetrain_disconnected[fl_id]=0
@@ -423,7 +423,7 @@ class Log():
                     degrees=monitormotor2.position(DEGREES)
                     monitormotor2.set_position(0, DEGREES)
                     log.add("DC1", "%s_Axis2 %d Moved %d Degrees"%(str(controller), 0, 0))
-                    self.axis1=0
+                    self.axis2=0
             else:
                 if Controller.axis2.position()!=0 and not (self.axis2 >= Controller.axis2.position() - log.tolrance and self.axis2 <= Controller.axis2.position() + log.tolrance):
                     degrees=monitormotor2.position(DEGREES)
@@ -477,7 +477,6 @@ class Log():
             elif Controller.buttonA.pressing()==False and self.button_a==False:
                 log.add("DC0", "%s_Button A Released"%(str(controller)))
                 self.button_a=True
-
 
             if Controller.buttonB.pressing() and self.button_b==True:
                 log.add("DC0", "%s_Button B Pressed"%(str(Controller)))
@@ -584,15 +583,17 @@ class Log():
 
         def start(self, Aton):
             """Starts recording. Enter name of file to start recording in."""
+
             filename=str(Aton) + "_pre.txt"
             if self.record == False:
                 self.record= True
                 brain.sdcard.savefile(filename, bytearray("\n", log.format))
-                self.Aton=Aton + "_pre.txt"
+                self.Aton= Aton + "_pre.txt"
                 log.add("DA0", filename)
 
         def stop(self, Aton):
             """Stops recording. Enter name of recording you wish to stop."""
+
             filename=str(Aton) + "_pre.txt"
             preatonfile=""
             self.record=False
@@ -602,11 +603,10 @@ class Log():
                 preatonlist=preatonfile.split("\n")
                 for i in range(len(preatonlist)):
                     prelist=preatonlist[i].split(' ')
-                    if len(prelist) >= 3:
-                        if prelist[3] == ":Controller":
-                            self.postlist.append(str(prelist) + "\n")
+                    if ":Controller" in prelist:
+                        self.postlist.append(str(prelist) + "\n")
                 for i in range(len(self.postlist)):
-                    self.poststring= self.poststring + str(self.postlist[i])
+                    self.poststring+= str(self.postlist[i])
                 brain.sdcard.savefile(filename, bytearray(str(self.poststring), log.format))
             
             except MemoryError:
@@ -614,8 +614,7 @@ class Log():
                 with open(filename, 'r') as f:
                     for line in f:
                         prelist=line.split(' ')
-                    if len(prelist) >= 3:
-                        if prelist[3] == ":Controller":
+                        if ":Controller" in prelist:
                             brain.sdcard.appendfile(filename, bytearray(str(prelist) + "\n", log.format))
 
             log.add("DA1", filename)
@@ -745,11 +744,13 @@ class Log():
                                     print(prelist[2].replace("[", '').replace("]", '').replace("'", '').replace("'", ''))
                                     print(prelist2[2].replace("[", '').replace("]", '').replace("'", '').replace("'", ''))
                                     brain.sdcard.appendfile(filename, bytearray("wait(" + str(abs(int(prelist[2].replace("[", '').replace("]", '').replace("'", '').replace("'", '').replace(",", '')) - int(prelist2[2].replace("[", '').replace("]", '').replace("'", '').replace("'", '').replace(",", '')))) + ", MSEC), ", log.format))
+            log.archive.recording(Aton + "_pre.txt")
             log.add("DA2", filename)
             print("Encode done.")            
         
         def run(self, Aton):
             """Runs encoded file. Enter file to run."""
+
             log.add("DA3", Aton + ".txt")
             try:
                 Atonfile=brain.sdcard.loadfile(Aton + ".txt")
@@ -770,6 +771,7 @@ class Log():
         
         def log(self):
             """Archives the Log.txt file. No inputs here"""
+
             speed=log_time.time()
             archivelist=""
             try:
@@ -817,38 +819,19 @@ class Log():
         
         def recording(self, recordingname):
             """Archives recording file. Enter full name of file."""
+            print("Archiving...")
+            filename=str(recordingname).replace(".txt", "_archived.txt")
+            brain.sdcard.savefile(filename)
+            with open(recordingname, 'r') as recording:
+                for line in recording:
+                    prelist=line.split(' ')
+                    brain.sdcard.appendfile(filename, bytearray("%s %s %s %s \n" %(prelist[2], prelist[9], prelist[10], prelist[11]), log.format))
+            brain.sdcard.savefile(recordingname)
+            log.add("DS3", recordingname)
 
-            speed=log_time.time()
-            archivelist=""
-            try:
-                reversecodes={value: key for key, value in log.codes.items()}
-                logfile=brain.sdcard.loadfile(recordingname).decode(log.format)
-                loglist=logfile.split("\n")
-                for i in range(len(loglist)):
-                    logline=loglist[i].split(':')
-                    if len(logline)>=4:
-                        loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
-                        archivelist=archivelist + str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n'
-                brain.sdcard.appendfile("loghistory.txt", bytearray(archivelist, log.format))
-                logfile=""
-                brain.sdcard.savefile(recordingname)
-            except MemoryError: # If the recording file is too big to load into memory, it will read the file line by line and write to the new file.
-                log.adding=False
-                reversecodes={value: key for key, value in log.codes.items()}
-                with open("Log.csv", 'r') as file:
-                    for line in file:
-                        speed2=log_time.time()
-                        logline=line.split(':')
-                        if len(logline)>=4:
-                            loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
-                            brain.sdcard.appendfile("loghistory.txt", bytearray(str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n', log.format))
-                        print("Archiving took: " + str(log_time.time() - speed2) + " MSEC")
-                log.clear()
-                log.adding=True
-            log.add("DS3", str(log_time.time() - speed) + " MSEC")
-        
         def index_history(self):
             """Gets lines of loghistory puts number in file. No inputs here"""
+
             speed=log_time.time()
             index=0
             with open("loghistory.txt", 'r') as file:
@@ -859,12 +842,13 @@ class Log():
             log.add("DS2", str(log_time.time() - speed) + " MSEC")
 
 
-        def recall(self, name):
-            """Unarchives a file. Enter full name of file to unarchive."""
-            filename=(str(name).replace("history.txt", "recalled.txt"))
+        def recall_log(self,):
+            """Unarchives The log. No inputs here."""
+
+            filename=("logrecalled.txt")
             print("recalling")
             try:
-                file=brain.sdcard.loadfile(name).decode(log.format)
+                file=brain.sdcard.loadfile("loghistory.txt").decode(log.format)
                 brain.sdcard.savefile(filename)
                 filelist=file.split(',')
                 for i in range(len(filelist)):
@@ -873,12 +857,26 @@ class Log():
                         brain.sdcard.appendfile(filename, bytearray(str(prelist[0]) + " " + str(prelist[1]) + " " + str(prelist[2]) + " " + str(log.codes.get(prelist[3])) + str(prelist[4 : len(prelist)-1]) + "\n", log.format))
                 print("Recall done.")
             except MemoryError: # Same thing as the last three exceptions.
-                with open(name, 'r') as file:
+                with open("loghistory.txt", 'r') as file:
                     for line in file:
                         prelist=line.split(' ')
                         if len(prelist) >= 5:
                             brain.sdcard.appendfile(filename, bytearray(str(prelist[0]) + " " + str(prelist[1]) + " " + str(prelist[2]) + " " + str(log.codes.get(prelist[3])) + str(prelist[4 : len(prelist)-1]) + "\n", log.format))
                 print("Recall done.")
+        
+        def recall_recording(self, name):
+            recording=brain.sdcard.loadfile(name).decode(log.format).split('\n')
+            filename=name.replace("_archived.txt", ".txt")
+            brain.sdcard.savefile(filename)
+            for item in recording:
+                prelist=item.split(' ')
+                print(prelist)
+                if "Moved" in item:
+                    brain.sdcard.appendfile(filename, bytearray("[',', '0', %s ':Controller', 'DATA:', 'Axis', 'Changed.', 'Axis:', '', %s %s 'Moved', '0', 'Degrees', ''] \n"%(prelist[0], prelist[1], prelist[2]), log.format))
+                elif "Pressed" in item or "Released" in item:
+                    brain.sdcard.appendfile(filename, bytearray("[',', '0', %s ':Controller', 'DATA:', 'Button', 'Changed.', 'Button:', '', %s %s %s ''] \n"%(prelist[0], prelist[1], prelist[2], prelist[3]), log.format))
+            log.add("DS5", name)
+                
 
     def __init__(self):
         self.capture=self.Capture()
@@ -927,6 +925,7 @@ class Log():
                     "DS2": ":System DATA: Index Log History complete. Time: ",
                     "DS3": ":System DATA: Archive Recording complete. Time: ",
                     "DS4": ":System DATA: Loop Speed. Time: ",
+                    "DS5": ":System DATA: Recalled Recording complete. Recording: ",
                     "EM0": ":Motor ERROR: Motor Criticaly Hot. Temp: ",
                     "EM1": ":Motor ERROR: Motor Disconnected. Name: ",
                     "EM2": ":Motor ERROR: Motor Very High Power. Power: ",
@@ -1084,7 +1083,7 @@ class Log():
                 if self.recording.record==False:
                     wait(200, MSEC)
                 else:
-                    pass
+                    wait(2, MSEC)
 
             self.unloadcache()
 
@@ -1096,6 +1095,5 @@ class Log():
     def add_logstart(self, funtion):
         """Used in logstart. Enter the funtion for variables like so "log.capture.variable()" then in the inner parentheses add the name of variable as a string and the variable. Can also be used for any capture funtion in CLEAR."""
         brain.sdcard.appendfile("Logstart.txt" , bytearray(funtion + ", ", self.format))
-
 
 log=Log()

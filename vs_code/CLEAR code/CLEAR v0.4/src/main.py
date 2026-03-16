@@ -181,6 +181,7 @@ if brain.sdcard.is_inserted():
             Clear.log.add_logstart("log.capture.variable('loader_state', loader_state)")
             Clear.log.add_logstart("log.capture.variable('pusher_state', pusher_state)")
             Clear.log.logstart(Right1, left1, Right2, left2, Right3, left3, motor1=Intake, motor2=TopMotor, motor3=colorsorting, brainread=True)
+
         Thread(capture_setup)
 
         def recordright():
@@ -203,8 +204,12 @@ if brain.sdcard.is_inserted():
                 recording_state=0
         
         def recallhistory():
-            Clear.log.archive.recall("loghistory.txt")
+            Clear.log.archive.recall_log()
 
+        def archiveright():
+            Clear.log.archive.recall_recording("Right_pre_archived.txt")
+
+        controller_1.buttonLeft.pressed(archiveright)
         controller_1.buttonRight.pressed(recordright)
         controller_1.buttonUp.pressed(recallhistory)
 

@@ -621,11 +621,18 @@ class Log():
             
             except MemoryError:
                 preatonfile=""
-                with open(filename, 'r') as f:
-                    for line in f:
+                brain.sdcard.savefile("Overflow.txt")
+                with open(filename, 'r') as file:
+                    for line in file:
                         prelist=line.split(' ')
                         if ":Controller" in prelist:
-                            brain.sdcard.appendfile(filename, bytearray(str(prelist) + "\n", log.format))
+                            brain.sdcard.appendfile("Overflow.txt", bytearray(str(prelist) + "\n", log.format))
+                brain.sdcard.savefile(filename)
+                with open("Overflow.txt", 'r') as file:
+                    for line in file:
+                        brain.sdcard.appendfile(filename, bytearray(line, log.format))
+                #brain.sdcard.savefile("Overflow.txt")
+                            
 
             log.add("DA1", filename)
 
@@ -808,9 +815,10 @@ class Log():
                 loglist=logfile.split("\n")
                 for i in range(len(loglist)):
                     logline=loglist[i].split(':')
+                    print("For code Split took: ", log_time.time()-speed)
                     if len(logline)>=4:
                         loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
-                        archivelist=archivelist + str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n'
+                        archivelist+=str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n'
                 brain.sdcard.appendfile("loghistory.txt", bytearray(archivelist, log.format))
                 logfile=""
                 log.clear()
@@ -841,7 +849,6 @@ class Log():
                         print("Archiving took: " + str(log_time.time() - speed2) + " MSEC")
                 log.clear()
                 log.adding=True
-            self.index_history()
             log.add("DS1", str(log_time.time() - speed) + " MSEC")
         
         def recording(self, recordingname):
@@ -865,7 +872,6 @@ class Log():
                 for line in file:
                     index+=1
             brain.sdcard.savefile("index.txt", bytearray(str(index), log.format))
-            brain.sdcard.appendfile("Aged_loghistory", bytearray())
             log.add("DS2", str(log_time.time() - speed) + " MSEC")
 
 
@@ -1022,11 +1028,12 @@ class Log():
     def add(self, add_code, add_details):
         """
         Main funtion for Log.
+
         Takes code and the added details gets runtime and index. 
         Then, prints it, puts them in Log or cache, and see if it needs to print to brain screen. 
         Enter code then the details you want as a string.
         """
-        
+
         if not self.adding:
             return
 
@@ -1083,7 +1090,9 @@ class Log():
     
     def logstart(self, Right1, Left1, *drivemotors, controller1=Controller(PRIMARY), controller2=None, brainread=False, indexhistory=True, **othermotors):
         """
-        Main way to use CLEAR. Enter drivetrain motors going right, left from front to back. 
+        Main way to use CLEAR.
+         
+        Enter drivetrain motors going right, left from front to back. 
         Then, add genaric smart motors by entering "motor1=___, motor2=___, etc.". 
         Optional: Enter controller1 and controller2 like "controller1=___, etc.". 
         Next, if you want brain read enter "brainread=True". 
@@ -1102,6 +1111,7 @@ class Log():
             pass
 
         self.archive.log()
+        self.archive.index_history()
 
         # Logs system start.
         self.add("DS0", 0)

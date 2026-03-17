@@ -1,89 +1,71 @@
-this is the documentation of the CLEAR code:
+This is the documentation of the CLEAR code:
 
 Section zero, Code:
 
-Here is the code in it current form for just CLEAR.py:
+Here is the code in its current form for just CLEAR.py:
 
 
 End of code CLEAR.
 
 Section one, Intro:
 
-The CLEAR code is a multi purpose code that is designed to work with most vex v5 robots with minimal code changes. This code is large but is designed to run lightly when not recording. This makes it useable with very big or resource intensive programs. Also, it is compatible with blocks because it uses python and can be copy pasted and put into a switch block to run in blocks. The biggest goal we have for it is that it can be easily be use by any team and make it easier for many teams having issues with worn or faulty parts or issues with there robot. It has five main functions Capture, Log, Encoding, Archiving, Recording. This is why it is named CLEAR the most fundamental parts is the capture and log so we will start with them next.
+The CLEAR code is a multi-purpose code designed to work with most VEX V5 robots with minimal modifications. This code is large, but it is designed to run lightly when not recording. This makes it usable with very big or resource-intensive programs. Also, it is compatible with blocks because it uses Python and can be copied, pasted, and placed in a switch block to run in blocks. Our primary goal is to make it easy for any team to use and to help many teams with worn or faulty parts or robot issues. It has five main functions: Capture, Log, Encoding, Archiving, and Recording. This is why it is named CLEAR. The most fundamental components are capture and logging so we will start with them next.
 
 Section two, Capture:
 
-The most fundamental part is the capture code its capabilities of capturing most of the info the robot gives. Because of the very customizable nature of the code, we will talk mostly about the standard things in the Logging object. The first thing is the controller logging it will log all buttons and stick axis and can do both controllers. It can also monitor the motors as it will give warnings about things like power and temps it does not give simple data about the motors. The last of the logging object is the drivetrain, the drivetrain is a separate object and can monitor a two motor, four motor, or a six motor drivetrain and monitors the same as the motors but as a more unified capture and uses different codes for the logging. Now, this is only the stander logging and in the code you can configure add loops or do one time captures to make it capture everything you want with even the most basic of coding skills.
+The most fundamental component is the capture code, which can capture most of the information the robot provides. Given the code's highly customizable nature, we will focus primarily on the standard features of the Logging object. The first thing is that the controller logging will log all buttons and stick axes, and it can support both controllers. It can also monitor the motors and provide warnings about power and temperature. It does not give simple data about the motors. The last logging object is the drivetrain. The drivetrain is a separate object that can monitor a two-, four-, or six-motor drivetrain. It captures the same data as the motors but in a more unified format and uses different logging codes. Now, this is only the standard logging, and in the code, you can configure to add loops or do one-time captures to make it capture everything you want with even the most basic of coding skills.
 
 Section three, Logging:
 
-The logging of the code is part of the capture and is the main object named Log. The log.add() function takes any code in the dictionary "codes" and produces a full string to log into an Sd card the logging always try's the print into the vex terminal but will only log into an Sd card if the card is in when the code starts. Then, the "codes" dictionary can add any code the user wants into the dictionary by a simple calling of a function every startup called log.add_codes(), this makes it a lot easier to adapt to robots with special features, This i why it is so easy to get the capture and logging to get anything that the person configuring the code wants. There is also a remove codes if you want to remove codes you added, also you can change the codes so you can edit what you want it to say or reuse the same key for a different purpose. 
+Logging is part of the capture and is implemented using the main object named Log. The log.add() function takes any code in the dictionary "codes" and produces a full string to log into an SD card. The logging always tries to print to the VEX terminal, but will only log to an SD card if the card is present when the code starts. Then, the "codes" dictionary can add any code the user wants into the dictionary by a simple calling of a function every startup called log.add_codes(), this makes it a lot easier to adapt to robots with special features, This i why it is so easy to get the capture and logging to get anything that the person configuring the code wants. There is also a remove codes feature if you want to remove the codes you added. Also, you can change the codes so you can edit what you want it to say or reuse the same key for a different purpose. 
 
 Section four, Archive:
 
-Archiving the logging code is a big part of the code as if it is not it will bog down the Sd card and take up a lot of space after long use or long recording sessions. How it works is by turning the full strings back into the codes that made them. This makes a much smaller file that will not bog down the Sd card nearly as fast. Then, because of the extra space used it can load the full log into memory and can load more lines from log history. Also, you can recall the archived data to make it read better and find problems that happened over multiple runs
+Archiving the logging code is a big part of the code; otherwise, it will bog down the SD card and consume a lot of space after long use or recording sessions. How it works is by turning the full strings back into the codes that made them. This makes a much smaller file that will not bog down the SD card nearly as fast. Then, because of the extra space used, it can load the full log into memory and fetch additional lines from the log history. Also, you can recall archived data to improve readability and identify issues that occurred across multiple runs.
 
 Section five, Recording:
 
-Recoding with this code is very different than the code that was originally intended. It works by using the capture of the code, because of the code using a time based movement we need the polling of the capture to be VERY fast in the current config we have it does from 5 Hz to 1000 Hz to do this it uses a cache and after looping the capture 300 times will unload the cache and put it into the Aton file and the log file. Even with this caching it is very resource intensive and will take a while to encode and a lot of battery. We would like to note that when the code is not recording the resources is very small and even when recording it is all the a thread so it will not interfere with the main code however it will affect any other program that is using the Thread() object by slowing it down some.
+Recoding with this code is very different from the code originally intended. It works by using the capture of the code, because of the code using a time based movement we need the polling of the capture to be VERY fast in the current config we have it does from 5 Hz to 1000 Hz to do this it uses a cache and after looping the capture 300 times will unload the cache and put it into the Aton file and the log file. Even with this caching, it is very resource-intensive and will take a while to encode and a lot of battery. We note that when the code is not recording, resources are minimal, and even when recording, it runs in a single thread, so it will not interfere with the main code. However, it will affect any other program that uses the Thread() object by slowing it slightly.
 
 Section six, Encoding:
 
-The encoding is simple in idea but a pain to make it work as it takes the logs strings and makes them into the function calls that the encode function inputs provide with the button than activates them and turns it into the exact python code needed to run it as fast as possible. This is done by having the function call have 21 variables with the functions that the coder wants to use for the Aton along side with there buttons to call that function.  NOTE It is recommended that the function work as similar as possible to the driver control functions to make the recording more accurate
+Encoding in this code means converting log strings into Python function calls that the robot can execute quickly. The encode function processes logged data, maps the correct button inputs to functions preconfigured by the coder, and translates them into runnable Python code. Each function call can have up to 21 variables, representing different actions or settings. These functions and their activation buttons should operate similarly to the driver control functions (used during manual operation), so that automatic playback is as accurate as possible.
 
 Section seven, Other:
 
-In the code (See section zero) you will see a lot of "try:", and "except MemoryError:" this is because the size of the files in the Sd card can very easily fill up the memory allocated to the program and lead to a memory error so in this case the file will be read and possess or use the file line by line this makes it still work but will make things slower as it is pulling from the Sd card and not the memory. Also in the Log objects __init__ function you will also see a "except OSError:" the true reason why is unknown to us but it comes of the memory being completely filled before it can get all the library's from python and showing an OS error 27 so it works the same as the memory error so it does not fill up all the memory on startup and force stop the program.
+Throughout the code (see section zero), you will see many "try:" and "except MemoryError:" statements. These are error-handling techniques in Python—when a MemoryError occurs, it means the computer does not have enough memory to complete a task, often because SD card files are large. In these cases, the program reads files line by line to avoid memory overflow, which is slower but safer. In the Log object’s __init__ function, there is also an "except OSError:" block. OSError in this context refers to an operating system error, often triggered when memory is full, that can prevent loading necessary Python libraries. By handling these errors, the program avoids crashing and prevents memory overflow at startup, even under resource constraints.
 
-Next, the code it primarily makes objects in the python. The reason for doing this is two big reasons. First is the wanting to learn to use objects to better understand python and use it to are advantage to learn and grow in are skills. the Final reason is for it to be able to be used with other robots in a clean and quick way that looks and feels like the vex code objects and help it for more beginner coders and makes it easy to make it do just about anything within the CLEAR codes goals.
+Next, the code primarily makes objects in Python. The reason for doing this is twofold. First, we want to learn to use objects to understand Python better and leverage them to our advantage as we develop our skills. The final reason is to enable it to be used with other robots quickly and cleanly, so it looks and feels like VEX code objects, to help more beginner coders, and to make it easy to do just about anything within CLEAR code's goals.
 
-A new addition was made for it to have an ease of updating or changing the CLEAR code is using the import from python to change the class objects and functions without needing the main code for it the only code needed in the main is a import with CLEAR, define the name you want for CLEAR to call it, and tell it what you want to log if the coder wants just the basics covered they can use the start function in the log to do the drivetrain ( up to a six motor) up to six independent motors and six variables. you put them in the input for the respective variables and motor names and it does all the work for you and gives an easy way to do it for most robots especially simple robots.
+A new addition was made for it to have an ease of updating or changing the CLEAR code is using the import from python to change the class objects and functions without needing the main code for it the only code needed in the main is a import with CLEAR, define the name you want for CLEAR to call it, and tell it what you want to log if the coder wants just the basics covered they can use the start function in the log to do the drivetrain ( up to a six motor) up to six independent motors and six variables. You put them in the input for the respective variables and motor names, and it does all the work for you and gives an easy way to do it for most robots, especially simple robots.
 
-Another addition to the code is the new function log.logstart() this function is an easy and quick way to get CLEAR to work for the Capture, and Logging for the main code all you need to get it working is call it with your drivetrain motors but up to six of them. There is also an added function that allows to add to the log.logstart() by putting it into the Sd card and executing it using the exec() function. This allows people to use the log.logstart() to add extra motors or variables in the normal function.
+Another addition to the code is the new function log.logstart(). This function is a quick, easy way to get CLEAR to work for Capture and Logging in the main code. All you need to get it working is to call it with your drivetrain motors, but up to six of them. There is also an added function that allows adding to the log.logstart() by writing it to the SD card and executing it with the exec() function. This allows people to use the log.logstart() to add extra motors or variables in the normal function.
 
-An important detail to note is that the main way to use this code in importing it from the Sd card so two lines are needed for it to work calling the import "import CLEAR" and naming the file imported "Clear= CLEAR" is necessary and any code called from CLEAR will need a Clear. at prefixed to it to call it properly. Also to make sure that the main code will work even when there is a bug or error importing or naming and if the Sd card is not there we will need error handling and an "if brain.sdcard.is_inserted():" to first see if the Sd card is in first and then a try and except for an import error and a name error to move on if the file CLEAR is not in the Sd card. 
+An important detail is that the primary way to use this code is to import it from the SD card, so two lines are required for it to work. Calling the import "import CLEAR" and naming the file imported "Clear= CLEAR" is necessary, and any code called from CLEAR will need a Clear. at prefixed to it to call it properly. Also to make sure that the main code will work even when there is a bug or error importing or naming and if the Sd card is not there we will need error handling and an "if brain.sdcard.is_inserted():" first to see if the Sd card is in first and then a try and except for an import error and a name error to move on if the file CLEAR is not in the Sd card. 
 
-A cool thing for people without a brain readout is the use of the brain readout in the log.logstart() helping when you cant use the terminal or for finding a repeatable problem faster.
+A cool thing for people without a brain readout is the use of the brain readout in the log.logstart(), helping when you can't use the terminal or for finding a repeatable problem faster.
 
-Section eight, Functions and there uses:
+Section eight, Functions and their uses:
 
-Now i will go into detail on how the capture works and its current capabilities.
+Now I will go into detail on how the capture works and its current capabilities.
 
-there are four main functions used in the default use of the Capture the log.capture.battery(), log.capture.controller(), log.capture.motor(), log.capture.drivetrain, and log.capture.variable().
+there are four functions used in the default use of the Capture the log.capture.battery(), log.capture.controller(), log.capture.motor(), log.capture.drivetrain, and log.capture.variable().
 
-First the battery function, There are no inputs for this function as there will always be one battery and the info with always be the same. It captures capacity, voltage, and current. If the capacity of the battery is 50% or lower with give a warning but if its lower than 25 it will give an error log. For the voltage if the voltage is lower than 12 volts it will give a warning and if lower than 11 volts it will give the error log. About the same as the voltage but if the amps is higher than 15 i twill warn and 18 will do the error log.
+First, the battery function. There are no inputs for this function, as there will always be one battery and the information will always be the same. It captures capacity, voltage, and current. If the battery capacity is 50% or lower, it will give a warning; if it is below 25%, it will log an error. For the voltage, if it is below 12 volts, a warning will be displayed; if it is below 11 volts, an error will be logged. About the same as the voltage, but if the amps are higher than 15, I'll warn, and 18 will trigger the error log.
 
-Next is the controller function, it can take both controllers with a simple input of 1 or 2 and you may input monitor motors to Capture how far the motors moved from the sticks. The function will Capture all the buttons and the stick position for both controllers and will log it all even if they are all pressed, to prevent spam it will only log when it is pressed and released and the sticks if they are different from the last time they where checked.
+Next is the controller function, which can accept either controller with a simple input of 1 or 2, and you can use the monitor motors to capture how far the motors moved relative to the sticks. The function will capture all button states and the stick position for both controllers and log them, even if all buttons are pressed. To prevent spam, it will log only when it is pressed and released, and the sticks only if they differ from the last time they were checked.
 
-Then there is the motors they are like the battery as they will only log when there is something of note so it will log the power and the temps, the only input is the motor you want to log.
-for the temps if the temps are 50% or more it will log a warning and if over 70% it will log an error. same for power but 11 and 20 respectively. After the value that the motor is checking for reaches normal values again it will log that to make the log more readable and give some more useful data
+Then there are the motors, which are like the battery: they only log when there is something of note, so they log power and temperature. The only input is the motor you want to log.
+For the temps, if they are 50% or more, it will log a warning; if over 70%, it will log an error. same for power, but 11 and 20 respectively. Once the motor's check value returns to normal, it will log the event to make the log more readable and provide more useful data.
 
-Next now is the drivetrain this is about the same as the motors but you need to do another '.' as you need to specify if the drivetrain is a two, four, or six motor drivetrain and input the motor names if there right place in the input order. the logging is very similar as the motor function and all the thresholds for the logging are the same but the code used are different and it will show which one is the problem in the drivetrain. Then the read out is a little different as it will not just show the peak use of the data but the total as well making it much more useful for drivetrain related issues.
+Next, the drivetrain. This is similar to the motors, but you need to add another '.' to specify whether it is a two-, four-, or six-motor drivetrain, and enter the motor names in the correct place in the input order. The logging is very similar to the motor function, and all thresholds are the same. However, the code used is different, and it will show which one is the problem in the drivetrain. Then the readout is slightly different: it will not only show the peak usage of the data but also the total, making it much more useful for drivetrain-related issues.
 
 last is the variables this one is pretty simple and with log the initial value and any changes to the value and logs it the input needed are its name in quotation marks and the value by calling that variable.
 
-now there are a lot more other function to capture and log for the smart ports and the three wire things here is a list of sensors the log currently supports.
-
-GPS
-Inertial
-AI vision
-vision
-distance
-rotation
-digital input
-analog input
-bumper
-limit
-potentiometer
-PWM
-encoder
-
-All of these sensors it logs all of the options that it gives for inputs. So, mostly there values for what they sense.
-
 Section nine, How to use it:
 
-How to use it in its simplest form is using the log.logstart() but first we need to get the import of the file naming it and error handling incase of the file not exist or cant load right.
-the main way to do it is to in a function (name does not matter) put an "if brain.sdcard.is_inserted():" as the first thing then a try: and the error handling for the import error and a name error then in the try add import CLEAR then Clear= CLEAR to get the file on a variable then do the log stuff you want the recommended way is the log.logstart() function but you will need to write it as Clear.log.logstart() because of it being imported. For the inputs for the function there are only two inputs required the right then the left drivetrain motors if you have more than a 2 motor drivetrain then add them in a 123 right left pattern like "right1 left1 right2 left2". Then, if you want any other motors in it add them by adding motor1=, motor2=, etc. to the motor(s) you want to log. The next input is the controller it can do both controllers by saying controller1= and then the name of the main controller then controller2= for the secondary controller. If you want variables you need to use the log.add_logstart() and put in quotation marks add log.capture.variable() then add the name as a string and the value by putting in just the variable. then out of the function add Thead() and put the function in it without the parenthesis. At the end of it should look like this:
+The simplest way to use it is log.logstart(), but first we need to import the file, name it, and handle errors if the file doesn't exist or can't be loaded.
+the main way to do it is to in a function (name does not matter) put an "if brain.sdcard.is_inserted():" as the first thing then a try: and the error handling for the import error and a name error then in the try add import CLEAR then Clear= CLEAR to get the file on a variable then do the log stuff you want the recommended way is the log.logstart() function but you will need to write it as Clear.log.logstart() because of it being imported. For the inputs for the function, there are only two inputs required: the right and then the left drivetrain motors. If you have more than 2 motor drivetrains, add them in a 123 right-left pattern, like "right1 left1 right2 left2". Then, if you want any other motors in it, add them by adding motor1=, motor2=, etc., to the motor(s) you want to log. The next input is the controller; it can specify both controllers by saying controller1=, then the name of the main controller, and then controller2= for the secondary controller. If you want variables, use log.add_logstart() and put them in quotation marks; add log.capture.variable() then add the name as a string and the value by putting in just the variable. Then, out of the function, add Thead() and put the function in it without the parentheses. At the end, it should look like this:
 
 if brain.sdcard.is_inserted():
     try:
@@ -91,13 +73,13 @@ if brain.sdcard.is_inserted():
         Clear=CLEAR
 
         def capture_setup():
-	    Clear.log.add_logstart("log.capture.variable('variable', variable)")
+     Clear.log.add_logstart("log.capture.variable('variable', variable)")
             Clear.log.logstart(Right1, left1, Right2, left2, Right3, left3, motor1=enter up to six motors)
-	    # NOTE: for the stuff that can take up to six of things it should go like motor1=x motor2=y etc. NOT: motor1=(x, y, etc.)
-	    # NOTE2: There are a few extra things you can config for changing if you want to print to the brain screen or not index the log history. Syntax: brainscreen=True, indexhistory=False.
+     # NOTE: for the stuff that can take up to six things, it should go like motor1=x motor2=y, etc. NOT: motor1=(x, y, etc.)
+     # NOTE2: There are a few extra things you can configure to change if you want to print to the brain screen or not index the log history. Syntax: brainscreen=True, indexhistory=False.
         Thread(capture_setup)
 
-All of that can use the logging, capture, and the archive for the code to use the Recording and encoding we need another function in the main code. The way to do this is very simple there are two ways to do it record and then encode or record and encode on two separate inputs we recommend the first option. All you need to do is in a function (again name does not matter) is the same if and error handling but don't import as you do need the previous code to be there for the recording and encoding to work. add the Clear.log.recording.start() then add the name of the recording in the input then after what you want in a recording is done add the Clear.log.record.stop() and also add the name of the recording (you may add the stop as a toggle or as a separate function). After you stopped the recording then you will put in Clear.log.recording.encode() now in the inputs you add the right side drive function then the left then any function to need from the recording as its function then its stop function then its button (the max you can add is six) and it should look like this with some controller print to show if it is recording and when its done:
+All of that can use logging, capture, and archive. For the code to use recording and encoding, we need another function in the main code. There are two ways to do this: record and then encode, or record and encode on two separate inputs. We recommend the first option. Please create a function (name doesn't matter) with the same if and error handling, and don't import it. You'll need the previous code to enable recording and encoding. Add the Clear.log.recording.start() then add the recording name to the input. After you've finished the recording, add Clear.log.record.stop() and also add the recording name (you may add the stop as a toggle or as a separate function). After you stop the recording, please put in Clear.log.recording.encode() now in the inputs you add the right side drive function, then the left, then any function needed from the recording as its function, then its stop function, then its button (the max you can add is six), and it should look like this with some controller print to show if it is recording and when it's done:
 
 def record():
             global recording_state
@@ -112,16 +94,16 @@ def record():
                 controller_1.screen.clear_line(3)
                 controller_1.screen.set_cursor(3,1)
                 controller_1.screen.print("Stopped.")
-                Clear.log.recording.encode("enter name of file you want here", enter function for right side drive, enter function for left side drive, "enter other functions up to six here" enter start of function, enter stop for function here if there is no stop enter none, "enter button you want for other function")
+                Clear.log.recording.encode("enter name of file you want here", enter function for right side drive, enter function for left side drive, "enter other functions up to six here", enter start of function, enter stop for function here if there is no stop enter none, "enter button you want for other function")
                 controller_1.screen.clear_line(3)
                 controller_1.screen.set_cursor(3,1)
                 controller_1.screen.print("Encoded.")
                 recording_state=0
 
-	#callback to run function if button pressed
+ #callback to run the function if the button is pressed
         controller_1.buttonRight.pressed(record)
-	
-	# end of recording part of code
+ 
+ # end of recording part of code
 
         controller_1.buttonUp.pressed(recallhistory)
 
@@ -130,7 +112,7 @@ def record():
 
         def driver():
             pass
-	    #Enter driver based functions you want here
+     #Enter driver-based functions you want here
         
         comp=Competition(driver, aton)
     except ImportError:
@@ -140,19 +122,15 @@ def record():
 
 Section ten, Performance:
 
-During the state competition when we where talking about the logging one of the judges asked about its performance we unfortunately could not fully answer this question other than its fairly light. Now we can say with full confidence that the software is light weight and will minimally impact the performance of the robot when logging.
+During the state competition, when we were talking about the logging, one of the judges asked about its performance. We couldn't fully answer this question, but it's fairly light. We can now say with full confidence that the software is lightweight and will have minimal impact on the robot's performance during logging.
 
-How we test for the performance is seeing how much time it takes to complete it because we can't see the utilization of the CPU in the brain. Next, the setup we used is a logging of a six motor drivetrain three other motors and two variables and one controller to test what the performance its for a basic robot we would make is. For the full loop which is logging all the things 200 times over the time when logging is about 40250 msec it varies a lot about +- 50 msec now every loop in the main loop has a 200msec wait to make it work at about 5 Hz so we spend about 250msec busy so in percent that's about 0.62% of the time busy and on top of that it uses the Thread function so it runs in the background and will never affect the true performance of the main program and will run its things when the brain is idle and on top of all of that we can't even feel any difference in lag for inputs. So this lead us to believe that it is indistinguishable than a brain without it. However this is not for recording witch is a different Hz and tries to use the max usage to get the best accuracy for the recording. Even then it still is in a Thread so it will not affect the main thread but if there is any other Thread it will not work until after the recording is done.
+We measure performance by how long it takes to complete, since we can't observe CPU utilization in the brain. Next, the setup we used logs six motor drivetrain motors, three other motors, two variables, and one controller to test the performance of a basic robot we would make. For the full loop, which logs everything 200 times over the time when logging is about 40250 msec, it varies by about +- 50 msec. Now, every loop in the main loop has a 200msec wait to make it work at about 5 Hz. Hence, we spend about 250msec busy, which is about 0.62% of the time, and it also uses the Thread function. Hence, it runs in the background without affecting the main program's performance. It runs its tasks when the brain is idle, and, on top of that, we can't even notice any lag in input. So this led us to believe that it is indistinguishable from a brain without it. However, this is not for recording, which uses a different Hz, and it tries to use the maximum usage to achieve the best accuracy for the recording. Even then, it is still in a Thread, so it will not affect the main thread. However, if there is another thread, it will not work until after the recording is done.
 
 Section eleven, plans on public code.
 
-During the first section of this code we talked a little on how we want this code to be used by many teams, here we will show how we plan on doing that and why.
+In the first section of this code, we briefly discussed how we want this code to be used by many teams. Here, we will show how we plan to do that and why.
 
 How we plan on doing it is by giving detailed instructions in code using clear comments Doc strings and a text document with instructions on how to set it up. We want this code to be usable by even a very beginner team with little programing skills and still have plenty of options for the very skilled. Now currently it is only in python as we do not have the proper skills for C++ but one will be make when can male it. Now we will expand on how we make it user friendly. First, having a text file having everything you need to understand how to set it up and make it work well with there code. Then also have options on how to do more advanced things with it and make it better integrated into there code. Next, we use Doc strings to make it easier to know what a single part does and what to put in it as input. There is a problem as when using blocks you need to know about the help() function and better understand how and why things are. Finally, inside of the code many comments explaining what parts do and where they fit into how the code works. We try and get it in a standard form for code comments but we still need to figure out what we want to put in exactly.
-
-section twelve, future plans for CLEAR.
-
-We have a few plans to improve the functionality of the code. The biggest one is getting logging for as many sensors as possible even the legacy motors and all of the three port stuff we can get as vex does not sell much of the stuff anymore. For the smart port stuff like inertial we have a good logging now but still need to work on other sensors. We also have plans to make it easier to configure the code and maybe get it to auto do it.
 
 
 

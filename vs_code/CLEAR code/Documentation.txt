@@ -49,7 +49,7 @@ Section eight, Functions and there uses:
 
 Now i will go into detail on how the capture works and its current capabilities.
 
-there are four functions used in the default use of the Capture the log.capture.battery(), log.capture.controller(), log.capture.motor(), log.capture.drivetrain, and log.capture.variable().
+there are four main functions used in the default use of the Capture the log.capture.battery(), log.capture.controller(), log.capture.motor(), log.capture.drivetrain, and log.capture.variable().
 
 First the battery function, There are no inputs for this function as there will always be one battery and the info with always be the same. It captures capacity, voltage, and current. If the capacity of the battery is 50% or lower with give a warning but if its lower than 25 it will give an error log. For the voltage if the voltage is lower than 12 volts it will give a warning and if lower than 11 volts it will give the error log. About the same as the voltage but if the amps is higher than 15 i twill warn and 18 will do the error log.
 
@@ -61,6 +61,24 @@ for the temps if the temps are 50% or more it will log a warning and if over 70%
 Next now is the drivetrain this is about the same as the motors but you need to do another '.' as you need to specify if the drivetrain is a two, four, or six motor drivetrain and input the motor names if there right place in the input order. the logging is very similar as the motor function and all the thresholds for the logging are the same but the code used are different and it will show which one is the problem in the drivetrain. Then the read out is a little different as it will not just show the peak use of the data but the total as well making it much more useful for drivetrain related issues.
 
 last is the variables this one is pretty simple and with log the initial value and any changes to the value and logs it the input needed are its name in quotation marks and the value by calling that variable.
+
+now there are a lot more other function to capture and log for the smart ports and the three wire things here is a list of sensors the log currently supports.
+
+GPS
+Inertial
+AI vision
+vision
+distance
+rotation
+digital input
+analog input
+bumper
+limit
+potentiometer
+PWM
+encoder
+
+All of these sensors it logs all of the options that it gives for inputs. So, mostly there values for what they sense.
 
 Section nine, How to use it:
 
@@ -131,6 +149,10 @@ Section eleven, plans on public code.
 During the first section of this code we talked a little on how we want this code to be used by many teams, here we will show how we plan on doing that and why.
 
 How we plan on doing it is by giving detailed instructions in code using clear comments Doc strings and a text document with instructions on how to set it up. We want this code to be usable by even a very beginner team with little programing skills and still have plenty of options for the very skilled. Now currently it is only in python as we do not have the proper skills for C++ but one will be make when can male it. Now we will expand on how we make it user friendly. First, having a text file having everything you need to understand how to set it up and make it work well with there code. Then also have options on how to do more advanced things with it and make it better integrated into there code. Next, we use Doc strings to make it easier to know what a single part does and what to put in it as input. There is a problem as when using blocks you need to know about the help() function and better understand how and why things are. Finally, inside of the code many comments explaining what parts do and where they fit into how the code works. We try and get it in a standard form for code comments but we still need to figure out what we want to put in exactly.
+
+section twelve, future plans for CLEAR.
+
+We have a few plans to improve the functionality of the code. The biggest one is getting logging for as many sensors as possible even the legacy motors and all of the three port stuff we can get as vex does not sell much of the stuff anymore. For the smart port stuff like inertial we have a good logging now but still need to work on other sensors. We also have plans to make it easier to configure the code and maybe get it to auto do it.
 
 
 

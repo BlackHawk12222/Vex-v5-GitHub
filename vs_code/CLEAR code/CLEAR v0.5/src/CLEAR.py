@@ -152,6 +152,8 @@ class Log():
                 self.inertial_calibrating=False
                 self.inertial_installed=False
                 self.inertial_rotation_history=0
+                self.inertial_roll_history=0
+                self.inertial_pitch_history=0
                 self.inertial_heading_history=0
                 self.inertial_x_axis_history=0
                 self.inertial_y_axis_history=0
@@ -233,7 +235,7 @@ class Log():
             def aivision(self, aivisionsensor):
                 pass
 
-            def inertial(self, inertialsensor):
+            def inertial(self, inertialsensor=Inertial(Ports.PORT1)):
                 """Capture for inertal sensor. Enter inertial sensor to log."""
     
                 if inertialsensor.is_calibrating() and not self.inertial_calibrating:
@@ -273,6 +275,22 @@ class Log():
 
                     log.add("DI0", int(inertialsensor.rotation()))
                     self.inertial_rotation_history= inertialsensor.rotation()
+
+                if not (self.inertial_roll_history >= inertialsensor.orientation(OrientationType.ROLL, DEGREES) - self.inertial_gyro_tolerance and self.inertial_roll_history <= inertialsensor.orientation(OrientationType.ROLL, DEGREES) + self.inertial_gyro_tolerance):
+
+                    if "DI2" not in log.codes:
+                        log.add_codes("DI2", ":Inertial DATA: Roll Changed. Roll: ")
+
+                    log.add("DI2", int(inertialsensor.orientation(OrientationType.ROLL, DEGREES)))
+                    self.inertial_roll_history= inertialsensor.orientation(OrientationType.ROLL, DEGREES)
+
+                if not (self.inertial_pitch_history >= inertialsensor.orientation(OrientationType.PITCH, DEGREES) - self.inertial_gyro_tolerance and self.inertial_pitch_history <= inertialsensor.orientation(OrientationType.PITCH, DEGREES) + self.inertial_gyro_tolerance):
+
+                    if "DI3" not in log.codes:
+                        log.add_codes("DI3", ":Inertial DATA: Roll Changed. Roll: ")
+
+                    log.add("DI3", int(inertialsensor.orientation(OrientationType.PITCH, DEGREES)))
+                    self.inertial_pitch_history= inertialsensor.orientation(OrientationType.PITCH, DEGREES)
                 
                 if not (self.inertial_heading_history >= inertialsensor.heading() - self.inertial_gyro_tolerance and self.inertial_heading_history <= inertialsensor.heading() + self.inertial_gyro_tolerance):
 

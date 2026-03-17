@@ -127,7 +127,7 @@ class Log():
                 self.optical_object=False
                 self.optical_color=""
                 self.inertial_axis_tolerance=1
-                self.inertial_gyro_tolerance=10
+                self.inertial_gyro_tolerance=5
                 self.inertial_calibrating=False
                 self.inertial_installed=False
                 self.inertial_rotation_history=0
@@ -212,7 +212,7 @@ class Log():
             def aivision(self, aivisionsensor):
                 pass
 
-            def inertial(self, inertialsensor=Inertial(Ports.PORT1)):
+            def inertial(self, inertialsensor):
                 """Capture for inertal sensor. Enter inertial sensor to log."""
     
                 if inertialsensor.is_calibrating() and not self.inertial_calibrating:
@@ -250,7 +250,7 @@ class Log():
                     if "DI0" not in log.codes:
                         log.add_codes("DI0", ":Inertial DATA: Rotation Changed. Rotation: ")
 
-                    log.add("DI0", inertialsensor.rotation())
+                    log.add("DI0", int(inertialsensor.rotation()))
                     self.inertial_rotation_history= inertialsensor.rotation()
                 
                 if not (self.inertial_heading_history >= inertialsensor.heading() - self.inertial_gyro_tolerance and self.inertial_heading_history <= inertialsensor.heading() + self.inertial_gyro_tolerance):
@@ -258,8 +258,8 @@ class Log():
                     if "DI1" not in log.codes:
                         log.add_codes("DI1", ":Inertial DATA: Heading Changed. Heading: ")
 
-                    log.add("DI1", inertialsensor.heading())
-                    self.inertial_heading_history= inertialsensor.rotation()
+                    log.add("DI1", int(inertialsensor.heading()))
+                    self.inertial_heading_history= inertialsensor.heading()
                 
                 if not (self.inertial_x_axis_history >= inertialsensor.acceleration(AxisType.XAXIS) - self.inertial_axis_tolerance and self.inertial_x_axis_history <= inertialsensor.acceleration(AxisType.XAXIS) + self.inertial_axis_tolerance):
 
@@ -267,6 +267,7 @@ class Log():
                         log.add_codes("DI4", ":Inertial DATA: X Axis Changed. Acceleration: ")
 
                     log.add("DI4", inertialsensor.acceleration(AxisType.XAXIS))
+                    self.inertial_x_axis_history= inertialsensor.acceleration(AxisType.XAXIS)
                 
                 if not (self.inertial_y_axis_history >= inertialsensor.acceleration(AxisType.YAXIS) - self.inertial_axis_tolerance and self.inertial_y_axis_history <= inertialsensor.acceleration(AxisType.YAXIS) + self.inertial_axis_tolerance):
 
@@ -274,6 +275,7 @@ class Log():
                         log.add_codes("DI5", ":Inertial DATA: Y Axis Changed. Acceleration: ")
 
                     log.add("DI5", inertialsensor.acceleration(AxisType.YAXIS))
+                    self.inertial_y_axis_history= inertialsensor.acceleration(AxisType.YAXIS)
 
                 if not (self.inertial_z_axis_history >= inertialsensor.acceleration(AxisType.ZAXIS) - self.inertial_axis_tolerance and self.inertial_z_axis_history <= inertialsensor.acceleration(AxisType.ZAXIS) + self.inertial_axis_tolerance):
 
@@ -281,6 +283,7 @@ class Log():
                         log.add_codes("DI6", ":Inertial DATA: Z Axis Changed. Acceleration: ")
                         
                     log.add("DI6", inertialsensor.acceleration(AxisType.ZAXIS))
+                    self.inertial_z_axis_history= inertialsensor.acceleration(AxisType.ZAXIS)
 
             def gps(self, gpssensor):
                 pass

@@ -181,6 +181,7 @@ if brain.sdcard.is_inserted():
         Clear=CLEAR
 
         def capture_setup():
+            Clear.log.add_logstart("log.capture.smartport.inertial(inertial_for_auton)")
             Clear.log.add_logstart("log.capture.variable('loader_state', loader_state)")
             Clear.log.add_logstart("log.capture.variable('pusher_state', pusher_state)")
             Clear.log.logstart(drivetrain=drivetrain, motor1=Intake, motor2=TopMotor, motor3=colorsorting, brainread=True)
@@ -242,6 +243,7 @@ controller_1.buttonL2.pressed(scoredown)
 controller_1.buttonDown.pressed(pushertoggle)
 controller_1.buttonB.pressed(loadertoggle)
 
+inertial_for_auton.calibrate()
 # Colorsort loop
 while True:
     while optical_9.is_near_object():

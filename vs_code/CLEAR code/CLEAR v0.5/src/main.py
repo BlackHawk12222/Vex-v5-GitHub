@@ -22,9 +22,12 @@ frontPiston = DigitalOut(brain.three_wire_port.a)
 inertial_for_auton = Inertial(Ports.PORT6)
 DeScorer = DigitalOut(brain.three_wire_port.b)
 Intake = Motor(Ports.PORT14, GearSetting.RATIO_6_1, True)
-Left= MotorGroup(left1, left2, left3)
-Right= MotorGroup(Right1, Right2, Right3)
+Left= MotorGroup(left1, left2)
+Right= MotorGroup(Right1, Right2)
 drivetrain= DriveTrain(Right, Left)
+analog_input=PotentiometerV2(brain.three_wire_port.c)
+limitswitch=Limit(brain.three_wire_port.b)
+bumperswitch=Bumper(brain.three_wire_port.a)
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
@@ -181,10 +184,13 @@ if brain.sdcard.is_inserted():
         Clear=CLEAR
 
         def capture_setup():
+            Clear.log.add_logstart("log.capture.threewire.potentiometer(analog_input)")
+            Clear.log.add_logstart("log.capture.threewire.bumper(bumperswitch)")
+            Clear.log.add_logstart("log.capture.threewire.limit(limitswitch)")
             Clear.log.add_logstart("log.capture.smartport.inertial(inertial_for_auton)")
             Clear.log.add_logstart("log.capture.variable('loader_state', loader_state)")
             Clear.log.add_logstart("log.capture.variable('pusher_state', pusher_state)")
-            Clear.log.logstart(drivetrain=drivetrain, motor1=Intake, motor2=TopMotor, motor3=colorsorting, brainread=True)
+            Clear.log.logstart(drivetrain=drivetrain, drivetraintype="Four", motor1=Intake, motor2=TopMotor, motor3=colorsorting, brainread=True)
 
         Thread(capture_setup)
 

@@ -21,6 +21,12 @@ def none():
 class Log():
     """Main object for the CLEAR import. \n To start logging use the "logstart()" function in this object to do the main logging if you need help with its inputs use help() over the "logstart()" function."""
 
+    class Program:
+        """Main object" for general program data like memory use ."""
+
+        def __init__(self):
+            pass
+
     class Capture:
         """Main object for capturing data of the robot and seeing if it needs to be logged."""
 
@@ -34,8 +40,17 @@ class Log():
                 self.drivetrain_disconnected={}
                 self.drivetrain_current_monitoring=0
             
-            def standerd(self, drivetrain):
+            def standerd(self, drivetrain, type):
                 """Used for two/four motor drivtrains for standerd use."""
+                if type=="four" or type=="Four":
+                    currentlimitsE=10
+                    currentlimitsW=6
+                elif type=="two" or type=="Two":
+                    currentlimitsE=5
+                    currentlimitsW=3
+
+                if id("standerd") not in self.drivetrain_disconnected:
+                    self.drivetrain_disconnected[id("standerd")] = 0
 
                 if drivetrain.temperature()>70 and (self.drivetrain_temp_monitoring==0 or self.drivetrain_temp_monitoring==2):
                     log.add("ED1", "Motor %s Temp %s"%(drivetrain, drivetrain.temperature(PERCENT)))
@@ -57,15 +72,21 @@ class Log():
                     log.add("DD1", "Motor %s Power %s"%(str(drivetrain), str(drivetrain.power(PowerUnits.WATT))))
                     self.drivetrain_power_monitoring=0
 
-                if drivetrain.current(CurrentUnits.AMP)>5 and (self.drivetrain_current_monitoring==0 or self.drivetrain_current_monitoring==2):
+                if drivetrain.current(CurrentUnits.AMP)>currentlimitsE and (self.drivetrain_current_monitoring==0 or self.drivetrain_current_monitoring==2):
                     log.add("ED4", "Motor %s Current %s"%(str(drivetrain), str(drivetrain.current(CurrentUnits.AMP))))
                     self.drivetrain_current_monitoring=1
-                elif drivetrain.current(CurrentUnits.AMP)>3 and (self.drivetrain_current_monitoring==0):
+                elif drivetrain.current(CurrentUnits.AMP)>currentlimitsW and (self.drivetrain_current_monitoring==0):
                     log.add("WD2", "Motor %s Current %s"%(str(drivetrain), str(drivetrain.current(CurrentUnits.AMP))))
                     self.drivetrain_current_monitoring=2
-                elif drivetrain.current(CurrentUnits.AMP)<=3 and (self.drivetrain_current_monitoring==1 or self.drivetrain_current_monitoring==2):
+                elif drivetrain.current(CurrentUnits.AMP)<=currentlimitsW and (self.drivetrain_current_monitoring==1 or self.drivetrain_current_monitoring==2):
                     log.add("DD2", "Motor %s Current %s"%(str(drivetrain), str(drivetrain.current(CurrentUnits.AMP))))
                     self.drivetrain_current_monitoring=0
+
+                if ((drivetrain.temperature(PERCENT) % 2==1 and drivetrain.temperature(PERCENT) % 5!=0) or drivetrain.temperature(PERCENT)==2 or (drivetrain.temperature(PERCENT) % 2==0 and drivetrain.temperature(PERCENT) % 10!=0)) and self.drivetrain_disconnected[id("standerd")]==0:
+                    log.add("ED3", "Unknown.")
+                    self.drivetrain_disconnected[id("standerd")]=1
+                elif not ((drivetrain.temperature(PERCENT) % 2==1 and drivetrain.temperature(PERCENT) % 5!=0) or drivetrain.temperature(PERCENT)==2 or (drivetrain.temperature(PERCENT) % 2==0 and drivetrain.temperature(PERCENT) % 10!=0)) and self.drivetrain_disconnected[id("standerd")]==1:
+                    self.drivetrain_disconnected[id("standerd")]=0
 
             
             def six_motor(self, front_left_motor, front_right_motor, middle_left_motor, middle_right_motor, back_left_motor, back_right_motor):
@@ -126,7 +147,7 @@ class Log():
                 self.motor_current_monitoring={}
                 self.optical_object=False
                 self.optical_color=""
-                self.inertial_axis_tolerance=1
+                self.inertial_axis_tolerance=0.5
                 self.inertial_gyro_tolerance=5
                 self.inertial_calibrating=False
                 self.inertial_installed=False
@@ -266,7 +287,7 @@ class Log():
                     if "DI4" not in log.codes:
                         log.add_codes("DI4", ":Inertial DATA: X Axis Changed. Acceleration: ")
 
-                    log.add("DI4", inertialsensor.acceleration(AxisType.XAXIS))
+                    log.add("DI4", round(inertialsensor.acceleration(AxisType.XAXIS), 2))
                     self.inertial_x_axis_history= inertialsensor.acceleration(AxisType.XAXIS)
                 
                 if not (self.inertial_y_axis_history >= inertialsensor.acceleration(AxisType.YAXIS) - self.inertial_axis_tolerance and self.inertial_y_axis_history <= inertialsensor.acceleration(AxisType.YAXIS) + self.inertial_axis_tolerance):
@@ -274,7 +295,7 @@ class Log():
                     if "DI5" not in log.codes:
                         log.add_codes("DI5", ":Inertial DATA: Y Axis Changed. Acceleration: ")
 
-                    log.add("DI5", inertialsensor.acceleration(AxisType.YAXIS))
+                    log.add("DI5", round(inertialsensor.acceleration(AxisType.YAXIS), 2))
                     self.inertial_y_axis_history= inertialsensor.acceleration(AxisType.YAXIS)
 
                 if not (self.inertial_z_axis_history >= inertialsensor.acceleration(AxisType.ZAXIS) - self.inertial_axis_tolerance and self.inertial_z_axis_history <= inertialsensor.acceleration(AxisType.ZAXIS) + self.inertial_axis_tolerance):
@@ -282,7 +303,7 @@ class Log():
                     if "DI6" not in log.codes:
                         log.add_codes("DI6", ":Inertial DATA: Z Axis Changed. Acceleration: ")
                         
-                    log.add("DI6", inertialsensor.acceleration(AxisType.ZAXIS))
+                    log.add("DI6", round(inertialsensor.acceleration(AxisType.ZAXIS), 2))
                     self.inertial_z_axis_history= inertialsensor.acceleration(AxisType.ZAXIS)
 
             def gps(self, gpssensor):
@@ -290,11 +311,119 @@ class Log():
 
             def distance(self, distancesensor):
                 pass
+
+            def rotation(self, rotaionsensor):
+                pass
             
         
         class Threewire:
             def __init__(self):
+                self.digital_value={}
+                self.analog_value={}
+            
+            def digitalinput(self, input):
+                """Capture for digital input. Enter Digital input to log."""
+
+                input_id=id(input)
+
+                if input_id not in self.digital_value:
+                    self.digital_value[input_id]=0
+
+                if input.value()==1 and self.digital_value[input_id]==0:
+                    if "DDI0" not in log.codes:
+                        log.add_codes("DDI0", ":Digital DATA: Value High.: ")
+                    log.add("DDI0", "")
+                    self.digital_value[input_id]=1
+                elif input.value()==0 and self.digital_value[input_id]==1:
+                    if "DDI1" not in log.codes:
+                        log.add_codes("DDI1", ":Digital DATA: Value Low.: ")
+                    log.add("DDI1", "")
+                    self.digital_value[input_id]=0
+
+            def analog(self, input):
+                """Capture for analog inputs. Enter analog input to log."""
+
+                input_id=id(input)
+
+                if input_id not in self.analog_value:
+                    self.analog_value[input_id]=0
+
+                if not (self.analog_value[input_id] >= input.value() - log.tolrance and self.analog_value[input_id] <= input.value() + log.tolrance):
+                    if "DAI0" not in log.codes:
+                        log.add_codes("DAI0", ":Analog DATA: Value Changed. Value: ")
+                    log.add("DAI0", input.value())
+                    self.analog_value[input_id]=input.value()
+            
+            def bumper(self, bumpersensor):
+                """Capture for bumper switchs. Enter bumper to log."""
+
+                bumper_id=id(bumpersensor)
+
+                if bumper_id not in self.digital_value:
+                    self.digital_value[bumper_id]=0
+
+                if bumpersensor.value()==1 and self.digital_value[bumper_id]==0:
+                    if "DBS0" not in log.codes:
+                        log.add_codes("DBS0", ":Bumper DATA: Pressed.: ")
+                    log.add("DBS0", "")
+                    self.digital_value[bumper_id]=1
+                elif bumpersensor.value()==0 and self.digital_value[bumper_id]==1:
+                    if "DBS1" not in log.codes:
+                        log.add_codes("DBS1", ":Bumper DATA: Released.: ")
+                    log.add("DBS1", "")
+                    self.digital_value[bumper_id]=0
+
+            def limit(self, limitsensor):
+                """Capture for limit switchs. Enter bumper to log."""
+
+                limit_id=id(limitsensor)
+
+                if limit_id not in self.digital_value:
+                    self.digital_value[limit_id]=0
+
+                if limitsensor.value()==1 and self.digital_value[limit_id]==0:
+                    if "DLS0" not in log.codes:
+                        log.add_codes("DLS0", ":Limit DATA: Pressed.: ")
+                    log.add("DLS0", "")
+                    self.digital_value[limit_id]=1
+                elif limitsensor.value()==0 and self.digital_value[limit_id]==1:
+                    if "DLS1" not in log.codes:
+                        log.add_codes("DLS1", ":Limit DATA: Released.: ")
+                    log.add("DLS1", "")
+                    self.digital_value[limit_id]=0
+
+            def potentiometer(self, sensor):
+                """Capture for potentiometer inputs. Enter potentiometer input to log."""
+
+                sensor_id=id(sensor)
+
+                if sensor_id not in self.analog_value:
+                    self.analog_value[sensor_id]=0
+
+                if not (self.analog_value[sensor_id] >= sensor.angle() - log.tolrance and self.analog_value[sensor_id] <= sensor.angle() + log.tolrance):
+                    if "DP0" not in log.codes:
+                        log.add_codes("DP0", ":Potentiometer DATA: Value Changed. Value: ")
+                    log.add("DP0", sensor.angle())
+                    self.analog_value[sensor_id]=sensor.angle()
+
+            def pwm(self, input):
+                """Capture for pwm inputs. Enter pwm input to log."""
+
+                input_id=id(input)
+
+                if input_id not in self.analog_value:
+                    self.analog_value[input_id]=0
+
+                if not (self.analog_value[input_id] >= input.value() - log.tolrance and self.analog_value[input_id] <= input.value() + log.tolrance):
+                    if "DPW0" not in log.codes:
+                        log.add_codes("DPW0", ":Pwm DATA: Value Changed. Value: ")
+                    log.add("DPW0", input.value())
+                    self.analog_value[input_id]=input.value()
+
+            def encoder(self, encodersensor):
                 pass
+
+            
 
         def __init__(self):
             self.drivetrain=self.Drivetrain()
@@ -1056,7 +1185,7 @@ class Log():
         log_content=brain.sdcard.loadfile("Log.csv")
         print(log_content.decode(self.format))
     
-    def logstart(self, *drivemotors, drivetrain=None, controller1=Controller(PRIMARY), controller2=None, brainread=False, indexhistory=True, **othermotors):
+    def logstart(self, *drivemotors, drivetrain=None, drivetraintype="Four", controller1=Controller(PRIMARY), controller2=None, brainread=False, indexhistory=True, **othermotors):
         """
         Main way to use CLEAR.
          
@@ -1088,16 +1217,17 @@ class Log():
             speed=log_time.time()
             
             for i in range(200):
+                if not self.recording.record:
+                    self.capture.battery()
 
-                self.capture.battery()
                 self.capture.controller(controller1)
 
-                if controller2!= None:
+                if controller2!= None and not self.recording.record:
                     self.capture.controller(controller2)
                 
                 # Checks for how much motors there are and does the proper funtion.
                 if drivetrain!= None:
-                    self.capture.drivetrain.standerd(drivetrain)
+                    self.capture.drivetrain.standerd(drivetrain, drivetraintype)
                 else:
                     self.capture.drivetrain.six_motor(*drivemotors)
 
@@ -1107,12 +1237,13 @@ class Log():
                     else:
                         raise NameError("Keyword argument not valid use motor1=, motor2=, etc. for you other motors.")
                 
-                try:
-                    exec(addedfuntion)
-                except Exception as e:
-                    print("ERROR exec in logstart Error: ", e)
+                if not self.recording.record:
+                    try:
+                        exec(addedfuntion)
+                    except Exception as e:
+                        print("ERROR exec in logstart Error: ", e)
                 
-                if self.recording.record==False:
+                if not self.recording.record:
                     wait(200, MSEC)
                 else:
                     wait(2, MSEC)

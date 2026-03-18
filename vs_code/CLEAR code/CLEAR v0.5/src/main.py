@@ -28,6 +28,8 @@ drivetrain= DriveTrain(Right, Left)
 analog_input=PotentiometerV2(brain.three_wire_port.c)
 limitswitch=Limit(brain.three_wire_port.b)
 bumperswitch=Bumper(brain.three_wire_port.a)
+optical2=Optical(Ports.PORT2)
+rotation=Rotation(Ports.PORT3)
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
@@ -184,6 +186,8 @@ if brain.sdcard.is_inserted():
         Clear=CLEAR
 
         def capture_setup():
+            Clear.log.add_logstart("log.capture.smartport.rotation(rotation)")
+            Clear.log.add_logstart("log.capture.smartport.optical(optical2)")
             Clear.log.add_logstart("log.capture.threewire.potentiometer(analog_input)")
             Clear.log.add_logstart("log.capture.threewire.bumper(bumperswitch)")
             Clear.log.add_logstart("log.capture.threewire.limit(limitswitch)")

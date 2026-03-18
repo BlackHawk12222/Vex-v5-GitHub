@@ -146,11 +146,11 @@ class Log():
                 self.motor_disconnected={}
                 self.motor_current_monitoring={}
                 self.optical_object=False
-                self.optical_color=""
+                self.optical_color=0
                 self.inertial_axis_tolerance=0.5
                 self.inertial_gyro_tolerance=5
                 self.inertial_calibrating=False
-                self.inertial_installed=False
+                self.inertial_connected=False
                 self.inertial_rotation_history=0
                 self.inertial_roll_history=0
                 self.inertial_pitch_history=0
@@ -158,6 +158,9 @@ class Log():
                 self.inertial_x_axis_history=0
                 self.inertial_y_axis_history=0
                 self.inertial_z_axis_history=0
+                self.rotation_connection=True
+                self.rotation_angle_history={}
+                self.rotation_position_history={}
 
             def motor(self, motor):
                 """Capture for any general smart motor. Enter motor you wish to log as input. (Can take motor groups as well.)"""
@@ -221,19 +224,17 @@ class Log():
                             log.add_codes("DO1", ":Optical DATA: Optical Detected Object.: ")
                         log.add("DO1", "")
                         self.optical_object=True
-                    if self.optical_color != opticalsensor.color():
+                    if not (self.optical_color >= opticalsensor.hue() - log.tolrance and self.optical_color <= opticalsensor.hue() + log.tolrance):
                         if "DO0" not in log.codes:
                             log.add_codes("DO0", ":Optical DATA: Color Changed. Color: ")
-                        log.add("DO0", opticalsensor.color())
+                        log.add("DO0", opticalsensor.hue())
+                        self.optical_color=opticalsensor.hue()
                 elif not opticalsensor.is_near_object() and self.optical_object:
                     if "DO2" not in log.codes:
                         log.add_codes("DO2", ":Optical DATA: Optical Lost Object.: ")
-                    log.add("D02", "")
+                    log.add("DO2", "")
                     self.optical_object=False
-                    self.optical_color=""
-
-            def aivision(self, aivisionsensor):
-                pass
+                    self.optical_color=0
 
             def inertial(self, inertialsensor=Inertial(Ports.PORT1)):
                 """Capture for inertal sensor. Enter inertial sensor to log."""
@@ -253,20 +254,20 @@ class Log():
                     log.add("DI3", "")
                     self.inertial_calibrating=False
 
-                if inertialsensor.installed() and not self.inertial_installed:
+                if inertialsensor.installed() and not self.inertial_connected:
 
                     if "DI7" not in log.codes:
                         log.add_codes("DI7", ":Inertial DATA: Inertial Installed: ")
 
                     log.add("DI7", "")
-                    self.inertial_installed=True
-                elif not inertialsensor.installed() and self.inertial_installed:
+                    self.inertial_connected=True
+                elif not inertialsensor.installed() and self.inertial_connected:
 
                     if "EI0" not in log.codes:
                         log.add_codes("EI0", ":Inertial ERROR: Inertial Disconnected.: ")
 
                     log.add("EI0", "")
-                    self.inertial_installed=False
+                    self.inertial_connected=False
 
                 if not (self.inertial_rotation_history >= inertialsensor.rotation() - self.inertial_gyro_tolerance and self.inertial_rotation_history <= inertialsensor.rotation() + self.inertial_gyro_tolerance):
 
@@ -324,14 +325,39 @@ class Log():
                     log.add("DI6", round(inertialsensor.acceleration(AxisType.ZAXIS), 2))
                     self.inertial_z_axis_history= inertialsensor.acceleration(AxisType.ZAXIS)
 
-            def gps(self, gpssensor):
-                pass
-
             def distance(self, distancesensor):
                 pass
 
-            def rotation(self, rotaionsensor):
-                pass
+            def rotation(self, rotationsensor):
+                """Capture for a rotation sensor. Enter rotation sensor to log"""
+
+                rotaion_id=id(rotationsensor)
+
+                if rotaion_id not in self.rotation_angle_history:
+                    self.rotation_angle_history[rotaion_id]=0
+                if rotaion_id not in self.rotation_position_history:
+                    self.rotation_position_history[rotaion_id]=0
+                
+                if rotationsensor.installed() and self.rotation_connection==False:
+                    if "DR0" not in log.codes:
+                        log.add_codes("DR0", ":Rotation DATA: Inertial Installed.: ")
+                    log.add("ER0", "")
+                elif not rotationsensor.installed() and self.rotation_connection==True:
+                    if "ER0" not in log.codes:
+                        log.add_codes("ER0", ":Rotation ERROR: Inertial Disconnected.: ")
+                    log.add("ER0", "")
+                
+                if not (self.rotation_angle_history[rotaion_id] >= rotationsensor.angle() - log.tolrance and self.rotation_angle_history[rotaion_id] <= rotationsensor.angle() + log.tolrance):
+                    if "DR1" not in log.codes:
+                        log.add_codes("DR1", ":Rotation DATA: Angle Changed. Angle: ")
+                    log.add("DR1", rotationsensor.angle())
+                    self.rotation_angle_history[rotaion_id]= rotationsensor.angle()
+                
+                if not (self.rotation_position_history[rotaion_id] >= rotationsensor.position() - log.tolrance and self.rotation_position_history[rotaion_id] <= rotationsensor.position() + log.tolrance):
+                    if "DR2" not in log.codes:
+                        log.add_codes("DR2", ":Rotation DATA: Position Changed. Position: ")
+                    log.add("DR2", rotationsensor.position())
+                    self.rotation_position_history[rotaion_id]= rotationsensor.position()
             
         
         class Threewire:
@@ -436,12 +462,7 @@ class Log():
                     if "DPW0" not in log.codes:
                         log.add_codes("DPW0", ":Pwm DATA: Value Changed. Value: ")
                     log.add("DPW0", input.value())
-                    self.analog_value[input_id]=input.value()
-
-            def encoder(self, encodersensor):
-                pass
-
-            
+                    self.analog_value[input_id]=input.value()    
 
         def __init__(self):
             self.drivetrain=self.Drivetrain()

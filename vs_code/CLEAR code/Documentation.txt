@@ -49,7 +49,7 @@ Section eight, Functions and their uses:
 
 Now I will go into detail on how the capture works and its current capabilities.
 
-there are four functions used in the default use of the Capture the log.capture.battery(), log.capture.controller(), log.capture.motor(), log.capture.drivetrain, and log.capture.variable().
+there are four main functions used in the default use of the Capture the log.capture.battery(), log.capture.controller(), log.capture.motor(), log.capture.drivetrain, and log.capture.variable().
 
 First, the battery function. There are no inputs for this function, as there will always be one battery and the information will always be the same. It captures capacity, voltage, and current. If the battery capacity is 50% or lower, it will give a warning; if it is below 25%, it will log an error. For the voltage, if it is below 12 volts, a warning will be displayed; if it is below 11 volts, an error will be logged. About the same as the voltage, but if the amps are higher than 15, I'll warn, and 18 will trigger the error log.
 
@@ -61,6 +61,22 @@ For the temps, if they are 50% or more, it will log a warning; if over 70%, it w
 Next, the drivetrain. This is similar to the motors, but you need to add another '.' to specify whether it is a two-, four-, or six-motor drivetrain, and enter the motor names in the correct place in the input order. The logging is very similar to the motor function, and all thresholds are the same. However, the code used is different, and it will show which one is the problem in the drivetrain. Then the readout is slightly different: it will not only show the peak usage of the data but also the total, making it much more useful for drivetrain-related issues.
 
 last is the variables this one is pretty simple and with log the initial value and any changes to the value and logs it the input needed are its name in quotation marks and the value by calling that variable.
+
+Now there are other function for more specific things mostly for sensors and such here is a list of them:
+
+optical
+inertial
+distance
+rotation
+digital input
+analog
+bumper
+limit
+potentiometer
+PWM
+
+This list is all the functions they are all functions to capture and log sensors it spans both the smart ports and the three wire ports we plan on adding more in the future but this is what we have now. All of the function log what the sensor outputs with all of them it uses a tolerance before logging to prevent the log from being filled to easy by just that sensor plug helps with it not logging when not actually doing anything. Some of the smart port sensors also log if its installed if the option is given.
+
 
 Section nine, How to use it:
 

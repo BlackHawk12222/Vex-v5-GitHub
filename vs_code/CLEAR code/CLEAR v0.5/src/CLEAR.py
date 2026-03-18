@@ -145,12 +145,13 @@ class Log():
                 self.motor_power_monitoring={}  
                 self.motor_disconnected={}
                 self.motor_current_monitoring={}
-                self.optical_object=False
-                self.optical_color=0
+                self.optical_object={}
+                self.optical_color={}
+                self.optical_connected={}
                 self.inertial_axis_tolerance=0.5
                 self.inertial_gyro_tolerance=5
                 self.inertial_calibrating=False
-                self.inertial_connected=False
+                self.inertial_connected=True
                 self.inertial_rotation_history=0
                 self.inertial_roll_history=0
                 self.inertial_pitch_history=0
@@ -158,7 +159,7 @@ class Log():
                 self.inertial_x_axis_history=0
                 self.inertial_y_axis_history=0
                 self.inertial_z_axis_history=0
-                self.rotation_connection=True
+                self.rotation_connection={}
                 self.rotation_angle_history={}
                 self.rotation_position_history={}
 
@@ -209,32 +210,67 @@ class Log():
                     self.motor_current_monitoring[motor_id]=0
                 
                 if motor.temperature(PERCENT)==2 and self.motor_disconnected[motor_id]==0:
-                    log.add("EM1", "Motor %s Disconnected"%(motor))
+                    log.add("EM1", "%s"%(motor))
                     self.motor_disconnected[motor_id]=1
                 
                 if motor.temperature(PERCENT)!=2 and self.motor_disconnected[motor_id]==1:
                     self.motor_disconnected[motor_id]=0
             
-            def optical(self, opticalsensor):
+            def optical(self, opticalsensor=Optical(Ports.PORT1)):
                 """Capture for an optical sensor. Enter optical sensor to Capture."""
 
+                optical_id=id(opticalsensor)
+
+                if  optical_id not in self.optical_connected:
+                    self.optical_connected[optical_id]=True
+
+                if  optical_id not in self.optical_object:
+                    self.optical_object[optical_id]=False
+
+                if  optical_id not in self.optical_color:
+                    self.optical_color[optical_id]=0
+                
+                if opticalsensor.installed() and not self.optical_connected[optical_id]:
+
+                    if "DO3" not in log.codes:
+                        log.add_codes("DO3", ":Optical DATA: Optical Installed: ")
+                    
+                    log.add("DO3", "")
+                    self.optical_connected[optical_id]=True
+                elif not opticalsensor.installed() and self.optical_connected[optical_id]:
+
+                    if "EO0" not in log.codes:
+                        log.add_codes("EO0", ":Optical ERROR: Optical Disconnected: ")
+
+                    log.add("EO0", "")
+                    self.optical_connected[optical_id]=False
+
                 if opticalsensor.is_near_object():
-                    if not self.optical_object:
+
+                    if not self.optical_object[optical_id]:
+
                         if "DO1" not in log.codes:
                             log.add_codes("DO1", ":Optical DATA: Optical Detected Object.: ")
+
                         log.add("DO1", "")
-                        self.optical_object=True
-                    if not (self.optical_color >= opticalsensor.hue() - log.tolrance and self.optical_color <= opticalsensor.hue() + log.tolrance):
+                        self.optical_object[optical_id]=True
+
+                    if not (self.optical_color[optical_id] >= opticalsensor.hue() - log.tolrance and self.optical_color[optical_id] <= opticalsensor.hue() + log.tolrance):
+
                         if "DO0" not in log.codes:
                             log.add_codes("DO0", ":Optical DATA: Color Changed. Color: ")
+
                         log.add("DO0", opticalsensor.hue())
-                        self.optical_color=opticalsensor.hue()
-                elif not opticalsensor.is_near_object() and self.optical_object:
+                        self.optical_color[optical_id]=opticalsensor.hue()
+                        
+                elif not opticalsensor.is_near_object() and self.optical_object[optical_id]:
+
                     if "DO2" not in log.codes:
                         log.add_codes("DO2", ":Optical DATA: Optical Lost Object.: ")
+
                     log.add("DO2", "")
-                    self.optical_object=False
-                    self.optical_color=0
+                    self.optical_object[optical_id]=False
+                    self.optical_color[optical_id]=0
 
             def inertial(self, inertialsensor=Inertial(Ports.PORT1)):
                 """Capture for inertal sensor. Enter inertial sensor to log."""
@@ -337,25 +373,37 @@ class Log():
                     self.rotation_angle_history[rotaion_id]=0
                 if rotaion_id not in self.rotation_position_history:
                     self.rotation_position_history[rotaion_id]=0
+                if rotaion_id not in self.rotation_connection:
+                    self.rotation_connection[rotaion_id]=True
                 
-                if rotationsensor.installed() and self.rotation_connection==False:
+                if rotationsensor.installed() and self.rotation_connection[rotaion_id]==False:
+
                     if "DR0" not in log.codes:
-                        log.add_codes("DR0", ":Rotation DATA: Inertial Installed.: ")
-                    log.add("ER0", "")
-                elif not rotationsensor.installed() and self.rotation_connection==True:
+                        log.add_codes("DR0", ":Rotation DATA: Rotation Installed.: ")
+
+                    log.add("DR0", "")
+                    self.rotation_connection[rotaion_id]=True
+                elif not rotationsensor.installed() and self.rotation_connection[rotaion_id]==True:
+
                     if "ER0" not in log.codes:
-                        log.add_codes("ER0", ":Rotation ERROR: Inertial Disconnected.: ")
+                        log.add_codes("ER0", ":Rotation ERROR: Rotation Disconnected.: ")
+
                     log.add("ER0", "")
+                    self.rotation_connection[rotaion_id]=False
                 
                 if not (self.rotation_angle_history[rotaion_id] >= rotationsensor.angle() - log.tolrance and self.rotation_angle_history[rotaion_id] <= rotationsensor.angle() + log.tolrance):
+
                     if "DR1" not in log.codes:
                         log.add_codes("DR1", ":Rotation DATA: Angle Changed. Angle: ")
+
                     log.add("DR1", rotationsensor.angle())
                     self.rotation_angle_history[rotaion_id]= rotationsensor.angle()
                 
                 if not (self.rotation_position_history[rotaion_id] >= rotationsensor.position() - log.tolrance and self.rotation_position_history[rotaion_id] <= rotationsensor.position() + log.tolrance):
+
                     if "DR2" not in log.codes:
                         log.add_codes("DR2", ":Rotation DATA: Position Changed. Position: ")
+
                     log.add("DR2", rotationsensor.position())
                     self.rotation_position_history[rotaion_id]= rotationsensor.position()
             

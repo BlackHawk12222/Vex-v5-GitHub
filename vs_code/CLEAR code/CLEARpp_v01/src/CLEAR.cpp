@@ -18,7 +18,7 @@ clear::clear(vex::brain* Brain_input){
 void clear::add(const char *code, const char *details){
     int time_of_log = logtimer.time(vex::timeUnits::msec);
     std::string body_log = codes.at(code);
-    Brain-> Screen.print("%d [%d] %s %s", index, time_of_log, body_log.c_str(), details);
+    Brain-> Screen.print(", %d [%d] %s %s \n", index, time_of_log, body_log.c_str(), details);
     if (Brain-> SDcard.isInserted()){
         int buffersize = snprintf(nullptr, 0, ", %d [%d] %s %s \n", index, time_of_log, body_log.c_str(), details);
         char buffer[buffersize];
@@ -26,4 +26,12 @@ void clear::add(const char *code, const char *details){
         Brain-> SDcard.appendfile("Log.csv", (uint8_t*)buffer, sizeof(buffer));
     }
     index+=1;
+}
+
+void start(){
+    clear* Clear;
+    Clear->add("DS0", "");
+    while(true){
+        vex::wait(5, vex::msec);
+    };
 }

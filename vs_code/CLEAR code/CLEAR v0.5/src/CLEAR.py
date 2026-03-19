@@ -1338,4 +1338,34 @@ class Log():
         """Used in logstart. Enter the funtion for variables like so "log.capture.variable()" then in the inner parentheses add the name of variable as a string and the variable. Can also be used for any capture funtion in CLEAR."""
         brain.sdcard.appendfile("Logstart.txt" , bytearray(funtion + ", ", self.format))
 
+    def auto_start(self, brainread=False):
+        if brainread:
+            brain.screen.set_font(FontType.MONO12)
+            self.brainscreen=True
+
+        # Loads extra funtions from file.
+        try:    
+            addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
+        except AttributeError:
+            addedfuntion=""
+
+        self.archive.log()
+        self.archive.index_history()
+
+        # Logs system start.
+        self.add("DS0", 0)
+        
+        globallogging= dir()
+        print(globallogging)
+        # for item in globallogging:
+        #     print(item)
+        #     print(type(item.replace("'", "")))
+        #     print("'")
+
+        #     item_type=type(item)
+
+        #     if  item_type == "<class 'int'>" or item_type == "<class 'bool'>" or item_type == "<class 'float'>":
+        #         log.add_logstart("log.capture.variable(%s, %s)"%(item, item.replace("'", "")))
+
+
 log=Log()

@@ -185,17 +185,18 @@ if brain.sdcard.is_inserted():
         Clear=CLEAR
 
         def capture_setup():
-            Clear.log.add_logstart("log.capture.system.memoryuse()")
-            Clear.log.add_logstart("log.capture.system.modules()")
-            Clear.log.add_logstart("log.capture.smartport.rotation(rotation)")
-            Clear.log.add_logstart("log.capture.smartport.optical(optical2)")
-            Clear.log.add_logstart("log.capture.threewire.potentiometer(analog_input)")
-            Clear.log.add_logstart("log.capture.threewire.bumper(bumperswitch)")
-            Clear.log.add_logstart("log.capture.threewire.limit(limitswitch)")
-            Clear.log.add_logstart("log.capture.smartport.inertial(inertial_for_auton)")
-            Clear.log.add_logstart("log.capture.variable('loader_state', loader_state)")
-            Clear.log.add_logstart("log.capture.variable('pusher_state', pusher_state)")
-            Clear.log.logstart(Right1, left1, Right2, left2, Right3, left3, motor1=Intake, motor2=TopMotor, motor3=colorsorting, brainread=True, controller1=controller_1)
+            # Clear.log.add_logstart("log.capture.system.memoryuse()")
+            # Clear.log.add_logstart("log.capture.system.modules()")
+            # Clear.log.add_logstart("log.capture.smartport.rotation(rotation)")
+            # Clear.log.add_logstart("log.capture.smartport.optical(optical2)")
+            # Clear.log.add_logstart("log.capture.threewire.potentiometer(analog_input)")
+            # Clear.log.add_logstart("log.capture.threewire.bumper(bumperswitch)")
+            # Clear.log.add_logstart("log.capture.threewire.limit(limitswitch)")
+            # Clear.log.add_logstart("log.capture.smartport.inertial(inertial_for_auton)")
+            # Clear.log.add_logstart("log.capture.variable('loader_state', loader_state)")
+            # Clear.log.add_logstart("log.capture.variable('pusher_state', pusher_state)")
+            # Clear.log.logstart(Right1, left1, Right2, left2, Right3, left3, motor1=Intake, motor2=TopMotor, motor3=colorsorting, brainread=True, controller1=controller_1)
+            Clear.log.auto_start(brainread=True)
 
         logging=Thread(capture_setup)
 

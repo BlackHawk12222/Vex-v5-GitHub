@@ -19,6 +19,9 @@ clear Clear(&Brain);
 
 int main() {
     Clear.add("DS0", "");
+    vex::wait(2, vex::seconds);
+    Brain.Screen.newLine();
+    Clear.add("DS1", "");
     return 0;
 }
 

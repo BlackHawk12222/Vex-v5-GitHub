@@ -24,7 +24,6 @@ DeScorer = DigitalOut(brain.three_wire_port.b)
 Intake = Motor(Ports.PORT14, GearSetting.RATIO_6_1, True)
 Left= MotorGroup(left1, left2)
 Right= MotorGroup(Right1, Right2)
-drivetrain= DriveTrain(Right, Left)
 analog_input=PotentiometerV2(brain.three_wire_port.c)
 limitswitch=Limit(brain.three_wire_port.b)
 bumperswitch=Bumper(brain.three_wire_port.a)
@@ -186,6 +185,8 @@ if brain.sdcard.is_inserted():
         Clear=CLEAR
 
         def capture_setup():
+            Clear.log.add_logstart("log.capture.system.memoryuse()")
+            Clear.log.add_logstart("log.capture.system.modules()")
             Clear.log.add_logstart("log.capture.smartport.rotation(rotation)")
             Clear.log.add_logstart("log.capture.smartport.optical(optical2)")
             Clear.log.add_logstart("log.capture.threewire.potentiometer(analog_input)")
@@ -194,9 +195,9 @@ if brain.sdcard.is_inserted():
             Clear.log.add_logstart("log.capture.smartport.inertial(inertial_for_auton)")
             Clear.log.add_logstart("log.capture.variable('loader_state', loader_state)")
             Clear.log.add_logstart("log.capture.variable('pusher_state', pusher_state)")
-            Clear.log.logstart(Right1, left1, Right2, left2, Right3, left3, motor1=Intake, motor2=TopMotor, motor3=colorsorting, brainread=True)
+            Clear.log.logstart(Right1, left1, Right2, left2, Right3, left3, motor1=Intake, motor2=TopMotor, motor3=colorsorting, brainread=True, controller1=controller_1)
 
-        Thread(capture_setup)
+        logging=Thread(capture_setup)
 
         def recordright():
             global recording_state
@@ -254,11 +255,3 @@ controller_1.buttonDown.pressed(pushertoggle)
 controller_1.buttonB.pressed(loadertoggle)
 
 inertial_for_auton.calibrate()
-# Colorsort loop
-while True:
-    while optical_9.is_near_object():
-        if 340 < optical_9.hue() <20:
-            colorsorting.spin(FORWARD, 12, VOLT)
-        else:
-            colorsorting.spin(REVERSE, 12, VOLT)
-    colorsorting.stop()

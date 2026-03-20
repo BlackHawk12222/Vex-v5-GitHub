@@ -1365,34 +1365,34 @@ class Log():
             brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.threewire.pwm%s, "%(values), self.format))
         
 
-    # def auto_start(self, brainread=False):
-    #     if brainread:
-    #         brain.screen.set_font(FontType.MONO12)
-    #         self.brainscreen=True
+    def auto_start(self, brainread=False):
+        if brainread:
+            brain.screen.set_font(FontType.MONO12)
+            self.brainscreen=True
 
-    #     # Loads extra funtions from file.
-    #     try:    
-    #         addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
-    #     except AttributeError:
-    #         addedfuntion=""
+        # Loads extra funtions from file.
+        try:    
+            addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
+        except AttributeError:
+            addedfuntion=""
 
-    #     self.archive.log()
-    #     self.archive.index_history()
+        self.archive.log()
+        self.archive.index_history()
 
-    #     # Logs system start.
-    #     self.add("DS0", 0)
+        # Logs system start.
+        self.add("DS0", 0)
         
-    #     globallogging= dir()
-    #     print(globallogging)
-        # for item in globallogging:
-        #     print(item)
-        #     print(type(item.replace("'", "")))
-        #     print("'")
+        globallogging= dir()
+        print(globallogging)
+        for item in globallogging:
+            print(item)
+            print(type(eval(item)))
+            print("")
 
-        #     item_type=type(item)
+            item_type=type(eval(item))
 
-        #     if  item_type == "<class 'int'>" or item_type == "<class 'bool'>" or item_type == "<class 'float'>":
-        #         log.add_logstart("log.capture.variable(%s, %s)"%(item, item.replace("'", "")))
+            if  item_type == "<class 'int'>" or item_type == "<class 'bool'>" or item_type == "<class 'float'>":
+                log.add_logstart("log.capture.variable(%s, %s)"%(item, item.replace("'", "")))
 
 
 log=Log()

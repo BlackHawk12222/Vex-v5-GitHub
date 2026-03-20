@@ -3,6 +3,7 @@
 #include <string>
 #include <cstdio>
 #include <iostream>
+#include <algorithm>
 #include "CLEAR.hpp"
 
 
@@ -13,6 +14,7 @@ clear::clear(vex::brain* Brain_input){
         uint8_t buffer[] = "Log start: \n";
         Brain->SDcard.savefile("Log.csv", buffer, sizeof(buffer));
     }
+    
 }
 
 void clear::add(const char *code, const char *details){
@@ -28,10 +30,46 @@ void clear::add(const char *code, const char *details){
     index+=1;
 }
 
-void start(){
+void clear::DrivetarinSixMotor(vex::motor Right1, vex::motor Left1, vex::motor Right2, vex::motor Left2, vex::motor Right3, vex::motor Left3){
     clear* Clear;
+    
+    if ((Right1.temperature(vex::percent) > 70 || Right2.temperature(vex::percent) > 70 || Right3.temperature(vex::percent) > 70 || Left1.temperature(vex::percent) > 70 || Left2.temperature(vex::percent) > 70 || Left3.temperature(vex::percent) > 70) && clear::temp_monitoring < 1){
+        short int buffersize = snprintf(nullptr, 0, "%.2f", std::max({Right1.temperature(vex::percent), Right2.temperature(vex::percent), Right3.temperature(vex::percent), Left1.temperature(vex::percent), Left2.temperature(vex::percent), Left3.temperature(vex::percent)}));
+        char buffer[buffersize];
+        snprintf(buffer, buffersize + 1, "%.2f", std::max({Right1.temperature(vex::percent), Right2.temperature(vex::percent), Right3.temperature(vex::percent), Left1.temperature(vex::percent), Left2.temperature(vex::percent), Left3.temperature(vex::percent)}));
+        Clear->add("ED0", buffer);
+        clear::temp_monitoring = 1;
+    }
+    else if ((Right1.temperature(vex::percent) > 50 || Right2.temperature(vex::percent) > 50 || Right3.temperature(vex::percent) > 50 || Left1.temperature(vex::percent) > 50 || Left2.temperature(vex::percent) > 50 || Left3.temperature(vex::percent) > 50) && clear::temp_monitoring < 2){
+        short int buffersize = snprintf(nullptr, 0, "%.2f", std::max({Right1.temperature(vex::percent), Right2.temperature(vex::percent), Right3.temperature(vex::percent), Left1.temperature(vex::percent), Left2.temperature(vex::percent), Left3.temperature(vex::percent)}));
+        char buffer[buffersize];
+        snprintf(buffer, buffersize + 1, "%.2f", std::max({Right1.temperature(vex::percent), Right2.temperature(vex::percent), Right3.temperature(vex::percent), Left1.temperature(vex::percent), Left2.temperature(vex::percent), Left3.temperature(vex::percent)}));
+        Clear->add("WD0", buffer);
+        clear::temp_monitoring = 2;
+    }
+    else if ((Right1.temperature(vex::percent) <= 50 || Right2.temperature(vex::percent) <= 50 || Right3.temperature(vex::percent) <= 50 || Left1.temperature(vex::percent) <= 50 || Left2.temperature(vex::percent) <= 50 || Left3.temperature(vex::percent) <= 50) && clear::temp_monitoring > 0){
+        short int buffersize = snprintf(nullptr, 0, "%.2f", std::max({Right1.temperature(vex::percent), Right2.temperature(vex::percent), Right3.temperature(vex::percent), Left1.temperature(vex::percent), Left2.temperature(vex::percent), Left3.temperature(vex::percent)}));
+        char buffer[buffersize];
+        snprintf(buffer, buffersize + 1, "%.2f", std::max({Right1.temperature(vex::percent), Right2.temperature(vex::percent), Right3.temperature(vex::percent), Left1.temperature(vex::percent), Left2.temperature(vex::percent), Left3.temperature(vex::percent)}));
+        Clear->add("DD0", buffer);
+        clear::temp_monitoring = 0;
+    }
+
+    if ((Right1.power(vex::watt) > 20 || Right2.power(vex::watt) > 20 || Right3.power(vex::watt) > 20 || Left1.power(vex::watt) > 20 || Left2.power(vex::watt) > 20 || Left3.power(vex::watt) > 20) && clear::power_moitoring == false){
+        short int buffersize = snprintf(nullptr, 0, "%.2f", std::max({Right1.power(vex::watt), Right2.power(vex::watt), Right3.power(vex::watt), Left1.power(vex::watt), Left2.power(vex::watt), Left3.power(vex::watt)}));
+        char buffer[buffersize];
+        snprintf(buffer, buffersize + 1, "%.2f", std::max({Right1.power(vex::watt), Right2.power(vex::watt), Right3.power(vex::watt), Left1.power(vex::watt), Left2.power(vex::watt), Left3.power(vex::watt)}));
+        Clear->add("ED1", buffer);
+        clear::power_moitoring = true;
+    }  
+}
+
+void clear::start(vex::motor Right1, vex::motor Left1, vex::motor Right2, vex::motor Left2, vex::motor Right3, vex::motor Left3){
+    clear* Clear;
+    
     Clear->add("DS0", "");
     while(true){
-        vex::wait(5, vex::msec);
+        Clear-> DrivetarinSixMotor(Right1, Right2, Right3, Left1, Left2, Left3);
+        vex::wait(200, vex::msec);
     };
 }

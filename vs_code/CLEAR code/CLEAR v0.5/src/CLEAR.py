@@ -1338,25 +1338,52 @@ class Log():
         """Used in logstart. Enter the funtion for variables like so "log.capture.variable()" then in the inner parentheses add the name of variable as a string and the variable. Can also be used for any capture funtion in CLEAR."""
         brain.sdcard.appendfile("Logstart.txt" , bytearray(funtion + ", ", self.format))
 
-    def auto_start(self, brainread=False):
-        if brainread:
-            brain.screen.set_font(FontType.MONO12)
-            self.brainscreen=True
-
-        # Loads extra funtions from file.
-        try:    
-            addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
-        except AttributeError:
-            addedfuntion=""
-
-        self.archive.log()
-        self.archive.index_history()
-
-        # Logs system start.
-        self.add("DS0", 0)
+    def add_logstart_A(self, type, *values):
+        if type=="variable":
+            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.variable%s, "%(values), self.format))
+        elif type=="modules":
+            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.system.modules(), ", self.format))
+        elif type=="memoryuse":
+            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.system.memoryuse(), ", self.format))
+        elif type=="inertial":
+            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.smartport.inertial%s, "%(values), self.format))
+        elif type=="optical":
+            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.smartport.optical%s, "%(values), self.format))
+        elif type=="rotation":
+            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.smartport.rotation%s, "%(values), self.format))
+        elif type=="potentiometer":
+            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.threewire.potentiometer%s, "%(values), self.format))
+        elif type=="bumper":
+            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.threewire.bumper%s, "%(values), self.format))
+        elif type=="limit":
+            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.threewire.limit%s, "%(values), self.format))
+        elif type=="digitalinput":
+            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.threewire.digitalinput%s, "%(values), self.format))
+        elif type=="analog":
+            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.threewire.analog%s, "%(values), self.format))
+        elif type=="pwm":
+            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.threewire.pwm%s, "%(values), self.format))
         
-        globallogging= dir()
-        print(globallogging)
+
+    # def auto_start(self, brainread=False):
+    #     if brainread:
+    #         brain.screen.set_font(FontType.MONO12)
+    #         self.brainscreen=True
+
+    #     # Loads extra funtions from file.
+    #     try:    
+    #         addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
+    #     except AttributeError:
+    #         addedfuntion=""
+
+    #     self.archive.log()
+    #     self.archive.index_history()
+
+    #     # Logs system start.
+    #     self.add("DS0", 0)
+        
+    #     globallogging= dir()
+    #     print(globallogging)
         # for item in globallogging:
         #     print(item)
         #     print(type(item.replace("'", "")))

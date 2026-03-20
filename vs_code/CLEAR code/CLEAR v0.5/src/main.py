@@ -195,8 +195,11 @@ if brain.sdcard.is_inserted():
             # Clear.log.add_logstart("log.capture.smartport.inertial(inertial_for_auton)")
             # Clear.log.add_logstart("log.capture.variable('loader_state', loader_state)")
             # Clear.log.add_logstart("log.capture.variable('pusher_state', pusher_state)")
-            # Clear.log.logstart(Right1, left1, Right2, left2, Right3, left3, motor1=Intake, motor2=TopMotor, motor3=colorsorting, brainread=True, controller1=controller_1)
-            Clear.log.auto_start(brainread=True)
+            Clear.log.add_logstart_A("variable", 'loader_state', loader_state)
+            Clear.log.add_logstart_A("variable", 'pusher_state', pusher_state)
+            Clear.log.add_logstart_A("memoryuse")
+            Clear.log.add_logstart_A("modules")
+            Clear.log.logstart(Right1, left1, Right2, left2, Right3, left3, motor1=Intake, motor2=TopMotor, motor3=colorsorting, brainread=True, controller1=controller_1)
 
         logging=Thread(capture_setup)
 

@@ -26,9 +26,6 @@ clear Clear(&Brain);
 int main() {
     Clear.add("DS0", "");
     Clear.start(Right1, Left1, Right2, Left2, Right3, Left3);
-    while (true){
-        vex::wait(5, vex::msec);
-    }
     Brain.Screen.newLine();
     Clear.add("DS1", "");
     return 0;

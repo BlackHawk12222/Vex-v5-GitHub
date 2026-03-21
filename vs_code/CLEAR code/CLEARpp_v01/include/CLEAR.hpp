@@ -3,9 +3,6 @@
 
 #include "vex.h"
 #include <unordered_map>
-#include <string>
-#include <cstdio>
-#include <iostream>
 
 class clear{
 
@@ -37,7 +34,7 @@ class clear{
         {"WD1", ":Drivetrain WARNING: High Power. Peak Power: "},
         {"DD1", ":Drivetrain DATA: Normal Power. Peak Power: "},
         {"ED2", ":Drivetrain ERROR: Motor Diconnected. Motor: "},
-        {"ED2", ":Drivetrain DATA: Motor Connected. Motor: "},
+        {"DD2", ":Drivetrain DATA: Motor Connected. Motor: "},
     };
 };
 

@@ -3,7 +3,7 @@
 # 	Module:       CLEAR.py                                                     #
 # 	Author:       Micah Bow                                                    #
 # 	Created:      1/27/2026, 12:42 PM                                          #
-#   Last Edited:  3/14/2026, 2:00 PM                                           #
+#   Last Edited:  3/22/2026, 2:00 PM                                           #
 # 	Description:  Capture, Logging, Encoding, Archiving, Recording.            #
 #                                                                              #
 # ---------------------------------------------------------------------------- #

@@ -179,70 +179,46 @@ def scorestop():
     TopMotor.stop()
 
 # Recording Functions
-if brain.sdcard.is_inserted():
-    try:
-        import CLEAR
-        Clear=CLEAR
+if brain.sdcard.is_inserted() and brain.sdcard.exists("CLEAR.py"):
+    import CLEAR
+    logging=Thread(lambda: CLEAR.log.auto_start(True))
 
-        def capture_setup():
-            # Clear.log.add_logstart("log.capture.system.memoryuse()")
-            # Clear.log.add_logstart("log.capture.system.modules()")
-            # Clear.log.add_logstart("log.capture.smartport.rotation(rotation)")
-            # Clear.log.add_logstart("log.capture.smartport.optical(optical2)")
-            # Clear.log.add_logstart("log.capture.threewire.potentiometer(analog_input)")
-            # Clear.log.add_logstart("log.capture.threewire.bumper(bumperswitch)")
-            # Clear.log.add_logstart("log.capture.threewire.limit(limitswitch)")
-            # Clear.log.add_logstart("log.capture.smartport.inertial(inertial_for_auton)")
-            # Clear.log.add_logstart("log.capture.variable('loader_state', loader_state)")
-            # Clear.log.add_logstart("log.capture.variable('pusher_state', pusher_state)")
-            Clear.log.add_logstart_A("variable", 'loader_state', loader_state)
-            Clear.log.add_logstart_A("variable", 'pusher_state', pusher_state)
-            Clear.log.add_logstart_A("memoryuse")
-            Clear.log.add_logstart_A("modules")
-            Clear.log.logstart(Right1, left1, Right2, left2, Right3, left3, motor1=Intake, motor2=TopMotor, motor3=colorsorting, brainread=True, controller1=controller_1)
+    def recordright():
+        global recording_state
+        if recording_state == 0:
+            CLEAR.log.recording.start("Right")
+            controller_1.screen.clear_line(3)
+            controller_1.screen.set_cursor(3,1)
+            controller_1.screen.print("Right recording.")
+            recording_state=1
+        elif recording_state == 1:
+            CLEAR.log.recording.stop("Right")
+            controller_1.screen.clear_line(3)
+            controller_1.screen.set_cursor(3,1)
+            controller_1.screen.print("Right Stopped.")
+            CLEAR.log.recording.encode("Right", rightmove, leftmove, intakeupstart, intakestop, "R1", intakedownstart, intakestop, "R2", scoreupstart, scorestop, "L1", scoredownstart, scorestop, "L2", loadertoggle, none, "B", pushertoggle, none, "DOWN")
+            controller_1.screen.clear_line(3)
+            controller_1.screen.set_cursor(3,1)
+            controller_1.screen.print("Right Encoded.")
+            recording_state=0
+    
+    def recallhistory():
+        CLEAR.log.archive.recall_log()
 
-        logging=Thread(capture_setup)
+    def archiveright():
+        CLEAR.log.archive.recall_recording("Right_pre_archived.txt")
 
-        def recordright():
-            global recording_state
-            if recording_state == 0:
-                Clear.log.recording.start("Right")
-                controller_1.screen.clear_line(3)
-                controller_1.screen.set_cursor(3,1)
-                controller_1.screen.print("Right recording.")
-                recording_state=1
-            elif recording_state == 1:
-                Clear.log.recording.stop("Right")
-                controller_1.screen.clear_line(3)
-                controller_1.screen.set_cursor(3,1)
-                controller_1.screen.print("Right Stopped.")
-                Clear.log.recording.encode("Right", rightmove, leftmove, intakeupstart, intakestop, "R1", intakedownstart, intakestop, "R2", scoreupstart, scorestop, "L1", scoredownstart, scorestop, "L2", loadertoggle, none, "B", pushertoggle, none, "DOWN")
-                controller_1.screen.clear_line(3)
-                controller_1.screen.set_cursor(3,1)
-                controller_1.screen.print("Right Encoded.")
-                recording_state=0
-        
-        def recallhistory():
-            Clear.log.archive.recall_log()
+    controller_1.buttonLeft.pressed(archiveright)
+    controller_1.buttonRight.pressed(recordright)
+    controller_1.buttonUp.pressed(recallhistory)
 
-        def archiveright():
-            Clear.log.archive.recall_recording("Right_pre_archived.txt")
+    def aton():
+        CLEAR.log.recording.run("Right")
 
-        controller_1.buttonLeft.pressed(archiveright)
-        controller_1.buttonRight.pressed(recordright)
-        controller_1.buttonUp.pressed(recallhistory)
-
-        def aton():
-            Clear.log.recording.run("Right")
-
-        def driver():
-            pass
-        
-        comp=Competition(driver, aton)
-    except ImportError:
-        print("CLEAR.py not found. Make sure it is in the sdcard and try again.")
-    except AttributeError:
-        print("CLEAR.py not found. Make sure it is in the sdcard and try again.")
+    def driver():
+        pass
+    
+    comp=Competition(driver, aton)
     
     
 

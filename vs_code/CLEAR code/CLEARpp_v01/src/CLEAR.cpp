@@ -2,6 +2,7 @@
 #include <algorithm>
 #include "CLEAR.hpp"
 #include <typeinfo>
+#include <string>
 
 
 

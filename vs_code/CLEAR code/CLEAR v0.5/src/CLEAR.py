@@ -1110,6 +1110,7 @@ class Log():
         self.cache=""
         self.brainscreen=False  # Used to see if need to print to brain screen.
         self.tolrance=3  # tolerance for controller stick diffrence when not recording and for general tolrance for sensors.
+        self.manual_control=False
 
         brain.sdcard.savefile("Logstart.txt")  # Clears Logstart file for refresh of instructions in it.
 
@@ -1276,6 +1277,7 @@ class Log():
         If you want to not index the history when it gets to big by entering "indexhistory=False".
         Last thing is using the "add_logstart()" function for variables and other things.
         """
+        self.manual_control=True
 
         if brainread:
             brain.screen.set_font(FontType.MONO12)
@@ -1337,44 +1339,11 @@ class Log():
     def add_logstart(self, funtion):
         """Used in logstart. Enter the funtion for variables like so "log.capture.variable()" then in the inner parentheses add the name of variable as a string and the variable. Can also be used for any capture funtion in CLEAR."""
         brain.sdcard.appendfile("Logstart.txt" , bytearray(funtion + ", ", self.format))
-
-    def add_logstart_A(self, type, *values):
-        if type=="variable":
-            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.variable%s, "%(values), self.format))
-        elif type=="modules":
-            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.system.modules(), ", self.format))
-        elif type=="memoryuse":
-            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.system.memoryuse(), ", self.format))
-        elif type=="inertial":
-            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.smartport.inertial%s, "%(values), self.format))
-        elif type=="optical":
-            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.smartport.optical%s, "%(values), self.format))
-        elif type=="rotation":
-            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.smartport.rotation%s, "%(values), self.format))
-        elif type=="potentiometer":
-            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.threewire.potentiometer%s, "%(values), self.format))
-        elif type=="bumper":
-            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.threewire.bumper%s, "%(values), self.format))
-        elif type=="limit":
-            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.threewire.limit%s, "%(values), self.format))
-        elif type=="digitalinput":
-            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.threewire.digitalinput%s, "%(values), self.format))
-        elif type=="analog":
-            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.threewire.analog%s, "%(values), self.format))
-        elif type=="pwm":
-            brain.sdcard.appendfile("Logstart.txt" , bytearray("log.capture.threewire.pwm%s, "%(values), self.format))
         
-
     def auto_start(self, brainread=False):
         if brainread:
             brain.screen.set_font(FontType.MONO12)
             self.brainscreen=True
-
-        # Loads extra funtions from file.
-        try:    
-            addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
-        except AttributeError:
-            addedfuntion=""
 
         self.archive.log()
         self.archive.index_history()
@@ -1383,16 +1352,75 @@ class Log():
         self.add("DS0", 0)
         
         globallogging= dir()
-        print(globallogging)
+
         for item in globallogging:
+            if self.manual_control:
+                break
             print(item)
             print(type(eval(item)))
             print("")
 
-            item_type=type(eval(item))
+            item_type=str(type(eval(item)))
 
             if  item_type == "<class 'int'>" or item_type == "<class 'bool'>" or item_type == "<class 'float'>":
-                log.add_logstart("log.capture.variable(%s, %s)"%(item, item.replace("'", "")))
+                log.add_logstart("log.capture.variable('%s', %s)"%(item, item.replace("'", "")))
+            elif item_type == "<class 'motor'>":
+                log.add_logstart("log.capture.smartport.motor(%s)"%(item.replace("'", "")))
+            elif item_type == "<class 'controller'>":
+                log.add_logstart("log.capture.controller(%s)"%(item.replace("'", "")))
+            elif item_type == "<class 'inertial'>":
+                log.add_logstart("log.capture.smartport.inertial(%s)"%(item.replace("'", "")))
+            elif item_type == "<class 'optical'>":
+                log.add_logstart("log.capture.smartport.optical(%s)"%(item.replace("'", "")))
+            elif item_type == "<class 'rotation'>":
+                log.add_logstart("log.capture.smartport.rotation(%s)"%(item.replace("'", "")))
+            elif item_type == "<class 'triport_bumper'>":
+                log.add_logstart("log.capture.threewire.bumper(%s)"%(item.replace("'", "")))
+            elif item_type == "<class 'triport_limit'>":
+                log.add_logstart("log.capture.threewire.limit(%s)"%(item.replace("'", "")))
+            elif item_type == "<class 'triport_digitalin'>":
+                log.add_logstart("log.capture.threewire.digitalinput(%s)"%(item.replace("'", "")))
+            elif item_type == "<class 'triport_potv2'>":
+                log.add_logstart("log.capture.threewire.digitalinput(%s)"%(item.replace("'", "")))
+            elif item_type == "<class 'triport_analog'>":
+                log.add_logstart("log.capture.threewire.analog(%s)"%(item.replace("'", "")))
+        
+        wait(20, MSEC)
+        print("DONE!!!")
 
+        # Loads extra funtions from file.
+        try:    
+            addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
+        except AttributeError:
+            addedfuntion=""
+        
+        while True:
+            if self.manual_control:
+                break
+
+            for i in range(10):
+
+                for i in range(20):
+
+                    speed2=log_time.time()
+
+                    if not self.recording.record:
+                        self.capture.battery()
+                        self.capture.system.memoryuse()
+                        self.capture.system.modules()
+
+                    try:
+                        exec(addedfuntion)
+                    except Exception as e:
+                        sys.print_exception(e) # type: ignore
+                    
+                    if not self.recording.record:
+                        wait(200 - (log_time.time() - speed2), MSEC)
+                    else:
+                        wait(2, MSEC)
+                    
+                gc.collect()
+
+            self.unloadcache()
 
 log=Log()

@@ -523,7 +523,13 @@ class Log():
                     self.analog_value[sensor_id]=sensor.angle()
 
             def pwm(self, input):
-                """Capture for pwm inputs. Enter pwm input to log."""
+                """
+                Capture for pwm inputs. 
+                Enter pwm input to log.
+
+                Args:
+                input= Pwm()
+                """
 
                 input_id=id(input)
 
@@ -567,7 +573,12 @@ class Log():
             self.button_R2=True
 
         def battery(self):
-            """Capture for the brains battery. No inputs here."""
+            """
+            Capture for the brains battery. 
+            
+            Args:
+            None
+            """
 
             # Battery monitoring for voltage, capacity, and current.
             if brain.battery.voltage(VoltageUnits.VOLT)<11 and (self.battery_voltage_monitoring==0 or self.battery_voltage_monitoring==2):
@@ -611,7 +622,13 @@ class Log():
                 self.battery_watt_monitoring=0
         
         def controller(self, controller):
-            """Capture for the controllers. Enter controller you wish to log. Optional: Enter motors to use for degrees turned."""
+            """
+            Capture for the controllers. 
+            Enter controller you wish to log. 
+            
+            Args:
+            controller= Controller()
+            """
 
             if not log.recording.record:  # Only logs when not recoding to save space on the recording file.
                 if controller.axis1.position()!=0 and not (self.axis1 >= controller.axis1.position() - log.tolrance and self.axis1 <= controller.axis1.position() + log.tolrance):
@@ -746,7 +763,14 @@ class Log():
                 self.button_R2=True
 
         def variable(self, name, value):
-            """Capture for int, float, and bool variables. Enter name of variable in a string and then the variable you wish to log."""
+            """
+            Capture for int, float, and bool variables. 
+            Enter name of variable in a string and then the variable you wish to log.
+            
+            Args:
+            name= String
+            value= Int, Boolean, Float
+            """
 
             valueid=id(name)
 
@@ -764,7 +788,9 @@ class Log():
 
 
     class Recording:
-        """Main class for recording."""
+        """
+        Main class for recording.
+        """
 
         def __init__(self):
             self.record=False  # Bool to see if recording
@@ -773,7 +799,13 @@ class Log():
             self.poststring="" # Used to store list to string.     
 
         def start(self, Aton):
-            """Starts recording. Enter name of file to start recording in."""
+            """
+            Starts recording. 
+            Enter name of file to start recording in.
+            
+            Args:
+            Aton= String
+            """
 
             filename=str(Aton) + "_pre.txt"
 
@@ -784,7 +816,13 @@ class Log():
                 log.add("DA0", filename)
 
         def stop(self, Aton):
-            """Stops recording. Enter name of recording you wish to stop."""
+            """
+            Stops recording. 
+            Enter name of recording you wish to stop.
+            
+            Args:
+            Aton= String
+            """
 
             filename=str(Aton) + "_pre.txt"
             preatonfile=""
@@ -820,7 +858,19 @@ class Log():
             log.add("DA1", filename)
 
         def encode(self, Aton, right, left, other1start=none, other1stop=none, other1button=none, other2start=none, other2stop=none, other2button=none, other3start=none, other3stop=none, other3button=none, other4start=none, other4stop=none, other4button=none, other5start=none, other5stop=none, other5button=none, other6start=none, other6stop=none, other6button=none):   
-            """Encodes the recording to python executable str in .txt file. Enter recording you wish to encode"""
+            """
+            Encodes the recording to python executable str in .txt file. 
+            Enter recording you wish to encode.
+            Also the right side drive funtion, left side drive funtion the any other funtions start, stop, and button to call funtion.
+
+            Args:
+            Aton= String
+            right= Funtion
+            left= Funtion
+            otherXstart= Funtion (optional, X is place holder from 1, 6)
+            otherXstop= Funtion (optional, X is place holder from 1, 6)
+            otherXbutton= String (optional, X is place holder from 1, 6)
+            """
             
             filename=Aton + ".txt"
             self.record=False
@@ -920,9 +970,9 @@ class Log():
 
                                     print("found axis")
                                     if "1_Axis3" in str(prelist):
-                                        brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(left[1]), str(prelist[10]).replace("'", ''), str(prelist[12]).replace("'", '')), log.format))
+                                        brain.sdcard.appendfile(filename, bytearray("%s(%s), "%(str(left[1]), str(prelist[10]).replace("'", '')), log.format))
                                     elif "1_Axis2" in str(prelist):
-                                        brain.sdcard.appendfile(filename, bytearray("%s(%s, %s), "%(str(right[1]), str(prelist[10]).replace("'", ''), str(prelist[12]).replace("'", '')), log.format))
+                                        brain.sdcard.appendfile(filename, bytearray("%s(%s), "%(str(right[1]), str(prelist[10]).replace("'", '')), log.format))
 
                                 elif "Button" in str(prelist):
 
@@ -966,7 +1016,13 @@ class Log():
             print("Encode done.")            
         
         def run(self, Aton):
-            """Runs encoded file. Enter file to run."""
+            """
+            Runs encoded file. 
+            Enter file to run.
+            
+            Args:
+            Aton= String
+            """
 
             log.add("DA3", Aton + ".txt")
             try:
@@ -982,12 +1038,20 @@ class Log():
 
 
     class Archive:
-        """Main object for archiving files made by CLEAR."""
+        """
+        Main object for archiving files made by CLEAR.
+        """
+
         def __init__(self):
             self.format="utf-8"
         
         def log(self):
-            """Archives the Log.txt file. No inputs here"""
+            """
+            Archives the Log.txt file.
+            
+            Args:
+            None
+            """
 
             speed=log_time.time()
             archivelist=""
@@ -1038,7 +1102,14 @@ class Log():
             del speed
 
         def recording(self, recordingname):
-            """Archives recording file. Enter full name of file."""
+            """
+            Archives recording file. 
+            Enter full name of file.
+
+            Args:
+            recordingname= String
+            """
+
             print("Archiving...")
             filename=str(recordingname).replace(".txt", "_archived.txt")
             brain.sdcard.savefile(filename)
@@ -1050,7 +1121,12 @@ class Log():
             log.add("DS3", recordingname)
 
         def index_history(self):
-            """Gets lines of loghistory puts number in file. No inputs here"""
+            """
+            Gets lines of loghistory puts number in file.
+            
+            Args:
+            None
+            """
 
             speed=log_time.time()
             index=0
@@ -1063,7 +1139,12 @@ class Log():
 
 
         def recall_log(self,):
-            """Unarchives The log. No inputs here."""
+            """
+            Unarchives The log.
+
+            Args:
+            None
+            """
 
             filename=("logrecalled.txt")
             print("recalling")
@@ -1085,7 +1166,13 @@ class Log():
                 print("Recall done.")
         
         def recall_recording(self, name):
-            """Restores recording file to an uncompressed state. Enter full name of the archived file."""
+            """
+            Restores recording file to an uncompressed state. 
+            Enter full name of the archived file.
+
+            Args:
+            name=String, full name of file
+            """
 
             recording=brain.sdcard.loadfile(name).decode(log.format).split('\n')
             filename=name.replace("_archived.txt", ".txt")
@@ -1199,7 +1286,12 @@ class Log():
             del log_lines, log_number
 
     def unloadcache(self): # This is only ment for the recording.
-        """When cache has items in it put them in the Log and the recording file. No inputs here."""
+        """
+        When cache has items in it put them in the Log and the recording file.
+
+        Args:
+        None
+        """
         if self.cache!="":
             brain.sdcard.appendfile(self.recording.Aton, bytearray(self.cache, self.format))
             brain.sdcard.appendfile("Log.csv", bytearray(self.cache, self.format))
@@ -1213,6 +1305,10 @@ class Log():
         Takes code and the added details gets runtime and index. 
         Then, prints it, puts them in Log or cache, and see if it needs to print to brain screen. 
         Enter code then the details you want as a string.
+
+        Args:
+        add_code= String
+        add_details= String
         """
 
         if not self.adding:
@@ -1236,33 +1332,74 @@ class Log():
         self.index += 1
         
     def add_codes(self, code_add, Decoded_text):
-        """Adds codes to the codes dictionary. Enter new code key, then the full string."""
+        """
+        Adds codes to the codes dictionary. 
+        Enter new code key, then the full string.
+
+        Args:
+        code_add= String
+        Decoded_text= String
+        """
+
         self.codes.update({code_add : "%s"%(Decoded_text)})
 
     def remove_codes(self, code_remove):
-        """Removes codes from dictionary. Enter code key to remove."""
+        """
+        Removes codes from dictionary.
+        Enter code key to remove.
+
+        Args:
+        code_remove= String
+        """
+
         if code_remove in self.codes:
             self.codes.pop(code_remove)
         else:
             print("Code Not Found In Log Codes")
 
     def edit_codes(self, code_edit, new_decoded_text):
-        """Edits existing codes in dictionary. Enter code key and then new full string"""
+        """
+        Edits existing codes in dictionary. 
+        Enter code key and then new full string
+        
+        Args:
+        code_edit= String
+        new_decoded_text= String
+        """
+
         if code_edit in self.codes:
             self.codes.update({code_edit : "%s"%(new_decoded_text)})
 
     # Clearing the log file
     def clear(self):
-        """Clears the Log.csv file. No inputs here"""
+        """
+        Clears the Log.csv file.
+        
+        Args:
+        None
+        """
+
         brain.sdcard.savefile("Log.csv", bytearray("Log Start: \n", self.format))
     
     # Displaying log codes dictionary
     def table(self):
-        """Prints codes dictionary. No inputs here."""
+        """
+        Prints codes dictionary.
+
+        Args:
+        None
+        """
+
         print(self.codes)
 
     def read(self):
-        """Prints the Log.csv file. No inputs here."""
+        """
+        Prints the Log.csv file. 
+        
+        Args:
+        None
+        """
+
         log_content=brain.sdcard.loadfile("Log.csv")
         print(log_content.decode(self.format))
     
@@ -1270,12 +1407,22 @@ class Log():
         """
         Main way to use CLEAR.
          
-        Enter drivetrain motors going right, left from front to back. 
+        Enter drivetrain motors going right, left from front to back. for a six motor.
+        if four or two drivetrain enter the drivetrain in drivetrain= and enter in drivetraintype how many motors are in there.
         Then, add genaric smart motors by entering "motor1=___, motor2=___, etc.". 
         Optional: Enter controller1 and controller2 like "controller1=___, etc.". 
         Next, if you want brain read enter "brainread=True". 
         If you want to not index the history when it gets to big by entering "indexhistory=False".
         Last thing is using the "add_logstart()" function for variables and other things.
+
+        Args:
+        *drivemotors=motors() (optional)
+        drivetrain=drivetrain() (optional)
+        drivetraintype=strings "Four", or "Two" (optional)
+        controller1=controller (Optional)
+        controller2=controller (Optional)
+        brainread= bool (optional)
+        **othermotors=  motor1=motor, etc (optional)
         """
         self.manual_control=True
 
@@ -1337,10 +1484,26 @@ class Log():
             self.unloadcache()
     
     def add_logstart(self, funtion):
-        """Used in logstart. Enter the funtion for variables like so "log.capture.variable()" then in the inner parentheses add the name of variable as a string and the variable. Can also be used for any capture funtion in CLEAR."""
+        """
+        Used in logstart. 
+        Enter the funtion for variables like so "log.capture.variable()" then in the inner parentheses add the name of variable as a string and the variable. 
+        Can also be used for any capture funtion in CLEAR.
+
+        Args:
+        funtion= Funtion for object Log
+        """
+
         brain.sdcard.appendfile("Logstart.txt" , bytearray(funtion + ", ", self.format))
         
     def auto_start(self, brainread=False):
+        """
+        An easy way to use the log start.
+        all that is needed if to call it but if you want you can make it print to the brain by adding True in the input.
+
+        Args:
+        brainread=Bool(optional)
+        """
+
         if brainread:
             brain.screen.set_font(FontType.MONO12)
             self.brainscreen=True
@@ -1381,7 +1544,7 @@ class Log():
             elif item_type == "<class 'triport_digitalin'>":
                 log.add_logstart("log.capture.threewire.digitalinput(%s)"%(item.replace("'", "")))
             elif item_type == "<class 'triport_potv2'>":
-                log.add_logstart("log.capture.threewire.digitalinput(%s)"%(item.replace("'", "")))
+                log.add_logstart("log.capture.threewire.potentiometer(%s)"%(item.replace("'", "")))
             elif item_type == "<class 'triport_analog'>":
                 log.add_logstart("log.capture.threewire.analog(%s)"%(item.replace("'", "")))
         

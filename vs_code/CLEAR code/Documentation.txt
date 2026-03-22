@@ -45,6 +45,8 @@ An important detail is that the primary way to use this code is to import it fro
 
 A cool thing for people without a brain readout is the use of the brain readout in the log.logstart(), helping when you can't use the terminal or for finding a repeatable problem faster.
 
+A huge breakthrough in the code was made as now the code with one function call can auto configure the log and start logging mostly the same as the manual log_start() function. This allows just about any person to just copy paste some text and they get a fully functioning log that work in most cases.
+
 Section eight, Functions and their uses:
 
 Now I will go into detail on how the capture works and its current capabilities.
@@ -80,7 +82,7 @@ This list is all the functions they are all functions to capture and log sensors
 
 Section nine, How to use it:
 
-The simplest way to use it is log.logstart(), but first we need to import the file, name it, and handle errors if the file doesn't exist or can't be loaded.
+The main way to use it is log.logstart(), but first we need to import the file, name it, and handle errors if the file doesn't exist or can't be loaded.
 the main way to do it is to in a function (name does not matter) put an "if brain.sdcard.is_inserted():" as the first thing then a try: and the error handling for the import error and a name error then in the try add import CLEAR then Clear= CLEAR to get the file on a variable then do the log stuff you want the recommended way is the log.logstart() function but you will need to write it as Clear.log.logstart() because of it being imported. For the inputs for the function, there are only two inputs required: the right and then the left drivetrain motors. If you have more than 2 motor drivetrains, add them in a 123 right-left pattern, like "right1 left1 right2 left2". Then, if you want any other motors in it, add them by adding motor1=, motor2=, etc., to the motor(s) you want to log. The next input is the controller; it can specify both controllers by saying controller1=, then the name of the main controller, and then controller2= for the secondary controller. If you want variables, use log.add_logstart() and put them in quotation marks; add log.capture.variable() then add the name as a string and the value by putting in just the variable. Then, out of the function, add Thead() and put the function in it without the parentheses. At the end, it should look like this:
 
 if brain.sdcard.is_inserted():
@@ -136,13 +138,21 @@ def record():
     except AttributeError:
         print("CLEAR.py not found. Make sure it is in the sdcard and try again.")
 
+However if you do not feal confident doing this or just do not understand it you may also use the log.auto_start() this is a one time function call that auto configures the CLEAR code to work with most codes. you can simply copy the text bellow and put it under the configuration of your code
+
+# Code to configure your robot / variables declarations here.
+ if brain.sdcard.is_inserted() and brain.sdcard.exists("CLEAR.py"):
+    import CLEAR
+    logging=Thread(lambda: CLEAR.log.auto_start(True))
+# Other code.
+
 Section ten, Performance:
 
 During the state competition, when we were talking about the logging, one of the judges asked about its performance. We couldn't fully answer this question, but it's fairly light. We can now say with full confidence that the software is lightweight and will have minimal impact on the robot's performance during logging.
 
 We measure performance by how long it takes to complete, since we can't observe CPU utilization in the brain. Next, the setup we used logs six motor drivetrain motors, three other motors, two variables, 5 sensors, and one controller to test the performance of a pretty big robot we would make; We also used the brain read to make it slower to. For the full loop, which logs everything 200 times over the time when logging is about 40600 msec, it varies by about +- 200 msec total. Now, every loop in the outer loop has a 200msec minus the time for the loop wait to make it work at 5 Hz. Hence, we spend about 600msec busy, which is ~1.52% of the time, and it also uses the Thread function because of that it runs in the background without affecting the main program's performance. It runs its tasks when the brain is idle, and, on top of that, we can't even notice any lag in input. So this led us to believe that it is indistinguishable from a brain without it. 
 
-Section eleven, plans on public code.
+Section eleven, plans on publishing code.
 
 In the first section of this code, we briefly discussed how we want this code to be used by many teams. Here, we will show how we plan to do that and why.
 

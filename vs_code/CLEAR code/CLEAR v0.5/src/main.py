@@ -45,11 +45,9 @@ print("\033[2J")
 #endregion VEXcode Generated Robot Configuration
 screen_precision = 0
 console_precision = 0
-pusher_state = 0
+pusher_state = False
 loader_state = False
 record = 0
-controlleraxis2positionhistory = 0
-controlleraxis3positionhistory = 0
 recording_state=0
 
 # ---------------------------------------------------------------------------- #
@@ -115,18 +113,18 @@ def scoredown():
 
 def pushertoggle():
     global pusher_state, Pusher
-    if pusher_state==0:
+    if not pusher_state:
         DeScorer.set(True)
         pusher_state=1
-        Pusher=1
+        Pusher=True
     else:
         DeScorer.set(False)
         pusher_state=0
-        Pusher=0
+        Pusher=False
 
 def loadertoggle():
     global loader_state
-    if loader_state==False:
+    if not loader_state:
         frontPiston.set(True)
         loader_state=True
     else:
@@ -135,7 +133,7 @@ def loadertoggle():
 
 # Aton Functions
 
-def leftmove(leftspeed, degrees):
+def leftmove(leftspeed):
     print("left: ", leftspeed)
     if leftspeed != 0:
         leftspeed=leftspeed/8.33
@@ -143,7 +141,7 @@ def leftmove(leftspeed, degrees):
     left2.spin(FORWARD, leftspeed, VOLT)
     left3.spin(FORWARD, leftspeed, VOLT)
 
-def rightmove(rightspeed, degrees):
+def rightmove(rightspeed):
     print("Right: ", rightspeed)
     if rightspeed != 0:
         rightspeed=rightspeed/8.33

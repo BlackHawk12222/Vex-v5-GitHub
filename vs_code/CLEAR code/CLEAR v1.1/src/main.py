@@ -185,17 +185,17 @@ if brain.sdcard.is_inserted() and brain.sdcard.exists("CLEAR.py"):
     def recordright():
         global recording_state
         if recording_state == 0:
-            CLEAR.log.recording.start("Right")
+            CLEAR.recording.start("Right")
             controller_1.screen.clear_line(3)
             controller_1.screen.set_cursor(3,1)
             controller_1.screen.print("Right recording.")
             recording_state=1
         elif recording_state == 1:
-            CLEAR.log.recording.stop("Right")
+            CLEAR.recording.stop("Right")
             controller_1.screen.clear_line(3)
             controller_1.screen.set_cursor(3,1)
             controller_1.screen.print("Right Stopped.")
-            CLEAR.log.recording.encode("Right", rightmove, leftmove, intakeupstart, intakestop, "R1", intakedownstart, intakestop, "R2", scoreupstart, scorestop, "L1", scoredownstart, scorestop, "L2", loadertoggle, none, "B", pushertoggle, none, "DOWN")
+            CLEAR.recording.encode("Right", rightmove, leftmove, intakeupstart, intakestop, "R1", intakedownstart, intakestop, "R2", scoreupstart, scorestop, "L1", scoredownstart, scorestop, "L2", loadertoggle, none, "B", pushertoggle, none, "DOWN")
             controller_1.screen.clear_line(3)
             controller_1.screen.set_cursor(3,1)
             controller_1.screen.print("Right Encoded.")
@@ -212,7 +212,8 @@ if brain.sdcard.is_inserted() and brain.sdcard.exists("CLEAR.py"):
     controller_1.buttonUp.pressed(recallhistory)
 
     def aton():
-        CLEAR.log.recording.run("Right")
+        CLEAR.recording.run("Right")
+        CLEAR.settings.open_settings_menu()
 
     def driver():
         pass

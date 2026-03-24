@@ -184,6 +184,10 @@ class Log():
                 self.rotation_connection={}
                 self.rotation_angle_history={}
                 self.rotation_position_history={}
+                self.distance_tolrance=100
+                self.distance_connection={}
+                self.distance_object={}
+                self.distance_history={}
 
             def motor(self, motor):
                 """Capture for any general smart motor. Enter motor you wish to log as input. (Can take motor groups as well.)"""
@@ -259,14 +263,14 @@ class Log():
                     if "DO3" not in log.codes:
                         log.add_codes("DO3", ":Optical DATA: Optical Installed: ")
                     
-                    log.add("DO3", "")
+                    log.add("DO3", str(opticalsensor))
                     self.optical_connected[optical_id]=True
                 elif not opticalsensor.installed() and self.optical_connected[optical_id]:
 
                     if "EO0" not in log.codes:
                         log.add_codes("EO0", ":Optical ERROR: Optical Disconnected: ")
 
-                    log.add("EO0", "")
+                    log.add("EO0", str(opticalsensor))
                     self.optical_connected[optical_id]=False
 
                 if opticalsensor.is_near_object():
@@ -276,7 +280,7 @@ class Log():
                         if "DO1" not in log.codes:
                             log.add_codes("DO1", ":Optical DATA: Optical Detected Object.: ")
 
-                        log.add("DO1", "")
+                        log.add("DO1", str(opticalsensor))
                         self.optical_object[optical_id]=True
 
                     if not (self.optical_color[optical_id] >= opticalsensor.hue() - log.tolrance and self.optical_color[optical_id] <= opticalsensor.hue() + log.tolrance):
@@ -284,7 +288,7 @@ class Log():
                         if "DO0" not in log.codes:
                             log.add_codes("DO0", ":Optical DATA: Color Changed. Color: ")
 
-                        log.add("DO0", opticalsensor.hue())
+                        log.add("DO0", str(opticalsensor.hue()) + " Sensor " + str(opticalsensor))
                         self.optical_color[optical_id]=opticalsensor.hue()
                         
                 elif not opticalsensor.is_near_object() and self.optical_object[optical_id]:
@@ -292,7 +296,7 @@ class Log():
                     if "DO2" not in log.codes:
                         log.add_codes("DO2", ":Optical DATA: Optical Lost Object.: ")
 
-                    log.add("DO2", "")
+                    log.add("DO2", str(opticalsensor))
                     self.optical_object[optical_id]=False
                     self.optical_color[optical_id]=0
 
@@ -386,7 +390,44 @@ class Log():
                     self.inertial_z_axis_history= inertialsensor.acceleration(AxisType.ZAXIS)
 
             def distance(self, distancesensor):
-                pass
+                distance_id=id(distancesensor)
+
+                if distance_id not in self.distance_connection:
+                    self.distance_connection[distance_id]=True
+                if distance_id not in self.distance_object:
+                    self.distance_object[distance_id]=False
+                if distance_id not in self.distance_history:
+                    self.distance_history[distance_id]=0
+
+                if distancesensor.installed() and not self.distance_connection[distance_id]:
+                    if "DDS3" not in log.codes:
+                        log.add_codes("DDS3", ":Distance DATA: Distance Installed.: ")
+                    log.add("DDS3", str(distancesensor))
+                    self.distance_connection[distance_id]=True
+                elif not distancesensor.installed() and self.distance_connection[distance_id]:
+                    if "EDS0" not in log.codes:
+                        log.add_codes("EDS0", ":Distance ERROR: Distance Disconnected.: ")
+                    log.add("EDS0", str(distancesensor))
+                    self.distance_connection[distance_id]=False
+
+                if distancesensor.is_object_detected():
+                    if not self.distance_object[distance_id]:
+                        if "DDS0" not in log.codes:
+                            log.add_codes("DDS0", ":Distance DATA: Distance Detected Object.: ")
+
+                        log.add("DDS0", distancesensor)
+                        self.distance_object[distance_id]=True
+
+                    if not (self.distance_history[distance_id] >= distancesensor.object_distance() - self.distance_tolrance and self.distance_history[distance_id] <= distancesensor.object_distance() + self.distance_tolrance):
+                        if "DDS1" not in log.codes:
+                            log.add_codes("DDS1", ":Distance DATA: Distance Changed. Distance: ")
+                        log.add("DDS1", str(distancesensor.object_distance()) + " Sensor " + str(distancesensor))
+                        self.distance_history[distance_id]=distancesensor.object_distance()
+                elif not distancesensor.is_object_detected() and self.distance_object[distance_id]:
+                    if "DDS4" not in log.codes:
+                        log.add_codes("DDS4", ":Distance DATA: Distance Lost Object.: ")
+                    log.add("DDS4", distancesensor)
+                    self.distance_object[distance_id]=False
 
             def rotation(self, rotationsensor):
                 """Capture for a rotation sensor. Enter rotation sensor to log"""
@@ -405,14 +446,14 @@ class Log():
                     if "DR0" not in log.codes:
                         log.add_codes("DR0", ":Rotation DATA: Rotation Installed.: ")
 
-                    log.add("DR0", "")
+                    log.add("DR0", str(rotationsensor))
                     self.rotation_connection[rotaion_id]=True
                 elif not rotationsensor.installed() and self.rotation_connection[rotaion_id]==True:
 
                     if "ER0" not in log.codes:
                         log.add_codes("ER0", ":Rotation ERROR: Rotation Disconnected.: ")
 
-                    log.add("ER0", "")
+                    log.add("ER0", str(rotationsensor))
                     self.rotation_connection[rotaion_id]=False
                 
                 if not (self.rotation_angle_history[rotaion_id] >= rotationsensor.angle() - log.tolrance and self.rotation_angle_history[rotaion_id] <= rotationsensor.angle() + log.tolrance):
@@ -420,7 +461,7 @@ class Log():
                     if "DR1" not in log.codes:
                         log.add_codes("DR1", ":Rotation DATA: Angle Changed. Angle: ")
 
-                    log.add("DR1", rotationsensor.angle())
+                    log.add("DR1", str(rotationsensor.angle()) + " Sensor " + str(rotationsensor))
                     self.rotation_angle_history[rotaion_id]= rotationsensor.angle()
                 
                 if not (self.rotation_position_history[rotaion_id] >= rotationsensor.position() - log.tolrance and self.rotation_position_history[rotaion_id] <= rotationsensor.position() + log.tolrance):
@@ -428,7 +469,7 @@ class Log():
                     if "DR2" not in log.codes:
                         log.add_codes("DR2", ":Rotation DATA: Position Changed. Position: ")
 
-                    log.add("DR2", rotationsensor.position())
+                    log.add("DR2", str(rotationsensor.position()) + " Sensor " + str(rotationsensor))
                     self.rotation_position_history[rotaion_id]= rotationsensor.position()
             
         
@@ -1537,6 +1578,8 @@ class Log():
                 log.add_logstart("log.capture.smartport.optical(%s)"%(item.replace("'", "")))
             elif item_type == "<class 'rotation'>":
                 log.add_logstart("log.capture.smartport.rotation(%s)"%(item.replace("'", "")))
+            elif item_type == "<class 'distance'>":
+                log.add_logstart("log.capture.smartport.distance(%s)"%(item.replace("'", "")))
             elif item_type == "<class 'triport_bumper'>":
                 log.add_logstart("log.capture.threewire.bumper(%s)"%(item.replace("'", "")))
             elif item_type == "<class 'triport_limit'>":

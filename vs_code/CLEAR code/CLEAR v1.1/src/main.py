@@ -29,6 +29,7 @@ limitswitch=Limit(brain.three_wire_port.b)
 bumperswitch=Bumper(brain.three_wire_port.a)
 optical2=Optical(Ports.PORT2)
 rotation=Rotation(Ports.PORT3)
+distance=Distance(Ports.PORT1)
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)

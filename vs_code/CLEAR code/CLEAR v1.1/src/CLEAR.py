@@ -8,17 +8,67 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
-
 from vex import *
-import gc
-import sys
+import gc, sys, utime  # type: ignore
 
 brain=Brain()
 log_time= Timer() # Main timer used.
+ticks=utime.ticks_us
 
-    
 def none():
     pass
+
+class Debug():
+    """Used for debugging functions in code."""
+    
+    @staticmethod
+    def start(func):
+        """Does error handling, prints all variables, and gives time fof funtion."""
+
+        def wrapper(*args, **kwargs):
+            try:
+                speed=ticks()
+                print("Startingdebug for %s"%(func))
+                func(*args, **kwargs)
+                print(func)
+                print("Time of function: %s MSEC"%((ticks()-speed)/1000))
+                print(locals())
+            except Exception as e:
+                sys.print_exception(e) # type: ignore
+        return wrapper
+
+    @staticmethod
+    def handling(func):
+        """Puts in error handling."""
+
+        def wrapper(*args, **kwargs):
+            try:
+                func(*args, **kwargs)
+            except Exception as e:
+                sys.print_exception(e) # type: ignore
+        return wrapper
+    
+    @staticmethod
+    def print(func):
+        """Prints variables."""
+
+        def wrapper(*args, **kwargs):
+            print("Startingdebug for %s"%(func))
+            func(*args, **kwargs)
+            print(func)
+            print(locals())
+        return wrapper
+    
+    @staticmethod
+    def time(func):
+        """Prints time to exec the function."""
+
+        def wrapper(*args, **kwargs):
+            speed=ticks()
+            func(*args, **kwargs)
+            print("Time of function: %s MSEC"%((ticks()-speed)/1000))
+        return wrapper
+        
 
 class Log():
     """Main object for the CLEAR import. \n To start logging use the "logstart()" function in this object to do the main logging if you need help with its inputs use help() over the "logstart()" function."""
@@ -33,18 +83,15 @@ class Log():
 
             def __init__(self):
                 self.modulelist=sys.modules.copy()
-                self.memory_logged=False
                 self.memory=0
+                self.memory_tolrance=100
 
             def memoryuse(self):
-                if gc.mem_alloc()/1000 >= 700 and not self.memory_logged:   # type: ignore
+                if not (self.memory >= gc.mem_alloc()/1000 - self.memory_tolrance and self.memory <= gc.mem_alloc()/1000 + self.memory_tolrance ):  # type: ignore
                     if "DSM0" not in log.codes:
-                        log.add_codes("DSM0", ":Memory WARNING: Memory useage high. Memory used: ")
+                            log.add_codes("DSM0", ":Memory DATA: Memory Useage Changed. Memory Used: ")
                     log.add("DSM0", str(gc.mem_alloc()/ 1000) + " KB") # type: ignore
-                    self.memory_logged=True
-                    self.memory=gc.mem_alloc() # type: ignore
-                elif self.memory_logged and (gc.mem_alloc()/1000 < 700 or (gc.mem_alloc() - self.memory)/1000 >= 100): # type: ignore
-                    self.memory_logged=False
+                    self.memory=gc.mem_alloc()/1000 # type: ignore
             
             def modules(self):
                 if self.modulelist != sys.modules:
@@ -888,7 +935,7 @@ class Log():
                 log.clear()
                 log.adding=True
                 del reversecodes, loglist, i, logline, archivelist
-            log.add("DS1", str(log_time.time() - speed) + " MSEC")
+            log.add("DS1", str(ticks() - speed) + " MSEC")
             del speed
 
         def recording(self, recordingname):
@@ -1089,6 +1136,7 @@ class Log():
             self.cache=""
             print("Unloaded cache")
 
+    @Debug.time
     def add(self, add_code, add_details):
         """
         Main funtion for Log.
@@ -1109,7 +1157,11 @@ class Log():
 
         print(entry)
         if recording.record:
-            self.cache += entry
+            try:
+                self.cache += entry
+            except MemoryError:
+                log.unloadcache()
+                gc.collect()
         else:
             brain.sdcard.appendfile("Log.csv", bytearray(entry, self.format))
 
@@ -1384,7 +1436,8 @@ class Log():
                 if gc_use:
                     gc.collect()
 
-            self.unloadcache()
+            #self.unloadcache()
+            pass
 
 class Recording:
     """
@@ -1687,17 +1740,7 @@ class Settings():
     def open_settings_menu(self):
         for value, key in self.settings.items():
             print("%s , %s" %(value, key))
- 
-class Debug():
-    debugging=False
-    
-    @staticmethod
-    def debug_start():
-        pass
-
 
 log=Log()
 recording=Recording()
 settings=Settings()
-
-

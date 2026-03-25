@@ -180,6 +180,7 @@ def scorestop():
 # Recording Functions
 if brain.sdcard.is_inserted() and brain.sdcard.exists("CLEAR.py"):
     import CLEAR
+    CLEAR.settings.open_settings_menu()
     logging=Thread(lambda: CLEAR.log.auto_start(True))
 
     def recordright():

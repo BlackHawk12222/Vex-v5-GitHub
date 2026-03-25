@@ -987,6 +987,8 @@ class Log():
         self.brainscreen=False  # Used to see if need to print to brain screen.
         self.tolrance=3  # tolerance for controller stick diffrence when not recording and for general tolrance for sensors.
         self.manual_control=False
+        self.printing=True
+        self.logging=True
 
         brain.sdcard.savefile("Logstart.txt")  # Clears Logstart file for refresh of instructions in it.
 
@@ -1103,7 +1105,8 @@ class Log():
         if not self.adding:
             return
 
-        entry = ", %d [%d] %s %s \n" % (self.index, log_time.time(), self.codes.get(add_code), add_details)       
+        entry = ", %d [%d] %s %s \n" % (self.index, log_time.time(), self.codes.get(add_code), add_details)
+
         print(entry)
         if recording.record:
             self.cache += entry
@@ -1292,10 +1295,21 @@ class Log():
         Args:
         brainread=Bool(optional)
         """
+        print(settings.settings)
+        self.format=str(settings.settings.get('format_used '))
+        self.tolrance=int(str(settings.settings.get('default_tolrance ')))
+        wait_time_logging=int(str(settings.settings.get('logging_loop_wait ')))
+        wait_time_recording=int(str(settings.settings.get('recording_loop_wait ')))
+        gc_use=bool(str(settings.settings.get('gc_use ')))
+        log_battery=bool(str(settings.settings.get('log_battery ')))
+        log_memory=bool(str(settings.settings.get('log_memory ')))
+        log_modules=bool(str(settings.settings.get('log_modules ')))
+        self.printing=bool(str(settings.settings.get('print_read ')))
+        self.logging=bool(str(settings.settings.get('sdcard_read ')))
+        self.brainscreen=bool(str(settings.settings.get('brain_read ')))
 
-        if brainread:
+        if self.brainscreen:
             brain.screen.set_font(FontType.MONO12)
-            self.brainscreen=True
 
         self.archive.log()
         self.archive.index_history()
@@ -1306,9 +1320,6 @@ class Log():
         globallogging= dir()
 
         for item in globallogging:
-            # print(item)
-            # print(type(eval(item)))
-            # print("")
 
             item_type=str(type(eval(item)))
 
@@ -1354,9 +1365,12 @@ class Log():
                     speed2=log_time.time()
 
                     if not recording.record:
-                        self.capture.battery()
-                        self.capture.system.memoryuse()
-                        self.capture.system.modules()
+                        if log_battery:
+                            self.capture.battery()
+                        if log_memory:
+                            self.capture.system.memoryuse()
+                        if log_modules:
+                            self.capture.system.modules()
 
                     try:
                         exec(addedfuntion)
@@ -1364,11 +1378,11 @@ class Log():
                         sys.print_exception(e) # type: ignore
                     
                     if not recording.record:
-                        wait(200 - (log_time.time() - speed2), MSEC)
+                        wait(wait_time_logging - (log_time.time() - speed2), MSEC)
                     else:
-                        wait(2, MSEC)
-                    
-                gc.collect()
+                        wait(wait_time_recording, MSEC)
+                if gc_use:
+                    gc.collect()
 
             self.unloadcache()
 
@@ -1627,7 +1641,6 @@ class Settings():
     def __init__(self):
         self.changes=""
         self.settings={}
-        self.runtime_settings={}
         self.default_settings_dictonary={
             "brain_read": False,
             "print_read": True,
@@ -1638,9 +1651,10 @@ class Settings():
             "log_memory": True,
             "log_modules": True,
             "log_battery": True,
-            "hz_logging": 5,
-            "hz_recording": 1000,
-            "format_used": "utf-8"
+            "logging_loop_wait": 200,
+            "recording_loop_wait": 0,
+            "format_used": "utf-8",
+            "default_tolrance": 3
         }
         if brain.sdcard.is_inserted() and not brain.sdcard.exists("settings.txt"):
             setting=""
@@ -1651,29 +1665,39 @@ class Settings():
             for line in self.settings_text:
                 print(line)
                 dict_stuff=line.split(":")
-                print(dict_stuff)
-                self.settings[dict_stuff[0]]=eval(dict_stuff[1])
+
+                if len(dict_stuff) >= 2:
+                    print(dict_stuff)
+                    self.settings[dict_stuff[0]]=dict_stuff[1]
             
         else:
-            self.settings_text=brain.sdcard.loadfile("settings.txt").decode(log.format).split(",")
+            self.settings_text=brain.sdcard.loadfile("settings.txt").decode(log.format).split("\n")
             for line in self.settings_text:
+                print(line)
                 dict_stuff=line.split(":")
-                self.settings[dict_stuff[0]]=eval(dict_stuff[1])
+
+                if len(dict_stuff) >= 2:
+                    print(dict_stuff)
+                    self.settings[dict_stuff[0]]=dict_stuff[1]
     
     @staticmethod
     def change_setting():
         pass
-
-    # def unpack_settings(self):
-    #     for value, key in self.settings:
-    #         self.runtime_settings[value]=key
-
     
     def open_settings_menu(self):
-        print(self.settings)
+        for value, key in self.settings.items():
+            print("%s , %s" %(value, key))
+ 
+class Debug():
+    debugging=False
     
+    @staticmethod
+    def debug_start():
+        pass
+
 
 log=Log()
 recording=Recording()
 settings=Settings()
+
 

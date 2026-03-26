@@ -9,7 +9,7 @@
 # ---------------------------------------------------------------------------- #
 
 from vex import *
-import gc, sys, utime  # type: ignore
+import gc, sys, utime, uasyncio  # type: ignore
 
 brain=Brain()
 log_time= Timer() # Main timer used.
@@ -1123,7 +1123,7 @@ class Log():
             # Clears lists to free memory.
             del log_lines, log_number
 
-    def unloadcache(self): # This is only ment for the recording.
+    def unloadcache(self) -> None: # This is only ment for the recording.
         """
         When cache has items in it put them in the Log and the recording file.
 
@@ -1136,8 +1136,12 @@ class Log():
             self.cache=""
             print("Unloaded cache")
 
+    async def append_log(self, entry: str):
+        brain.sdcard.appendfile("Log.csv", bytearray(entry, self.format))
+
+
     @Debug.time
-    def add(self, add_code, add_details):
+    def add(self, add_code: str, add_details: Any) -> str:
         """
         Main funtion for Log.
 
@@ -1147,11 +1151,11 @@ class Log():
 
         Args:
         add_code= String
-        add_details= String
+        add_details= Any
         """
 
         if not self.adding:
-            return
+            return ""
 
         entry = ", %d [%d] %s %s \n" % (self.index, log_time.time(), self.codes.get(add_code), add_details)
 
@@ -1163,7 +1167,7 @@ class Log():
                 log.unloadcache()
                 gc.collect()
         else:
-            brain.sdcard.appendfile("Log.csv", bytearray(entry, self.format))
+            uasyncio.create_task(self.append_log(entry))
 
         if self.brainscreen:  # Checks if pinting to brainscreen is enabled.
 
@@ -1174,8 +1178,10 @@ class Log():
             brain.screen.print(entry)
             brain.screen.new_line()
         self.index += 1
+
+        return entry
         
-    def add_codes(self, code_add, Decoded_text):
+    def add_codes(self, code_add: str, Decoded_text: str) -> None:
         """
         Adds codes to the codes dictionary. 
         Enter new code key, then the full string.
@@ -1187,7 +1193,7 @@ class Log():
 
         self.codes.update({code_add : "%s"%(Decoded_text)})
 
-    def remove_codes(self, code_remove):
+    def remove_codes(self, code_remove) -> None:
         """
         Removes codes from dictionary.
         Enter code key to remove.
@@ -1201,7 +1207,7 @@ class Log():
         else:
             print("Code Not Found In Log Codes")
 
-    def edit_codes(self, code_edit, new_decoded_text):
+    def edit_codes(self, code_edit, new_decoded_text) -> None:
         """
         Edits existing codes in dictionary. 
         Enter code key and then new full string
@@ -1215,7 +1221,7 @@ class Log():
             self.codes.update({code_edit : "%s"%(new_decoded_text)})
 
     # Clearing the log file
-    def clear(self):
+    def clear(self) -> None:
         """
         Clears the Log.csv file.
         
@@ -1226,7 +1232,7 @@ class Log():
         brain.sdcard.savefile("Log.csv", bytearray("Log Start: \n", self.format))
     
     # Displaying log codes dictionary
-    def table(self):
+    def table(self) -> None:
         """
         Prints codes dictionary.
 
@@ -1236,7 +1242,7 @@ class Log():
 
         print(self.codes)
 
-    def read(self):
+    def read(self) -> None:
         """
         Prints the Log.csv file. 
         
@@ -1284,7 +1290,7 @@ class Log():
         self.archive.index_history()
 
         # Logs system start.
-        self.add("DS0", 0)
+        self.add("DS0", "")
         
         while True:
             for i in range(10):
@@ -1327,7 +1333,7 @@ class Log():
 
             self.unloadcache()
     
-    def add_logstart(self, funtion):
+    def add_logstart(self, funtion) -> None:
         """
         Used in logstart. 
         Enter the funtion for variables like so "log.capture.variable()" then in the inner parentheses add the name of variable as a string and the variable. 
@@ -1367,7 +1373,7 @@ class Log():
         self.archive.index_history()
 
         # Logs system start.
-        self.add("DS0", 0)
+        self.add("DS0", "")
         
         globallogging= dir()
 
@@ -1410,34 +1416,29 @@ class Log():
         
         while True:
 
-            for i in range(10):
+            for i in range(20):
 
-                for i in range(20):
+                speed2=log_time.time()
 
-                    speed2=log_time.time()
+                if not recording.record:
+                    if log_battery:
+                        self.capture.battery()
+                    if log_memory:
+                        self.capture.system.memoryuse()
+                    if log_modules:
+                        self.capture.system.modules()
 
-                    if not recording.record:
-                        if log_battery:
-                            self.capture.battery()
-                        if log_memory:
-                            self.capture.system.memoryuse()
-                        if log_modules:
-                            self.capture.system.modules()
-
-                    try:
-                        exec(addedfuntion)
-                    except Exception as e:
-                        sys.print_exception(e) # type: ignore
-                    
-                    if not recording.record:
-                        wait(wait_time_logging - (log_time.time() - speed2), MSEC)
-                    else:
-                        wait(wait_time_recording, MSEC)
-                if gc_use:
-                    gc.collect()
-
-            #self.unloadcache()
-            pass
+                try:
+                    exec(addedfuntion)
+                except Exception as e:
+                    sys.print_exception(e) # type: ignore
+                
+                if not recording.record:
+                    wait(wait_time_logging - (log_time.time() - speed2), MSEC)
+                else:
+                    wait(wait_time_recording, MSEC)
+            if gc_use and not recording.record:
+                gc.collect()
 
 class Recording:
     """
@@ -1450,7 +1451,7 @@ class Recording:
         self.postlist=[] # Used for prossesing files.
         self.poststring="" # Used to store list to string.     
 
-    def start(self, Aton):
+    def start(self, Aton) -> None:
         """
         Starts recording. 
         Enter name of file to start recording in.
@@ -1467,7 +1468,7 @@ class Recording:
             self.Aton= Aton + "_pre.txt"
             log.add("DA0", filename)
 
-    def stop(self, Aton):
+    def stop(self, Aton) -> None:
         """
         Stops recording. 
         Enter name of recording you wish to stop.
@@ -1509,7 +1510,7 @@ class Recording:
 
         log.add("DA1", filename)
 
-    def encode(self, Aton, right, left, other1start=none, other1stop=none, other1button=none, other2start=none, other2stop=none, other2button=none, other3start=none, other3stop=none, other3button=none, other4start=none, other4stop=none, other4button=none, other5start=none, other5stop=none, other5button=none, other6start=none, other6stop=none, other6button=none):   
+    def encode(self, Aton, right, left, other1start=none, other1stop=none, other1button=none, other2start=none, other2stop=none, other2button=none, other3start=none, other3stop=none, other3button=none, other4start=none, other4stop=none, other4button=none, other5start=none, other5stop=none, other5button=none, other6start=none, other6stop=none, other6button=none) -> None:   
         """
         Encodes the recording to python executable str in .txt file. 
         Enter recording you wish to encode.
@@ -1667,7 +1668,7 @@ class Recording:
         log.add("DA2", filename)
         print("Encode done.")            
     
-    def run(self, Aton):
+    def run(self, Aton) -> None:
         """
         Runs encoded file. 
         Enter file to run.
@@ -1732,14 +1733,6 @@ class Settings():
                 if len(dict_stuff) >= 2:
                     print(dict_stuff)
                     self.settings[dict_stuff[0]]=dict_stuff[1]
-    
-    @staticmethod
-    def change_setting():
-        pass
-    
-    def open_settings_menu(self):
-        for value, key in self.settings.items():
-            print("%s , %s" %(value, key))
 
 log=Log()
 recording=Recording()

@@ -1220,11 +1220,14 @@ class Log():
         
         entry = ", %d [%d] %s %s \n" % (index, timer.time(), codes.get(add_code), add_details)
 
-        print(entry)
-        if record:
-            uasyncio.create_task(self.append_recording(entry))
-        else:
-            uasyncio.create_task(self.append_log(entry))
+        if self.printing:
+            print(entry)
+        
+        if self.logging:
+            if record:
+                uasyncio.create_task(self.append_recording(entry))
+            else:
+                uasyncio.create_task(self.append_log(entry))
 
         if brainscreen:  # Checks if pinting to brainscreen is enabled.
 
@@ -1429,13 +1432,41 @@ class Log():
         self.tolrance:int=int(str(settings.settings.get('default_tolrance ')))
         wait_time_logging:int=int(str(settings.settings.get('logging_loop_wait ')))
         wait_time_recording:int=int(str(settings.settings.get('recording_loop_wait ')))
-        gc_use:bool=bool(str(settings.settings.get('gc_use ')))
-        log_battery:bool=bool(str(settings.settings.get('log_battery ')))
-        log_memory:bool=bool(str(settings.settings.get('log_memory ')))
-        log_modules:bool=bool(str(settings.settings.get('log_modules ')))
-        self.printing:bool=bool(str(settings.settings.get('print_read ')))
-        self.logging:bool=bool(str(settings.settings.get('sdcard_read ')))
-        self.brainscreen:bool=bool(str(settings.settings.get('brain_read ')))
+
+        if "True" in str(settings.settings.get('gc_use ')):
+            gc_use:bool=True
+        else:
+            gc_use:bool=False
+
+        if "True" in str(settings.settings.get('log_battery ')):
+            log_battery:bool=True
+        else:
+            log_battery:bool=False
+
+        if "True" in str(settings.settings.get('log_memory ')):
+            log_memory:bool=True
+        else:
+            log_memory:bool=False
+
+        if "True" in str(settings.settings.get('log_modules ')):
+            log_modules:bool=True
+        else:
+            log_modules:bool=False
+
+        if "True" in str(settings.settings.get('print_read ')):
+            self.printing:bool=True
+        else:
+            self.printing:bool=False
+
+        if "True" in str(settings.settings.get('sdcard_read ')):
+            self.logging:bool=True
+        else:
+            self.logging:bool=False
+
+        if "True" in str(settings.settings.get('brain_read ')):
+            self.brainscreen:bool=True
+        else:
+            self.brainscreen:bool=False
 
         if self.brainscreen:
             brain.screen.set_font(FontType.MONO12)

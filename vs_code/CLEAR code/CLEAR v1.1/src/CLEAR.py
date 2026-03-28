@@ -90,11 +90,14 @@ class Log():
                 self.field=False
 
             def memoryuse(self) -> None:
-                if not (self.memory >= gc.mem_alloc()/1000 - self.memory_tolrance and self.memory <= gc.mem_alloc()/1000 + self.memory_tolrance ):  # type: ignore
+                speed=log_time.time()
+                memory=gc.mem_alloc()  # type: ignore
+                print("Alloc_use: %d"%(log_time.time()-speed))
+                if not (self.memory >= memory/1000 - self.memory_tolrance and self.memory <= memory/1000 + self.memory_tolrance ):
                     if "DSM0" not in log.codes:
-                            log.add_codes("DSM0", ":Memory DATA: Memory Useage Changed. Memory Used: ")
-                    log.add("DSM0", str(gc.mem_alloc()/ 1000) + " KB") # type: ignore
-                    self.memory=gc.mem_alloc()/1000 # type: ignore
+                        log.add_codes("DSM0", ":Memory DATA: Memory Useage Changed. Memory Used: ")
+                    log.add("DSM0", str(memory/ 1000) + " KB")
+                    self.memory=memory/1000
             
             def modules(self) -> None:
                 if self.modulelist != sys.modules:
@@ -395,28 +398,86 @@ class Log():
             def inertial(self, inertialsensor: Inertial) -> None:
                 """Capture for inertal sensor. Enter inertial sensor to log."""
     
-                if inertialsensor.is_calibrating() and not self.inertial_calibrating:
+                if inertialsensor.installed():
+                    
+                    if not self.inertial_connected:
+                        if "DI7" not in log.codes:
+                            log.add_codes("DI7", ":Inertial DATA: Inertial Installed: ")
 
-                    if "DI2" not in log.codes:
-                        log.add_codes("DI2", ":Inertial DATA: Calibrating.: ")
+                        log.add("DI7", "")
+                        self.inertial_connected=True
 
-                    log.add("DI2", "")
-                    self.inertial_calibrating=True
-                elif not inertialsensor.is_calibrating() and self.inertial_calibrating:
+                    if inertialsensor.is_calibrating() and not self.inertial_calibrating:
 
-                    if "DI3" not in log.codes:
-                        log.add_codes("DI3", ":Inertial DATA: Calibration Complete.: ")
+                        if "DI2" not in log.codes:
+                            log.add_codes("DI2", ":Inertial DATA: Calibrating.: ")
 
-                    log.add("DI3", "")
-                    self.inertial_calibrating=False
+                        log.add("DI2", "")
+                        self.inertial_calibrating=True
+                    elif not inertialsensor.is_calibrating() and self.inertial_calibrating:
 
-                if inertialsensor.installed() and not self.inertial_connected:
+                        if "DI3" not in log.codes:
+                            log.add_codes("DI3", ":Inertial DATA: Calibration Complete.: ")
 
-                    if "DI7" not in log.codes:
-                        log.add_codes("DI7", ":Inertial DATA: Inertial Installed: ")
+                        log.add("DI3", "")
+                        self.inertial_calibrating=False
 
-                    log.add("DI7", "")
-                    self.inertial_connected=True
+                    if not (self.inertial_rotation_history >= inertialsensor.rotation() - self.inertial_gyro_tolerance and self.inertial_rotation_history <= inertialsensor.rotation() + self.inertial_gyro_tolerance):
+
+                        if "DI0" not in log.codes:
+                            log.add_codes("DI0", ":Inertial DATA: Rotation Changed. Rotation: ")
+
+                        log.add("DI0", int(inertialsensor.rotation()))
+                        self.inertial_rotation_history= inertialsensor.rotation()
+
+                    if not (self.inertial_roll_history >= inertialsensor.orientation(OrientationType.ROLL, DEGREES) - self.inertial_gyro_tolerance and self.inertial_roll_history <= inertialsensor.orientation(OrientationType.ROLL, DEGREES) + self.inertial_gyro_tolerance):
+
+                        if "DI2" not in log.codes:
+                            log.add_codes("DI2", ":Inertial DATA: Roll Changed. Roll: ")
+
+                        log.add("DI2", int(inertialsensor.orientation(OrientationType.ROLL, DEGREES)))
+                        self.inertial_roll_history= inertialsensor.orientation(OrientationType.ROLL, DEGREES)
+
+                    if not (self.inertial_pitch_history >= inertialsensor.orientation(OrientationType.PITCH, DEGREES) - self.inertial_gyro_tolerance and self.inertial_pitch_history <= inertialsensor.orientation(OrientationType.PITCH, DEGREES) + self.inertial_gyro_tolerance):
+
+                        if "DI3" not in log.codes:
+                            log.add_codes("DI3", ":Inertial DATA: Roll Changed. Roll: ")
+
+                        log.add("DI3", int(inertialsensor.orientation(OrientationType.PITCH, DEGREES)))
+                        self.inertial_pitch_history= inertialsensor.orientation(OrientationType.PITCH, DEGREES)
+                    
+                    if not (self.inertial_heading_history >= inertialsensor.heading() - self.inertial_gyro_tolerance and self.inertial_heading_history <= inertialsensor.heading() + self.inertial_gyro_tolerance):
+
+                        if "DI1" not in log.codes:
+                            log.add_codes("DI1", ":Inertial DATA: Heading Changed. Heading: ")
+
+                        log.add("DI1", int(inertialsensor.heading()))
+                        self.inertial_heading_history= inertialsensor.heading()
+                    
+                    if not (self.inertial_x_axis_history >= inertialsensor.acceleration(AxisType.XAXIS) - self.inertial_axis_tolerance and self.inertial_x_axis_history <= inertialsensor.acceleration(AxisType.XAXIS) + self.inertial_axis_tolerance):
+
+                        if "DI4" not in log.codes:
+                            log.add_codes("DI4", ":Inertial DATA: X Axis Changed. Acceleration: ")
+
+                        log.add("DI4", round(inertialsensor.acceleration(AxisType.XAXIS), 2))
+                        self.inertial_x_axis_history= inertialsensor.acceleration(AxisType.XAXIS)
+                    
+                    if not (self.inertial_y_axis_history >= inertialsensor.acceleration(AxisType.YAXIS) - self.inertial_axis_tolerance and self.inertial_y_axis_history <= inertialsensor.acceleration(AxisType.YAXIS) + self.inertial_axis_tolerance):
+
+                        if "DI5" not in log.codes:
+                            log.add_codes("DI5", ":Inertial DATA: Y Axis Changed. Acceleration: ")
+
+                        log.add("DI5", round(inertialsensor.acceleration(AxisType.YAXIS), 2))
+                        self.inertial_y_axis_history= inertialsensor.acceleration(AxisType.YAXIS)
+
+                    if not (self.inertial_z_axis_history >= inertialsensor.acceleration(AxisType.ZAXIS) - self.inertial_axis_tolerance and self.inertial_z_axis_history <= inertialsensor.acceleration(AxisType.ZAXIS) + self.inertial_axis_tolerance):
+
+                        if "DI6" not in log.codes:
+                            log.add_codes("DI6", ":Inertial DATA: Z Axis Changed. Acceleration: ")
+                            
+                        log.add("DI6", round(inertialsensor.acceleration(AxisType.ZAXIS), 2))
+                        self.inertial_z_axis_history= inertialsensor.acceleration(AxisType.ZAXIS)
+                        
                 elif not inertialsensor.installed() and self.inertial_connected:
 
                     if "EI0" not in log.codes:
@@ -425,61 +486,7 @@ class Log():
                     log.add("EI0", "")
                     self.inertial_connected=False
 
-                if not (self.inertial_rotation_history >= inertialsensor.rotation() - self.inertial_gyro_tolerance and self.inertial_rotation_history <= inertialsensor.rotation() + self.inertial_gyro_tolerance):
-
-                    if "DI0" not in log.codes:
-                        log.add_codes("DI0", ":Inertial DATA: Rotation Changed. Rotation: ")
-
-                    log.add("DI0", int(inertialsensor.rotation()))
-                    self.inertial_rotation_history= inertialsensor.rotation()
-
-                if not (self.inertial_roll_history >= inertialsensor.orientation(OrientationType.ROLL, DEGREES) - self.inertial_gyro_tolerance and self.inertial_roll_history <= inertialsensor.orientation(OrientationType.ROLL, DEGREES) + self.inertial_gyro_tolerance):
-
-                    if "DI2" not in log.codes:
-                        log.add_codes("DI2", ":Inertial DATA: Roll Changed. Roll: ")
-
-                    log.add("DI2", int(inertialsensor.orientation(OrientationType.ROLL, DEGREES)))
-                    self.inertial_roll_history= inertialsensor.orientation(OrientationType.ROLL, DEGREES)
-
-                if not (self.inertial_pitch_history >= inertialsensor.orientation(OrientationType.PITCH, DEGREES) - self.inertial_gyro_tolerance and self.inertial_pitch_history <= inertialsensor.orientation(OrientationType.PITCH, DEGREES) + self.inertial_gyro_tolerance):
-
-                    if "DI3" not in log.codes:
-                        log.add_codes("DI3", ":Inertial DATA: Roll Changed. Roll: ")
-
-                    log.add("DI3", int(inertialsensor.orientation(OrientationType.PITCH, DEGREES)))
-                    self.inertial_pitch_history= inertialsensor.orientation(OrientationType.PITCH, DEGREES)
                 
-                if not (self.inertial_heading_history >= inertialsensor.heading() - self.inertial_gyro_tolerance and self.inertial_heading_history <= inertialsensor.heading() + self.inertial_gyro_tolerance):
-
-                    if "DI1" not in log.codes:
-                        log.add_codes("DI1", ":Inertial DATA: Heading Changed. Heading: ")
-
-                    log.add("DI1", int(inertialsensor.heading()))
-                    self.inertial_heading_history= inertialsensor.heading()
-                
-                if not (self.inertial_x_axis_history >= inertialsensor.acceleration(AxisType.XAXIS) - self.inertial_axis_tolerance and self.inertial_x_axis_history <= inertialsensor.acceleration(AxisType.XAXIS) + self.inertial_axis_tolerance):
-
-                    if "DI4" not in log.codes:
-                        log.add_codes("DI4", ":Inertial DATA: X Axis Changed. Acceleration: ")
-
-                    log.add("DI4", round(inertialsensor.acceleration(AxisType.XAXIS), 2))
-                    self.inertial_x_axis_history= inertialsensor.acceleration(AxisType.XAXIS)
-                
-                if not (self.inertial_y_axis_history >= inertialsensor.acceleration(AxisType.YAXIS) - self.inertial_axis_tolerance and self.inertial_y_axis_history <= inertialsensor.acceleration(AxisType.YAXIS) + self.inertial_axis_tolerance):
-
-                    if "DI5" not in log.codes:
-                        log.add_codes("DI5", ":Inertial DATA: Y Axis Changed. Acceleration: ")
-
-                    log.add("DI5", round(inertialsensor.acceleration(AxisType.YAXIS), 2))
-                    self.inertial_y_axis_history= inertialsensor.acceleration(AxisType.YAXIS)
-
-                if not (self.inertial_z_axis_history >= inertialsensor.acceleration(AxisType.ZAXIS) - self.inertial_axis_tolerance and self.inertial_z_axis_history <= inertialsensor.acceleration(AxisType.ZAXIS) + self.inertial_axis_tolerance):
-
-                    if "DI6" not in log.codes:
-                        log.add_codes("DI6", ":Inertial DATA: Z Axis Changed. Acceleration: ")
-                        
-                    log.add("DI6", round(inertialsensor.acceleration(AxisType.ZAXIS), 2))
-                    self.inertial_z_axis_history= inertialsensor.acceleration(AxisType.ZAXIS)
 
             def distance(self, distancesensor: Distance) -> None:
                 distance_id=id(distancesensor)
@@ -1336,13 +1343,41 @@ class Log():
         self.tolrance:int=int(str(settings.settings.get('default_tolrance ')))
         wait_time_logging:int=int(str(settings.settings.get('logging_loop_wait ')))
         wait_time_recording:int=int(str(settings.settings.get('recording_loop_wait ')))
-        gc_use:bool=bool(str(settings.settings.get('gc_use ')))
-        log_battery:bool=bool(str(settings.settings.get('log_battery ')))
-        log_memory:bool=bool(str(settings.settings.get('log_memory ')))
-        log_modules:bool=bool(str(settings.settings.get('log_modules ')))
-        self.printing:bool=bool(str(settings.settings.get('print_read ')))
-        self.logging:bool=bool(str(settings.settings.get('sdcard_read ')))
-        self.brainscreen:bool=bool(str(settings.settings.get('brain_read ')))
+
+        if "True" in str(settings.settings.get('gc_use ')):
+            gc_use:bool=True
+        else:
+            gc_use:bool=False
+
+        if "True" in str(settings.settings.get('log_battery ')):
+            log_battery:bool=True
+        else:
+            log_battery:bool=False
+
+        if "True" in str(settings.settings.get('log_memory ')):
+            log_memory:bool=True
+        else:
+            log_memory:bool=False
+
+        if "True" in str(settings.settings.get('log_modules ')):
+            log_modules:bool=True
+        else:
+            log_modules:bool=False
+
+        if "True" in str(settings.settings.get('print_read ')):
+            self.printing:bool=True
+        else:
+            self.printing:bool=False
+
+        if "True" in str(settings.settings.get('sdcard_read ')):
+            self.logging:bool=True
+        else:
+            self.logging:bool=False
+
+        if "True" in str(settings.settings.get('brain_read ')):
+            self.brainscreen:bool=True
+        else:
+            self.brainscreen:bool=False
         self.manual_control=True
 
         if self.brainscreen:
@@ -1479,13 +1514,35 @@ class Log():
         
         globallogging= dir()
 
+        if "True" in str(settings.settings.get('auto_do_variables ')):
+            auto_do_variables:bool=True
+        else:
+            auto_do_variables:bool=False
 
-        auto_do_variables:bool=bool(str(settings.settings.get('auto_do_variables ')))
-        auto_do_three_wire:bool=bool(str(settings.settings.get('auto_do_control ')))
-        auto_do_control:bool=bool(str(settings.settings.get('auto_do_three_wire ')))
-        auto_do_smart_port:bool=bool(str(settings.settings.get('auto_do_smart_port ')))
-        auto_do_motors:bool=bool(str(settings.settings.get('auto_do_motors ')))
-        auto_do_controller:bool=bool(str(settings.settings.get('auto_do_controller ')))
+        if "True" in str(settings.settings.get('auto_do_control ')):
+            auto_do_control:bool=True
+        else:
+            auto_do_control:bool=False
+
+        if "True" in str(settings.settings.get('auto_do_three_wire ')):
+            auto_do_three_wire:bool=True
+        else:
+            auto_do_three_wire:bool=False
+
+        if "True" in str(settings.settings.get('auto_do_smart_port ')):
+            auto_do_smart_port:bool=True
+        else:
+            auto_do_smart_port:bool=False
+
+        if "True" in str(settings.settings.get('auto_do_motors ')):
+            auto_do_motors:bool=True
+        else:
+            auto_do_motors:bool=False
+
+        if "True" in str(settings.settings.get('auto_do_controller ')):
+            auto_do_controller:bool=True
+        else:
+            auto_do_controller:bool=False
 
         for item in globallogging:
 
@@ -1517,6 +1574,8 @@ class Log():
                 log.add_logstart("log.capture.threewire.analog(%s)"%(item.replace("'", "")))
             elif item_type == "<class 'competition'>" and auto_do_control:
                 log.add_logstart("log.capture.system.control(%s)"%(item.replace("'", "")))
+            
+            del item_type
 
         del auto_do_variables, auto_do_three_wire, auto_do_control, auto_do_smart_port, auto_do_motors, auto_do_controller
         # Loads extra funtions from file.
@@ -1524,20 +1583,24 @@ class Log():
             addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
         except AttributeError:
             addedfuntion=""
+
+        timer=log_time
         
         while True:
 
             for i in range(20):
 
-                speed2:int=log_time.time()
+                speed2:int=timer.time()
 
                 if not recording.record:
                     if log_battery:
                         self.capture.battery()
                     if log_memory:
+                        speed=timer.time()
                         self.capture.system.memoryuse()
+                        print("speed: %d"%(timer.time()-speed))
                     if log_modules:
-                        self.capture.system.modules()
+                        self.capture.system.modules()    
 
                 try:
                     exec(addedfuntion)
@@ -1545,11 +1608,13 @@ class Log():
                     sys.print_exception(e) # type: ignore
                 
                 if not recording.record:
-                    wait(wait_time_logging - (log_time.time() - speed2), MSEC)
+                    print("Loop speed: %d"%(timer.time() - speed2))
+                    wait(wait_time_logging - (timer.time() - speed2), MSEC)
                 else:
                     wait(wait_time_recording, MSEC)
                 
-                del speed2
+                del speed2, speed
+
             if gc_use and not recording.record:
                 gc.collect()
 

@@ -256,6 +256,7 @@ class Log():
                 self.motor_power_monitoring={}  
                 self.motor_disconnected={}
                 self.motor_current_monitoring={}
+                self.setup={}
                 self.optical_object={}
                 self.optical_color={}
                 self.optical_connected={}
@@ -282,62 +283,79 @@ class Log():
                 """Capture for any general smart motor. Enter motor you wish to log as input. (Can take motor groups as well.)"""
 
                 motor_id=str(motor)
+                setup=self.setup
                 
                 # Setup id to sets if not there.
-                if motor_id not in self.motor_temp_monitoring:
+                if motor_id not in setup:
                     self.motor_temp_monitoring[motor_id] = 0
-                if motor_id not in self.motor_power_monitoring:
                     self.motor_power_monitoring[motor_id] = 0
-                if motor_id not in self.motor_current_monitoring:
                     self.motor_current_monitoring[motor_id] = 0
-                if motor_id not in self.motor_disconnected:
-                    self.motor_disconnected[motor_id] = 0
+                    self.motor_disconnected[motor_id] = False
+                    self.setup[motor_id]=True
 
-                motor_disconnected=self.motor_disconnected
-                motor_current_monitoring=self.motor_current_monitoring
-                motor_temp_monitoring=self.motor_temp_monitoring
-                motor_power_monitoring=self.motor_power_monitoring
-                motor_temp=motor.temperature(PERCENT)
-                motor_power=motor.power(PowerUnits.WATT)
-                motor_current=motor.current(CurrentUnits.AMP)
+                motor_temp:int=motor.temperature(PERCENT)
+                motor_disconnected:int=self.motor_disconnected[motor_id]
+
+                if recording.record:
+                    return
+
+                if motor_temp==2:
+                    if not motor_disconnected:
+                        log.add("EM1", "%s"%(motor))
+                        self.motor_disconnected[motor_id]=True
+                    else:
+                        return
+                elif motor_temp!=2 and motor_disconnected:
+                    self.motor_disconnected[motor_id]=False
+
+                motor_current_monitoring:int=self.motor_current_monitoring[motor_id]
+                motor_temp_monitoring:int=self.motor_temp_monitoring[motor_id]
+                motor_power_monitoring:int=self.motor_power_monitoring[motor_id]
+                motor_power:int=int(motor.power(PowerUnits.WATT))
+                motor_current:int=int(motor.current(CurrentUnits.AMP) * 10)
                 
                 # Cheaks for the temps,  power, and cheaks for conecttions of motors(s).
-                if motor_temp>70 and (motor_temp_monitoring[motor_id]==0 or motor_temp_monitoring[motor_id]==2):
-                    log.add("EM0", "Motor %s Temp %s"%(motor, motor_temp))
-                    motor_temp_monitoring[motor_id]=1
-                elif motor_temp>50 and (motor_temp_monitoring[motor_id]==0):
-                    log.add("WM0", "Motor %s Temp %s"%(motor, motor_temp))
-                    motor_temp_monitoring[motor_id]=2
-                elif motor_temp<=50 and (motor_temp_monitoring[motor_id]==2 or motor_temp_monitoring[motor_id]==1):
-                    log.add("DM0", "Motor %s Temp %s"%(motor, motor_temp))
-                    motor_temp_monitoring[motor_id]=0
+                if motor_temp<=50: 
+                    if motor_temp_monitoring>0:
+                        log.add("DM0", "Motor %s Temp %s"%(motor, motor_temp))
+                        self.motor_temp_monitoring[motor_id]=0
+                elif motor_temp>70: 
+                    if (motor_temp_monitoring==0 or motor_temp_monitoring==2):
+                        log.add("EM0", "Motor %s Temp %s"%(motor, motor_temp))
+                        self.motor_temp_monitoring[motor_id]=1  
+                elif motor_temp>50: 
+                    if motor_temp_monitoring==0:
+                        log.add("WM0", "Motor %s Temp %s"%(motor, motor_temp))
+                        self.motor_temp_monitoring[motor_id]=2
                 
-                if motor_power>20 and (motor_power_monitoring[motor_id]==0 or motor_power_monitoring[motor_id]==2):
-                    log.add("EM2", "Motor %s Power %s"%(str(motor), str(motor_power)))
-                    motor_power_monitoring[motor_id]=1
-                elif motor_power>12 and (motor_power_monitoring[motor_id]==0):
-                    log.add("WM1", "Motor %s Power %s"%(str(motor), str(motor_power)))
-                    motor_power_monitoring[motor_id]=2
-                elif motor_power<=12 and (motor_power_monitoring[motor_id]==1 or motor_power_monitoring[motor_id]==2):
-                    log.add("DM1", "Motor %s Power %s"%(str(motor), str(motor_power)))
-                    motor_power_monitoring[motor_id]=0
 
-                if motor_current>2 and (motor_current_monitoring[motor_id]==0 or motor_current_monitoring[motor_id]==2):
-                    log.add("EM3", "Motor %s Current %s"%(str(motor), str(motor_current)))
-                    motor_current_monitoring[motor_id]=1
-                elif motor_current>1.5 and (motor_current_monitoring[motor_id]==0):
-                    log.add("WM2", "Motor %s Current %s"%(str(motor), str(motor_current)))
-                    motor_current_monitoring[motor_id]=2
-                elif motor_current<=1.5 and (motor_current_monitoring[motor_id]==1 or motor_current_monitoring[motor_id]==2):
-                    log.add("DM2", "Motor %s Current %s"%(str(motor), str(motor_current)))
-                    motor_current_monitoring[motor_id]=0
+                if motor_power<=12: 
+                    if motor_power_monitoring>0:
+                        log.add("DM1", "Motor %s Power %s"%(str(motor), str(motor_power)))
+                        self.motor_power_monitoring[motor_id]=0
+                elif motor_power>20: 
+                    if (motor_power_monitoring==0 or motor_power_monitoring==2):
+                        log.add("EM2", "Motor %s Power %s"%(str(motor), str(motor_power)))
+                        self.motor_power_monitoring[motor_id]=1
+                elif motor_power>12: 
+                    if motor_power_monitoring==0:
+                        log.add("WM1", "Motor %s Power %s"%(str(motor), str(motor_power)))
+                        self.motor_power_monitoring[motor_id]=2
+
+                if motor_current<=15: 
+                    if motor_current_monitoring>0:
+                        log.add("DM2", "Motor %s Current %1.1f"%(str(motor), float(motor_current)/10))
+                        self.motor_current_monitoring[motor_id]=0
+                elif motor_current>20: 
+                    if (motor_current_monitoring==0 or motor_current_monitoring==2):
+                        log.add("EM3", "Motor %s Current %1.1f"%(str(motor), float(motor_current)/10))
+                        self.motor_current_monitoring[motor_id]=1
+                elif motor_current>15:
+                    if motor_current_monitoring==0:
+                        log.add("WM2", "Motor %s Current %1.1f"%(str(motor), float(motor_current)/10))
+                        self.motor_current_monitoring[motor_id]=2
+
                 
-                if motor_temp==2 and motor_disconnected[motor_id]==0:
-                    log.add("EM1", "%s"%(motor))
-                    motor_disconnected[motor_id]=1
-                
-                if motor_temp!=2 and motor_disconnected[motor_id]==1:
-                    motor_disconnected[motor_id]=0
             
             def optical(self, opticalsensor: Optical) -> None:
                 """Capture for an optical sensor. Enter optical sensor to Capture."""
@@ -770,16 +788,16 @@ class Log():
             controller= Controller()
             """
 
-            axis1=self.axis1
-            axis2=self.axis2
-            axis3=self.axis3
-            axis4=self.axis4
-            record=recording.record
-            tolrance=log.tolrance
-            c_axis1=controller.axis1.position()
-            c_axis2=controller.axis2.position()
-            c_axis3=controller.axis3.position()
-            c_axis4=controller.axis4.position()
+            axis1:int=self.axis1
+            axis2:int=self.axis2
+            axis3:int=self.axis3
+            axis4:int=self.axis4
+            record:bool=recording.record
+            tolrance:int=log.tolrance
+            c_axis1:int=controller.axis1.position()
+            c_axis2:int=controller.axis2.position()
+            c_axis3:int=controller.axis3.position()
+            c_axis4:int=controller.axis4.position()
 
             if not record:  # Only logs when not recoding to save space on the recording file.
                 if c_axis1!=0 and not (axis1 >= c_axis1 - tolrance and axis1 <= c_axis1 + tolrance):
@@ -829,89 +847,114 @@ class Log():
 
             # Button logging for controller.
 
-            if controller.buttonA.pressing() and self.button_a==True:
+            button_a=self.button_a
+            button_b=self.button_b
+            button_x=self.button_x
+            button_y=self.button_y
+            button_up=self.button_up
+            button_down=self.button_down
+            button_left=self.button_left
+            button_right=self.button_right
+            button_L1=self.button_L1
+            button_L2=self.button_L2
+            button_R1=self.button_R1
+            button_R2=self.button_R2
+            C_button_a=controller.buttonA.pressing()
+            C_button_b=controller.buttonB.pressing()
+            C_button_x=controller.buttonX.pressing()
+            C_button_y=controller.buttonY.pressing()
+            C_button_up=controller.buttonUp.pressing()
+            C_button_down=controller.buttonDown.pressing()
+            C_button_left=controller.buttonLeft.pressing()
+            C_button_right=controller.buttonRight.pressing()
+            C_button_L1=controller.buttonL1.pressing()
+            C_button_L2=controller.buttonL2.pressing()
+            C_button_R1=controller.buttonR1.pressing()
+            C_button_R2=controller.buttonR2.pressing()
+
+            if C_button_a and button_a==True:
                 log.add("DC0", "%s_Button A Pressed"%(str(controller)))
-                self.button_a=False
-            elif controller.buttonA.pressing()==False and self.button_a==False:
+                button_a=False
+            elif C_button_a==False and button_a==False:
                 log.add("DC0", "%s_Button A Released"%(str(controller)))
-                self.button_a=True
+                button_a=True
 
-            if controller.buttonB.pressing() and self.button_b==True:
+            if C_button_b and button_b==True:
                 log.add("DC0", "%s_Button B Pressed"%(str(controller)))
-                self.button_b=False
-            elif controller.buttonB.pressing()==False and self.button_b==False:
+                button_b=False
+            elif C_button_b==False and button_b==False:
                 log.add("DC0", "%s_Button B Released"%(str(controller)))
-                self.button_b=True
+                button_b=True
 
-            if controller.buttonX.pressing() and self.button_x==True:
+            if C_button_x and button_x==True:
                 log.add("DC0", "%s_Button X Pressed"%(str(controller)))
-                self.button_x=False
-            elif controller.buttonX.pressing()==False and self.button_x==False:
+                button_x=False
+            elif C_button_x==False and self.button_x==False:
                 log.add("DC0", "%s_Button X Released"%(str(controller)))
-                self.button_x=True
+                button_x=True
 
-            if controller.buttonY.pressing() and self.button_y==True:
+            if C_button_y and button_y==True:
                 log.add("DC0", "%s_Button Y Pressed"%(str(controller)))
-                self.button_y=False
-            elif controller.buttonY.pressing()==False and self.button_y==False:
+                button_y=False
+            elif C_button_y==False and button_y==False:
                 log.add("DC0", "%s_Button Y Released"%(str(controller)))
-                self.button_y=True
+                button_y=True
 
-            if controller.buttonUp.pressing() and self.button_up==True:
+            if C_button_up and button_up==True:
                 log.add("DC0", "%s_Button UP Pressed"%(str(controller)))
-                self.button_up=False
-            elif controller.buttonUp.pressing()==False and self.button_up==False:
+                button_up=False
+            elif C_button_up==False and button_up==False:
                 log.add("DC0", "%s_Button UP Released"%(str(controller)))
-                self.button_up=True
+                button_up=True
 
-            if controller.buttonDown.pressing() and self.button_down==True:
+            if C_button_down and button_down==True:
                 log.add("DC0", "%s_Button DOWN Pressed"%(str(controller)))
-                self.button_down=False
-            elif controller.buttonDown.pressing()==False and self.button_down==False:
+                button_down=False
+            elif C_button_down==False and button_down==False:
                 log.add("DC0", "%s_Button DOWN Released"%(str(controller)))
-                self.button_down=True
+                button_down=True
 
-            if controller.buttonLeft.pressing() and self.button_left==True:
+            if C_button_left and button_left==True:
                 log.add("DC0", "%s_Button LEFT Pressed"%(str(controller)))
-                self.button_left=False
-            elif controller.buttonLeft.pressing()==False and self.button_left==False:
+                button_left=False
+            elif C_button_left==False and button_left==False:
                 log.add("DC0", "%s_Button LEFT Released"%(str(controller)))
-                self.button_left=True
+                button_left=True
 
-            if controller.buttonRight.pressing() and self.button_right==True:
+            if C_button_right and button_right==True:
                 log.add("DC0", "%s_Button RIGHT Pressed"%(str(controller)))
-                self.button_right=False
-            elif controller.buttonRight.pressing()==False and self.button_right==False:
+                button_right=False
+            elif C_button_right==False and button_right==False:
                 log.add("DC0", "%s_Button RIGHT Released"%(str(controller)))
-                self.button_right=True
+                button_right=True
 
-            if controller.buttonL1.pressing() and self.button_L1==True:
+            if C_button_L1 and button_L1==True:
                 log.add("DC0", "%s_Button L1 Pressed"%(str(controller)))
-                self.button_L1=False
-            elif controller.buttonL1.pressing()==False and self.button_L1==False:
+                button_L1=False
+            elif C_button_L1==False and button_L1==False:
                 log.add("DC0", "%s_Button L1 Released"%(str(controller)))
-                self.button_L1=True
+                button_L1=True
 
-            if controller.buttonL2.pressing() and self.button_L2==True:
+            if C_button_L2 and button_L2==True:
                 log.add("DC0", "%s_Button L2 Pressed"%(str(controller)))
-                self.button_L2=False
-            elif controller.buttonL2.pressing()==False and self.button_L2==False:
+                button_L2=False
+            elif C_button_L2==False and button_L2==False:
                 log.add("DC0", "%s_Button L2 Released"%(str(controller)))
-                self.button_L2=True
+                button_L2=True
 
-            if controller.buttonR1.pressing() and self.button_R1==True:
+            if C_button_R1 and button_R1==True:
                 log.add("DC0", "%s_Button R1 Pressed"%(str(controller)))
-                self.button_R1=False
-            elif controller.buttonR1.pressing()==False and self.button_R1==False:
+                button_R1=False
+            elif C_button_R1==False and button_R1==False:
                 log.add("DC0", "%s_Button R1 Released"%(str(controller)))
-                self.button_R1=True
+                button_R1=True
 
-            if controller.buttonR2.pressing() and self.button_R2==True:
+            if C_button_R2 and button_R2==True:
                 log.add("DC0", "%s_Button R2 Pressed"%(str(controller)))
-                self.button_R2=False
-            elif controller.buttonR2.pressing()==False and self.button_R2==False:
+                button_R2=False
+            elif C_button_R2==False and button_R2==False:
                 log.add("DC0", "%s_Button R2 Released"%(str(controller)))
-                self.button_R2=True
+                button_R2=True
 
         def variable(self, name: str, value: Any) -> None:
             """
@@ -1548,7 +1591,7 @@ class Log():
 
             item_type=str(type(eval(item)))
 
-            if  item_type == "<class 'int'>" or item_type == "<class 'bool'>" or item_type == "<class 'float'>" and auto_do_variables:
+            if  (item_type == "<class 'int'>" or item_type == "<class 'bool'>" or item_type == "<class 'float'>") and auto_do_variables:
                 log.add_logstart("log.capture.variable('%s', %s)"%(item, item.replace("'", "")))
             elif item_type == "<class 'motor'>" and auto_do_motors:
                 log.add_logstart("log.capture.smartport.motor(%s)"%(item.replace("'", "")))
@@ -1579,10 +1622,12 @@ class Log():
 
         del auto_do_variables, auto_do_three_wire, auto_do_control, auto_do_smart_port, auto_do_motors, auto_do_controller
         # Loads extra funtions from file.
-        try:    
+        try:
             addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
+            added_bytes=compile(addedfuntion, '<string>' ,'exec', 0,  True, 2)
         except AttributeError:
             addedfuntion=""
+            added_bytes=compile("", '<string>' ,'exec', 0,  True, 2)
 
         timer=log_time
         
@@ -1596,16 +1641,13 @@ class Log():
                     if log_battery:
                         self.capture.battery()
                     if log_memory:
-                        speed=timer.time()
                         self.capture.system.memoryuse()
-                        print("speed: %d"%(timer.time()-speed))
                     if log_modules:
                         self.capture.system.modules()    
 
-                try:
-                    exec(addedfuntion)
-                except Exception as e:
-                    sys.print_exception(e) # type: ignore
+                speed=timer.time()
+                exec(added_bytes)
+                print("Exec time: %d"%(timer.time()-speed))
                 
                 if not recording.record:
                     print("Loop speed: %d"%(timer.time() - speed2))
@@ -1615,7 +1657,7 @@ class Log():
                 
                 del speed2, speed
 
-            if gc_use and not recording.record:
+            if gc_use:
                 gc.collect()
 
 class Recording:
@@ -1879,7 +1921,7 @@ class Settings():
             "gc_use": True,
             "archive_log": True,
             "archive_recordings": True,
-            "log_memory": True,
+            "log_memory": False,
             "log_modules": True,
             "log_battery": True,
             "logging_loop_wait": 200,

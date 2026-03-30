@@ -41,6 +41,7 @@ pusher_state = False
 loader_state = False
 record = 0
 recording_state=0
+pushing=False
 
 # ---------------------------------------------------------------------------- #
 #                                                                              #
@@ -168,6 +169,17 @@ def scorestop():
     Intake.stop()
     TopMotor.stop()
 
+def push_toggle():
+    global pushing
+    import push
+    po=push.Pushing()
+    if not push:
+        po.impact_mode(Right1, Right2, Right3, left1, left2, left3)
+    else:
+        po.stop
+
+
+
 # Recording Functions
 if brain.sdcard.is_inserted() and brain.sdcard.exists("CLEAR.py"):
     import CLEAR
@@ -223,5 +235,6 @@ controller_1.buttonL1.pressed(scoreup)
 controller_1.buttonL2.pressed(scoredown)
 controller_1.buttonDown.pressed(pushertoggle)
 controller_1.buttonB.pressed(loadertoggle)
+controller_1.buttonA.pressed(push_toggle)
 
 inertial_for_auton.calibrate()

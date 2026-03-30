@@ -7,67 +7,15 @@
 # 	Description:  Capture, Logging, Encoding, Archiving, Recording.            #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
-
 from vex import *
-import gc, sys, utime, uasyncio, micropython  # type: ignore
+    
+import gc, sys, uasyncio  # type: ignore
 
 brain=Brain()
 log_time= Timer() # Main timer used.
 
 def none():
     pass
-
-class Debug():
-    """Used for debugging functions in code."""
-    
-    @staticmethod
-    def start(func):
-        """Does error handling, prints all variables, and gives time fof funtion."""
-
-        def wrapper(*args, **kwargs):
-            try:
-                speed:float=utime.ticks_ms()
-                print("Startingdebug for %s"%(func))
-                func(*args, **kwargs)
-                print(func)
-                print("Time of function: %f Msec"%((utime.ticks_diff(utime.ticks_ms, speed))))
-                print(locals())
-            except Exception as e:
-                sys.print_exception(e) # type: ignore
-        return wrapper
-
-    @staticmethod
-    def handling(func):
-        """Puts in error handling."""
-
-        def wrapper(*args, **kwargs):
-            try:
-                func(*args, **kwargs)
-            except Exception as e:
-                sys.print_exception(e) # type: ignore
-        return wrapper
-    
-    @staticmethod
-    def print(func):
-        """Prints variables."""
-
-        def wrapper(*args, **kwargs):
-            print("Startingdebug for %s"%(func))
-            func(*args, **kwargs)
-            print(func)
-            print(locals())
-        return wrapper
-    
-    @staticmethod
-    def time(func):
-        """Prints time to exec the function."""
-
-        def wrapper(*args, **kwargs):
-            speed:float=utime.ticks_ms()
-            func(*args, **kwargs)
-            print("Time of function: %f Msec"%((utime.ticks_diff(utime.ticks_ms(), speed))))
-        return wrapper
-        
 
 class Log():
     """Main object for the CLEAR import. \n To start logging use the "logstart()" function in this object to do the main logging if you need help with its inputs use help() over the "logstart()" function."""
@@ -1973,6 +1921,27 @@ class Settings():
 
                 if len(dict_stuff) >= 2:
                     self.settings[dict_stuff[0]]=dict_stuff[1]
+
+class interface():
+    continue_=True
+    version_number="v1.1"
+
+    @classmethod
+    def __call__(cls):
+        interface.menu()
+    
+    @classmethod
+    def menu(cls):
+        cls.continue_=True
+        print("CLEAR %s select option")
+
+    @classmethod
+    def change(cls):
+        pass
+    
+    @classmethod
+    def close(cls):
+        cls.continue_=False      
 
 settings=Settings()
 log=Log()

@@ -415,93 +415,107 @@ class Log():
 
             def inertial(self, inertialsensor: Inertial) -> None:
                 """Capture for inertal sensor. Enter inertial sensor to log."""
+
+                log_add=log.add
+                log_add_codes=log.add_codes
     
                 if inertialsensor.installed():
-                    
+
+                    inertial_gyro_tolerance=self.inertial_gyro_tolerance
+                    inertial_axis_tolerance=self.inertial_axis_tolerance
+                    heading=inertialsensor.heading()
+                    rotation=inertialsensor.rotation()
+                    acceleration_y=inertialsensor.acceleration(AxisType.YAXIS)
+                    acceleration_z=inertialsensor.acceleration(AxisType.ZAXIS)
+                    acceleration_x=inertialsensor.acceleration(AxisType.XAXIS)
+                    pitch=inertialsensor.orientation(OrientationType.PITCH, DEGREES)
+                    roll=inertialsensor.orientation(OrientationType.ROLL, DEGREES)
+
+
                     if not self.inertial_connected:
                         if "DI7" not in log.codes:
-                            log.add_codes("DI7", ":Inertial DATA: Inertial Installed: ")
+                            log_add_codes("DI7", ":Inertial DATA: Inertial Installed: ")
 
-                        log.add("DI7", "")
+                        log_add("DI7", "")
                         self.inertial_connected=True
 
                     if inertialsensor.is_calibrating() and not self.inertial_calibrating:
 
                         if "DI2" not in log.codes:
-                            log.add_codes("DI2", ":Inertial DATA: Calibrating.: ")
+                            log_add_codes("DI2", ":Inertial DATA: Calibrating.: ")
 
-                        log.add("DI2", "")
+                        log_add("DI2", "")
                         self.inertial_calibrating=True
                     elif not inertialsensor.is_calibrating() and self.inertial_calibrating:
 
                         if "DI3" not in log.codes:
-                            log.add_codes("DI3", ":Inertial DATA: Calibration Complete.: ")
+                            log_add_codes("DI3", ":Inertial DATA: Calibration Complete.: ")
 
-                        log.add("DI3", "")
+                        log_add("DI3", "")
                         self.inertial_calibrating=False
 
-                    if not (self.inertial_rotation_history >= inertialsensor.rotation() - self.inertial_gyro_tolerance and self.inertial_rotation_history <= inertialsensor.rotation() + self.inertial_gyro_tolerance):
+                    if not (self.inertial_rotation_history >= rotation - inertial_gyro_tolerance and self.inertial_rotation_history <= rotation + inertial_gyro_tolerance):
 
                         if "DI0" not in log.codes:
-                            log.add_codes("DI0", ":Inertial DATA: Rotation Changed. Rotation: ")
+                            log_add_codes("DI0", ":Inertial DATA: Rotation Changed. Rotation: ")
 
-                        log.add("DI0", int(inertialsensor.rotation()))
-                        self.inertial_rotation_history= inertialsensor.rotation()
+                        log_add("DI0", int(rotation))
+                        self.inertial_rotation_history= rotation
 
-                    if not (self.inertial_roll_history >= inertialsensor.orientation(OrientationType.ROLL, DEGREES) - self.inertial_gyro_tolerance and self.inertial_roll_history <= inertialsensor.orientation(OrientationType.ROLL, DEGREES) + self.inertial_gyro_tolerance):
+                    if not (self.inertial_roll_history >= roll - inertial_gyro_tolerance and self.inertial_roll_history <= roll + inertial_gyro_tolerance):
 
-                        if "DI2" not in log.codes:
-                            log.add_codes("DI2", ":Inertial DATA: Roll Changed. Roll: ")
+                        if "DI9" not in log.codes:
+                            log_add_codes("DI9", ":Inertial DATA: Roll Changed. Roll: ")
 
-                        log.add("DI2", int(inertialsensor.orientation(OrientationType.ROLL, DEGREES)))
-                        self.inertial_roll_history= inertialsensor.orientation(OrientationType.ROLL, DEGREES)
+                        log_add("DI9", int(roll))
+                        self.inertial_roll_history= roll
 
-                    if not (self.inertial_pitch_history >= inertialsensor.orientation(OrientationType.PITCH, DEGREES) - self.inertial_gyro_tolerance and self.inertial_pitch_history <= inertialsensor.orientation(OrientationType.PITCH, DEGREES) + self.inertial_gyro_tolerance):
+                    if not (self.inertial_pitch_history >= pitch - inertial_gyro_tolerance and self.inertial_pitch_history <= pitch + inertial_gyro_tolerance):
 
-                        if "DI3" not in log.codes:
-                            log.add_codes("DI3", ":Inertial DATA: Roll Changed. Roll: ")
+                        if "DI8" not in log.codes:
+                            log_add_codes("DI8", ":Inertial DATA: Pitch Changed. Pitch: ")
 
-                        log.add("DI3", int(inertialsensor.orientation(OrientationType.PITCH, DEGREES)))
-                        self.inertial_pitch_history= inertialsensor.orientation(OrientationType.PITCH, DEGREES)
+                        log_add("DI8", int(pitch))
+                        self.inertial_pitch_history= pitch
                     
-                    if not (self.inertial_heading_history >= inertialsensor.heading() - self.inertial_gyro_tolerance and self.inertial_heading_history <= inertialsensor.heading() + self.inertial_gyro_tolerance):
+                    if not (self.inertial_heading_history >= heading - inertial_gyro_tolerance and self.inertial_heading_history <= heading + inertial_gyro_tolerance):
 
                         if "DI1" not in log.codes:
-                            log.add_codes("DI1", ":Inertial DATA: Heading Changed. Heading: ")
+                            log_add_codes("DI1", ":Inertial DATA: Heading Changed. Heading: ")
 
-                        log.add("DI1", int(inertialsensor.heading()))
-                        self.inertial_heading_history= inertialsensor.heading()
+                        log_add("DI1", int(heading))
+                        self.inertial_heading_history= heading
                     
-                    if not (self.inertial_x_axis_history >= inertialsensor.acceleration(AxisType.XAXIS) - self.inertial_axis_tolerance and self.inertial_x_axis_history <= inertialsensor.acceleration(AxisType.XAXIS) + self.inertial_axis_tolerance):
+                    if not (self.inertial_x_axis_history >= acceleration_x - inertial_axis_tolerance and self.inertial_x_axis_history <= acceleration_x + inertial_axis_tolerance):
 
                         if "DI4" not in log.codes:
-                            log.add_codes("DI4", ":Inertial DATA: X Axis Changed. Acceleration: ")
+                            log_add_codes("DI4", ":Inertial DATA: X Axis Changed. Acceleration: ")
 
-                        log.add("DI4", round(inertialsensor.acceleration(AxisType.XAXIS), 2))
-                        self.inertial_x_axis_history= inertialsensor.acceleration(AxisType.XAXIS)
+                        log_add("DI4", round(acceleration_x, 2))
+                        self.inertial_x_axis_history= acceleration_x
                     
-                    if not (self.inertial_y_axis_history >= inertialsensor.acceleration(AxisType.YAXIS) - self.inertial_axis_tolerance and self.inertial_y_axis_history <= inertialsensor.acceleration(AxisType.YAXIS) + self.inertial_axis_tolerance):
+                    if not (self.inertial_y_axis_history >= acceleration_y - inertial_axis_tolerance and self.inertial_y_axis_history <= acceleration_y + inertial_axis_tolerance):
 
                         if "DI5" not in log.codes:
-                            log.add_codes("DI5", ":Inertial DATA: Y Axis Changed. Acceleration: ")
+                            log_add_codes("DI5", ":Inertial DATA: Y Axis Changed. Acceleration: ")
 
-                        log.add("DI5", round(inertialsensor.acceleration(AxisType.YAXIS), 2))
-                        self.inertial_y_axis_history= inertialsensor.acceleration(AxisType.YAXIS)
+                        log_add("DI5", round(acceleration_y, 2))
+                        self.inertial_y_axis_history= acceleration_y
 
-                    if not (self.inertial_z_axis_history >= inertialsensor.acceleration(AxisType.ZAXIS) - self.inertial_axis_tolerance and self.inertial_z_axis_history <= inertialsensor.acceleration(AxisType.ZAXIS) + self.inertial_axis_tolerance):
+                    if not (self.inertial_z_axis_history >= acceleration_z - inertial_axis_tolerance and self.inertial_z_axis_history <= acceleration_z + inertial_axis_tolerance):
 
                         if "DI6" not in log.codes:
-                            log.add_codes("DI6", ":Inertial DATA: Z Axis Changed. Acceleration: ")
+                            log_add_codes("DI6", ":Inertial DATA: Z Axis Changed. Acceleration: ")
                             
-                        log.add("DI6", round(inertialsensor.acceleration(AxisType.ZAXIS), 2))
-                        self.inertial_z_axis_history= inertialsensor.acceleration(AxisType.ZAXIS)
+                        log_add("DI6", round(acceleration_z, 2))
+                        self.inertial_z_axis_history= acceleration_z
                         
-                elif not inertialsensor.installed() and self.inertial_connected:
+                elif self.inertial_connected:
 
                     if "EI0" not in log.codes:
-                        log.add_codes("EI0", ":Inertial ERROR: Inertial Disconnected.: ")
+                        log_add_codes("EI0", ":Inertial ERROR: Inertial Disconnected.: ")
 
-                    log.add("EI0", "")
+                    log_add("EI0", "")
                     self.inertial_connected=False
 
                 
@@ -738,47 +752,64 @@ class Log():
             None
             """
 
-            # Battery monitoring for voltage, capacity, and current.
-            if brain.battery.voltage(VoltageUnits.VOLT)<11 and (self.battery_voltage_monitoring==0 or self.battery_voltage_monitoring==2):
-                log.add("EB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
-                self.battery_voltage_monitoring=1
-            elif brain.battery.voltage(VoltageUnits.VOLT)<12 and (self.battery_voltage_monitoring==0 or self.battery_voltage_monitoring==1):
-                log.add("WB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
-                self.battery_voltage_monitoring=2
-            elif brain.battery.voltage(VoltageUnits.VOLT)>=12 and (self.battery_voltage_monitoring==1 or self.battery_voltage_monitoring==2):
-                log.add("DB0", "%s"%(brain.battery.voltage(VoltageUnits.VOLT)))
-                self.battery_voltage_monitoring=0
-            
-            if brain.battery.capacity()<25 and self.battery_capacity_monitoring!=brain.battery.capacity():
-                log.add("EB1", "%s"%(brain.battery.capacity()))
-                self.battery_capacity_monitoring=brain.battery.capacity()
-            elif brain.battery.capacity()<50 and self.battery_capacity_monitoring!=brain.battery.capacity():
-                log.add("WB1", "%s"%(brain.battery.capacity()))
-                self.battery_capacity_monitoring=brain.battery.capacity()
-            elif brain.battery.capacity()>=50 and self.battery_capacity_monitoring!=brain.battery.capacity():
-                log.add("DB3", "%s"%(brain.battery.capacity()))
-                self.battery_capacity_monitoring=brain.battery.capacity()
-            
-            if brain.battery.current(CurrentUnits.AMP)>18 and (self.battery_current_monitoring==0 or self.battery_current_monitoring==2):
-                log.add("EB2", "%s"%(brain.battery.current(CurrentUnits.AMP)))
-                self.battery_current_monitoring=1
-            elif brain.battery.current(CurrentUnits.AMP)>13 and (self.battery_current_monitoring==0 or self.battery_current_monitoring==1):
-                log.add("WB2", "%s"%(brain.battery.current(CurrentUnits.AMP)))
-                self.battery_current_monitoring=2
-            elif brain.battery.current(CurrentUnits.AMP)<=5 and (self.battery_current_monitoring==1 or self.battery_current_monitoring==2):
-                log.add("DB1","%s"%(brain.battery.current(CurrentUnits.AMP)))
-                self.battery_current_monitoring=0
+            voltage:int=int(brain.battery.voltage(VoltageUnits.VOLT))
+            current:int=int(brain.battery.current(CurrentUnits.AMP))
+            capacity:int=int(brain.battery.capacity())
+            watts:int=int(brain.battery.current(CurrentUnits.AMP) * brain.battery.voltage(VoltageUnits.VOLT))
 
-            if brain.battery.current(CurrentUnits.AMP) * brain.battery.voltage(VoltageUnits.VOLT)>200 and (self.battery_watt_monitoring==0 or self.battery_watt_monitoring==3):
-                log.add("EB3", "%s"%(int(brain.battery.current(CurrentUnits.AMP) * brain.battery.voltage(VoltageUnits.VOLT))))
-                self.battery_watt_monitoring=1
-            elif brain.battery.current(CurrentUnits.AMP) * brain.battery.voltage(VoltageUnits.VOLT)>150 and (self.battery_watt_monitoring==0 or self.battery_watt_monitoring==1):
-                log.add("WB3", "%s"%(int(brain.battery.current(CurrentUnits.AMP) * brain.battery.voltage(VoltageUnits.VOLT))))
-                self.battery_watt_monitoring=2
-            elif brain.battery.current(CurrentUnits.AMP) * brain.battery.voltage(VoltageUnits.VOLT)<=150 and (self.battery_watt_monitoring==1 or self.battery_watt_monitoring==2):
-                log.add("DB2", "%s"%(int(brain.battery.current(CurrentUnits.AMP) * brain.battery.voltage(VoltageUnits.VOLT))))
-                self.battery_watt_monitoring=0
-        
+            # Battery monitoring for voltage, capacity, and current.
+            if voltage>=12:
+                if self.battery_voltage_monitoring==1 or self.battery_voltage_monitoring==2:
+                    log.add("DB0", "%s"%(voltage))
+                    self.battery_voltage_monitoring=0
+            elif voltage<12:
+                if self.battery_voltage_monitoring==0 or self.battery_voltage_monitoring==1:
+                    log.add("WB0", "%s"%(voltage))
+                    self.battery_voltage_monitoring=2
+            elif voltage<11:
+                if self.battery_voltage_monitoring==0 or self.battery_voltage_monitoring==2:
+                    log.add("EB0", "%s"%(voltage))
+                    self.battery_voltage_monitoring=1
+
+            if capacity>=50:
+                if self.battery_capacity_monitoring!=capacity:
+                    log.add("DB3", "%s"%(capacity))
+                    self.battery_capacity_monitoring=capacity
+            elif capacity<50:
+                if self.battery_capacity_monitoring!=capacity:
+                    log.add("WB1", "%s"%(capacity))
+                    self.battery_capacity_monitoring=capacity
+            elif capacity<25:
+                if self.battery_capacity_monitoring!=capacity:
+                    log.add("EB1", "%s"%(capacity))
+                    self.battery_capacity_monitoring=capacity
+            
+            if current<=5:
+                if self.battery_current_monitoring==1 or self.battery_current_monitoring==2:
+                    log.add("DB1","%s"%(current))
+                    self.battery_current_monitoring=0
+            elif current>13:
+                if self.battery_current_monitoring==0 or self.battery_current_monitoring==1:
+                    log.add("WB2", "%s"%(current))
+                    self.battery_current_monitoring=2
+            elif current>18:
+                if self.battery_current_monitoring==0 or self.battery_current_monitoring==2:
+                    log.add("EB2", "%s"%(current))
+                    self.battery_current_monitoring=1
+            
+            if watts<=150:
+                if self.battery_watt_monitoring==1 or self.battery_watt_monitoring==2:
+                    log.add("DB2", "%s"%(watts))
+                    self.battery_watt_monitoring=0
+            elif watts>150:
+                if self.battery_watt_monitoring==0 or self.battery_watt_monitoring==1:
+                    log.add("WB3", "%s"%(watts))
+                    self.battery_watt_monitoring=2
+            elif watts>200:
+                if self.battery_watt_monitoring==0 or self.battery_watt_monitoring==3:
+                    log.add("EB3", "%s"%(watts))
+                    self.battery_watt_monitoring=1     
+
         def controller(self, controller: Controller) -> None:
             """
             Capture for the controllers. 
@@ -788,173 +819,127 @@ class Log():
             controller= Controller()
             """
 
-            axis1:int=self.axis1
-            axis2:int=self.axis2
-            axis3:int=self.axis3
-            axis4:int=self.axis4
-            record:bool=recording.record
-            tolrance:int=log.tolrance
-            c_axis1:int=controller.axis1.position()
-            c_axis2:int=controller.axis2.position()
-            c_axis3:int=controller.axis3.position()
-            c_axis4:int=controller.axis4.position()
+            record = recording.record
+            ctrl_name = str(controller)
+            log_add = log.add
 
-            if not record:  # Only logs when not recoding to save space on the recording file.
-                if c_axis1!=0 and not (axis1 >= c_axis1 - tolrance and axis1 <= c_axis1 + tolrance):
-                    log.add("DC1", "%s_Axis1 %d Moved"%(str(controller), c_axis1))
-                    axis1=c_axis1
-                elif 0 == c_axis1 and axis1!=0:
-                    log.add("DC1", "%s_Axis1 %d Moved"%(str(controller), 0))
-                    axis1=0
+            speed=log_time.time()
+            if record:  # Uses more accurate logging when recording.
+                prev_axis2 = self.axis2
+                prev_axis3 = self.axis3
+                c_axis2 = int(controller.axis2.position())
+                c_axis3 = int(controller.axis3.position())
 
-            if record:  # Uses more accurete logging when recording.
-                if c_axis2!=0 and axis2 != c_axis2:
-                    log.add("DC1", "%s_Axis2 %d Moved"%(str(controller), c_axis2))
-                    axis2=c_axis2
-                elif 0 == c_axis2 and axis2!=0:
-                    log.add("DC1", "%s_Axis2 %d Moved"%(str(controller), 0))
-                    axis2=0
+                if c_axis2 != prev_axis2:
+                    log_add("DC1", "%s_Axis2 %d Moved"%(ctrl_name, c_axis2))
+                    self.axis2 = c_axis2
+                if c_axis3 != prev_axis3:
+                    log_add("DC1", "%s_Axis3 %d Moved"%(ctrl_name, c_axis3))
+                    self.axis3 = c_axis3
             else:
-                if c_axis2!=0 and not (axis2 >= c_axis2 - tolrance and axis2 <= c_axis2 + tolrance):
-                    log.add("DC1", "%s_Axis2 %d Moved"%(str(controller), c_axis2))
-                    axis2=c_axis2
-                elif 0 == c_axis2 and axis2!=0:
-                    log.add("DC1", "%s_Axis2 %d Moved"%(str(controller), 0, ))
-                    axis2=0
+                prev_axis1 = self.axis1
+                prev_axis2 = self.axis2
+                prev_axis3 = self.axis3
+                prev_axis4 = self.axis4
+                c_axis1 = int(controller.axis1.position())
+                c_axis2 = int(controller.axis2.position())
+                c_axis3 = int(controller.axis3.position())
+                c_axis4 = int(controller.axis4.position())
+                tol = log.tolrance
 
-            if record:  # Uses more accurete logging when recording.
-                if c_axis3!=0 and axis3 != c_axis3:
-                    log.add("DC1", "%s_Axis3 %d Moved"%(str(controller), c_axis3))
-                    axis3=c_axis3
-                elif 0 == c_axis3 and axis3!=0:
-                    log.add("DC1", "%s_Axis3 %d Moved"%(str(controller), 0))
-                    axis3=0
-            else:
-                if c_axis3!=0 and not (axis3 >= c_axis3 - tolrance and axis3 <= c_axis3 + tolrance):
-                    log.add("DC1", "%s_Axis3 %d Moved"%(str(controller), c_axis3))
-                    axis3=c_axis3
-                elif 0 == controller.axis3.position() and self.axis3!=0:
-                    log.add("DC1", "%s_Axis3 %d Moved"%(str(controller), 0))
-                    axis3=0
+                if c_axis1 != 0 and not (prev_axis1 >= c_axis1 - tol and prev_axis1 <= c_axis1 + tol):
+                    log_add("DC1", "%s_Axis1 %d Moved"%(ctrl_name, c_axis1))
+                    self.axis1 = c_axis1
+                elif c_axis1 == 0 and prev_axis1 != 0:
+                    log_add("DC1", "%s_Axis1 %d Moved"%(ctrl_name, 0))
+                    self.axis1 = 0
 
-            if not record:  # Only logs when not recoding to save space on the recording file.
-                if c_axis4!=0 and not (axis4 >= c_axis4 - tolrance and axis4 <= c_axis4 + tolrance):
-                    log.add("DC1", "%s_Axis4 %d Moved"%(str(controller), c_axis4))
-                    axis4=c_axis4
-                elif 0 == c_axis4 and axis4!=0:
-                    log.add("DC1", "%s_Axis4 %d Moved"%(str(controller), 0))
-                    axis4=0
+                if c_axis2 != 0 and not (prev_axis2 >= c_axis2 - tol and prev_axis2 <= c_axis2 + tol):
+                    log_add("DC1", "%s_Axis2 %d Moved"%(ctrl_name, c_axis2))
+                    self.axis2 = c_axis2
+                elif c_axis2 == 0 and prev_axis2 != 0:
+                    log_add("DC1", "%s_Axis2 %d Moved"%(ctrl_name, 0))
+                    self.axis2 = 0
+
+                if c_axis3 != 0 and not (prev_axis3 >= c_axis3 - tol and prev_axis3 <= c_axis3 + tol):
+                    log_add("DC1", "%s_Axis3 %d Moved"%(ctrl_name, c_axis3))
+                    self.axis3 = c_axis3
+                elif c_axis3 == 0 and prev_axis3 != 0:
+                    log_add("DC1", "%s_Axis3 %d Moved"%(ctrl_name, 0))
+                    self.axis3 = 0
+
+                if c_axis4 != 0 and not (prev_axis4 >= c_axis4 - tol and prev_axis4 <= c_axis4 + tol):
+                    log_add("DC1", "%s_Axis4 %d Moved"%(ctrl_name, c_axis4))
+                    self.axis4 = c_axis4
+                elif c_axis4 == 0 and prev_axis4 != 0:
+                    log_add("DC1", "%s_Axis4 %d Moved"%(ctrl_name, 0))
+                    self.axis4 = 0
 
             # Button logging for controller.
 
-            button_a=self.button_a
-            button_b=self.button_b
-            button_x=self.button_x
-            button_y=self.button_y
-            button_up=self.button_up
-            button_down=self.button_down
-            button_left=self.button_left
-            button_right=self.button_right
-            button_L1=self.button_L1
-            button_L2=self.button_L2
-            button_R1=self.button_R1
-            button_R2=self.button_R2
-            C_button_a=controller.buttonA.pressing()
-            C_button_b=controller.buttonB.pressing()
-            C_button_x=controller.buttonX.pressing()
-            C_button_y=controller.buttonY.pressing()
-            C_button_up=controller.buttonUp.pressing()
-            C_button_down=controller.buttonDown.pressing()
-            C_button_left=controller.buttonLeft.pressing()
-            C_button_right=controller.buttonRight.pressing()
-            C_button_L1=controller.buttonL1.pressing()
-            C_button_L2=controller.buttonL2.pressing()
-            C_button_R1=controller.buttonR1.pressing()
-            C_button_R2=controller.buttonR2.pressing()
+            button_names = [
+                "A", "B", "X", "Y",
+                "UP", "DOWN", "LEFT", "RIGHT",
+                "L1", "L2", "R1", "R2",
+            ]
+            button_objs = [
+                controller.buttonA,
+                controller.buttonB,
+                controller.buttonX,
+                controller.buttonY,
+                controller.buttonUp,
+                controller.buttonDown,
+                controller.buttonLeft,
+                controller.buttonRight,
+                controller.buttonL1,
+                controller.buttonL2,
+                controller.buttonR1,
+                controller.buttonR2,
+            ]
+            button_values = [
+                self.button_a,
+                self.button_b,
+                self.button_x,
+                self.button_y,
+                self.button_up,
+                self.button_down,
+                self.button_left,
+                self.button_right,
+                self.button_L1,
+                self.button_L2,
+                self.button_R1,
+                self.button_R2,
+            ]
 
-            if C_button_a and button_a==True:
-                log.add("DC0", "%s_Button A Pressed"%(str(controller)))
-                button_a=False
-            elif C_button_a==False and button_a==False:
-                log.add("DC0", "%s_Button A Released"%(str(controller)))
-                button_a=True
+            for i in range(12):
+                button = button_objs[i]
+                pressing = button.pressing()
+                state = button_values[i]
+                name = button_names[i]
+                if pressing:
+                    if state:
+                        log_add("DC0", "%s_Button %s Pressed"%(ctrl_name, name))
+                        state = False
+                else:
+                    if not state:
+                        log_add("DC0", "%s_Button %s Released"%(ctrl_name, name))
+                        state = True
+                button_values[i] = state
 
-            if C_button_b and button_b==True:
-                log.add("DC0", "%s_Button B Pressed"%(str(controller)))
-                button_b=False
-            elif C_button_b==False and button_b==False:
-                log.add("DC0", "%s_Button B Released"%(str(controller)))
-                button_b=True
-
-            if C_button_x and button_x==True:
-                log.add("DC0", "%s_Button X Pressed"%(str(controller)))
-                button_x=False
-            elif C_button_x==False and self.button_x==False:
-                log.add("DC0", "%s_Button X Released"%(str(controller)))
-                button_x=True
-
-            if C_button_y and button_y==True:
-                log.add("DC0", "%s_Button Y Pressed"%(str(controller)))
-                button_y=False
-            elif C_button_y==False and button_y==False:
-                log.add("DC0", "%s_Button Y Released"%(str(controller)))
-                button_y=True
-
-            if C_button_up and button_up==True:
-                log.add("DC0", "%s_Button UP Pressed"%(str(controller)))
-                button_up=False
-            elif C_button_up==False and button_up==False:
-                log.add("DC0", "%s_Button UP Released"%(str(controller)))
-                button_up=True
-
-            if C_button_down and button_down==True:
-                log.add("DC0", "%s_Button DOWN Pressed"%(str(controller)))
-                button_down=False
-            elif C_button_down==False and button_down==False:
-                log.add("DC0", "%s_Button DOWN Released"%(str(controller)))
-                button_down=True
-
-            if C_button_left and button_left==True:
-                log.add("DC0", "%s_Button LEFT Pressed"%(str(controller)))
-                button_left=False
-            elif C_button_left==False and button_left==False:
-                log.add("DC0", "%s_Button LEFT Released"%(str(controller)))
-                button_left=True
-
-            if C_button_right and button_right==True:
-                log.add("DC0", "%s_Button RIGHT Pressed"%(str(controller)))
-                button_right=False
-            elif C_button_right==False and button_right==False:
-                log.add("DC0", "%s_Button RIGHT Released"%(str(controller)))
-                button_right=True
-
-            if C_button_L1 and button_L1==True:
-                log.add("DC0", "%s_Button L1 Pressed"%(str(controller)))
-                button_L1=False
-            elif C_button_L1==False and button_L1==False:
-                log.add("DC0", "%s_Button L1 Released"%(str(controller)))
-                button_L1=True
-
-            if C_button_L2 and button_L2==True:
-                log.add("DC0", "%s_Button L2 Pressed"%(str(controller)))
-                button_L2=False
-            elif C_button_L2==False and button_L2==False:
-                log.add("DC0", "%s_Button L2 Released"%(str(controller)))
-                button_L2=True
-
-            if C_button_R1 and button_R1==True:
-                log.add("DC0", "%s_Button R1 Pressed"%(str(controller)))
-                button_R1=False
-            elif C_button_R1==False and button_R1==False:
-                log.add("DC0", "%s_Button R1 Released"%(str(controller)))
-                button_R1=True
-
-            if C_button_R2 and button_R2==True:
-                log.add("DC0", "%s_Button R2 Pressed"%(str(controller)))
-                button_R2=False
-            elif C_button_R2==False and button_R2==False:
-                log.add("DC0", "%s_Button R2 Released"%(str(controller)))
-                button_R2=True
+            (
+                self.button_a,
+                self.button_b,
+                self.button_x,
+                self.button_y,
+                self.button_up,
+                self.button_down,
+                self.button_left,
+                self.button_right,
+                self.button_L1,
+                self.button_L2,
+                self.button_R1,
+                self.button_R2,
+            ) = button_values
 
         def variable(self, name: str, value: Any) -> None:
             """
@@ -1246,6 +1231,21 @@ class Log():
 
         brain.sdcard.appendfile("Log.csv", bytearray(entry, self.format))
     
+    async def brain_read(self, entry: str) -> None:
+        """
+        Prints to brain screen.
+
+        Args:
+        entry= String
+        """
+
+        if brain.screen.row()>=20:
+            brain.screen.clear_screen()
+            brain.screen.set_cursor(1,1)
+
+        brain.screen.print(entry)
+        brain.screen.new_line()
+    
     def add(self, add_code: str, add_details: Any) -> str:
         """
         Main funtion for Log.
@@ -1258,17 +1258,17 @@ class Log():
         add_code= String
         add_details= Any
         """
+
         codes=self.codes
         brainscreen=self.brainscreen
         record=recording.record
         index=self.index
         adding=self.adding
-        timer=log_time
 
         if not adding:
             return ""
         
-        entry = ", %d [%d] %s %s \n" % (index, timer.time(), codes.get(add_code), add_details)
+        entry = ", %d [%d] %s %s \n" % (index, log_time.time(), codes.get(add_code), add_details)
 
         if self.printing:
             print(entry)
@@ -1280,13 +1280,8 @@ class Log():
                 uasyncio.create_task(self.append_log(entry))
 
         if brainscreen:  # Checks if pinting to brainscreen is enabled.
+            uasyncio.create_task(self.brain_read(entry))
 
-            if brain.screen.row()>=20:  # Checks if at end of screen row
-                brain.screen.clear_screen()
-                brain.screen.set_cursor(1,1)
-
-            brain.screen.print(entry)
-            brain.screen.new_line()
         self.index += 1
 
         return entry
@@ -1482,6 +1477,7 @@ class Log():
                     wait(wait_time_recording, MSEC)
                 
                 del speed2
+
             if gc_use:  
                 gc.collect()
     
@@ -1496,16 +1492,24 @@ class Log():
         """
 
         brain.sdcard.appendfile("Logstart.txt" , bytearray(funtion + ", ", self.format))
-        
-    def auto_start(self):
-        """
-        An easy way to use the log start.
-        all that is needed if to call it but if you want you can make it print to the brain by adding True in the input.
+    
 
-        Args:
-        None
-        """
-        
+    async def async_battery(self):
+        self.capture.battery()
+    
+    async def async_memory(self):
+        self.capture.system.memoryuse()
+    
+    async def async_modules(self):
+        self.capture.system.modules()
+    
+    async def async_exec(self, funtion):
+        exec(funtion)
+    
+    async def async_sleep(self):
+        await uasyncio.sleep(0)
+
+    async def auto_start_loop(self):
         self.format:str=str(settings.settings.get('format_used '))
         self.tolrance:int=int(str(settings.settings.get('default_tolrance ')))
         wait_time_logging:int=int(str(settings.settings.get('logging_loop_wait ')))
@@ -1630,35 +1634,45 @@ class Log():
             added_bytes=compile("", '<string>' ,'exec', 0,  True, 2)
 
         timer=log_time
-        
-        while True:
 
+        while True:
             for i in range(20):
 
-                speed2:int=timer.time()
+                start:int=timer.time()
+
+                await self.async_exec(added_bytes)
 
                 if not recording.record:
-                    if log_battery:
-                        self.capture.battery()
                     if log_memory:
-                        self.capture.system.memoryuse()
-                    if log_modules:
-                        self.capture.system.modules()    
+                        await self.async_memory()
 
-                speed=timer.time()
-                exec(added_bytes)
-                print("Exec time: %d"%(timer.time()-speed))
-                
-                if not recording.record:
-                    print("Loop speed: %d"%(timer.time() - speed2))
-                    wait(wait_time_logging - (timer.time() - speed2), MSEC)
+                    if log_modules:
+                        await self.async_modules()
+
+                    if log_battery:
+                        await self.async_battery()
+
+                    await uasyncio.sleep_ms(wait_time_logging - (timer.time() - start))
                 else:
-                    wait(wait_time_recording, MSEC)
+                    await uasyncio.sleep_ms(wait_time_recording - (timer.time() - start))
                 
-                del speed2, speed
+                del start
 
             if gc_use:
                 gc.collect()
+        
+    def auto_start(self):
+        """
+        An easy way to use the log start.
+        all that is needed if to call it but if you want you can make it print to the brain by adding True in the input.
+
+        Args:
+        None
+        """
+        uasyncio.run(self.auto_start_loop())  
+    
+    def __call__(self) -> None:
+        logging=Thread(self.auto_start)
 
 class Recording:
     """

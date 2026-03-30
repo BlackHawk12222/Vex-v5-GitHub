@@ -14,7 +14,6 @@ Right2 = Motor(Ports.PORT13, GearSetting.RATIO_6_1, False)
 Right3 = Motor(Ports.PORT12, GearSetting.RATIO_6_1, True)
 left1 = Motor(Ports.PORT20, GearSetting.RATIO_6_1, True)
 left3 = Motor(Ports.PORT18, GearSetting.RATIO_6_1, False)
-optical_9 = Optical(Ports.PORT9)
 colorsorting = Motor(Ports.PORT15, GearSetting.RATIO_18_1, True)
 left2 = Motor(Ports.PORT19, GearSetting.RATIO_6_1, True)
 TopMotor = Motor(Ports.PORT1, GearSetting.RATIO_18_1, True)
@@ -22,14 +21,6 @@ frontPiston = DigitalOut(brain.three_wire_port.a)
 inertial_for_auton = Inertial(Ports.PORT6)
 DeScorer = DigitalOut(brain.three_wire_port.b)
 Intake = Motor(Ports.PORT14, GearSetting.RATIO_6_1, True)
-Left= MotorGroup(left1, left2)
-Right= MotorGroup(Right1, Right2)
-analog_input=PotentiometerV2(brain.three_wire_port.c)
-limitswitch=Limit(brain.three_wire_port.b)
-bumperswitch=Bumper(brain.three_wire_port.a)
-optical2=Optical(Ports.PORT2)
-rotation=Rotation(Ports.PORT3)
-distance=Distance(Ports.PORT1)
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
@@ -180,7 +171,7 @@ def scorestop():
 # Recording Functions
 if brain.sdcard.is_inserted() and brain.sdcard.exists("CLEAR.py"):
     import CLEAR
-    logging=Thread(CLEAR.log.auto_start)
+    CLEAR.log
 
     def recordright():
         global recording_state

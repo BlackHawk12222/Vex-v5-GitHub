@@ -27,6 +27,22 @@ void log::init_motor_monitor(std::list<pros::Motor> motors){
     }
 }
 
+void log::update_motor_temps(pros::Motor motor){
+    unsigned short int temps=motor.get_temperature();
+    if (temps>70){
+        log::add("ME01", "");
+    }
+}
+
+void log::update_motor_monitor(std::list<pros::Motor> motors){
+    for (pros::Motor motor : motors){
+        log::update_motor_current(motor);
+        log::update_motor_efficiency(motor);
+        log::update_motor_power(motor);
+        log::update_motor_temps(motor);
+    }
+}
+
 void log::log_start(std::list<pros::Motor> motors){
     init_motor_monitor(motors);
     while (true){

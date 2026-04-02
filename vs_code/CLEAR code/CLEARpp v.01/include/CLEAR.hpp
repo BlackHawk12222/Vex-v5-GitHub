@@ -33,6 +33,10 @@ class log{
     };
     void init_motor_monitor(std::list<pros::Motor> motors);
     void update_motor_monitor(std::list<pros::Motor> motors);
+    void update_motor_temps(pros::Motor motor);
+    void update_motor_power(pros::Motor motor);
+    void update_motor_current(pros::Motor motor);
+    void update_motor_efficiency(pros::Motor motor);
     log();
 };
 #endif CLEAR_HPP

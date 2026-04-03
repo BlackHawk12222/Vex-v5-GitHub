@@ -4,18 +4,13 @@
 #include <list>
 #include <unordered_map>
 
-class log{
+class logging{
  public:   
     void add(const char* Code, const char* Details);
     void log_start(std::list<pros::Motor> motors);
     void auto_start();
 
  private:
-    std::list<short unsigned int> motor_monitor_temp;
-    std::list<short unsigned int> motor_monitor_power;
-    std::list<short unsigned int> motor_monitor_current;
-    std::list<short unsigned int> motor_monitor_power;
-    std::list<short unsigned int> motor_monitor_efficiency;
     long unsigned int index = 0;
     std::unordered_map<std::string, std::string> log_codes={
         {"MD01", "Motor DATA: Temps Normal. Temps: "},
@@ -31,12 +26,27 @@ class log{
         {"ME03", "Motor ERROR: Current Critical. Current: "},
         {"ME04", "Motor ERROR: Efficiency Critical. Efficiency: "},
     };
-    void init_motor_monitor(std::list<pros::Motor> motors);
-    void update_motor_monitor(std::list<pros::Motor> motors);
-    void update_motor_temps(pros::Motor motor);
-    void update_motor_power(pros::Motor motor);
-    void update_motor_current(pros::Motor motor);
-    void update_motor_efficiency(pros::Motor motor);
-    log();
+    capture* Capture;
+    logging(); 
 };
-#endif CLEAR_HPP
+
+class capture{
+    public:
+        void init_motor_monitor(std::list<pros::Motor> motors);
+        void update_motor_monitor(std::list<pros::Motor> motors);
+        void update_motor_temps(pros::Motor motor);
+        void update_motor_power(pros::Motor motor);
+        void update_motor_current(pros::Motor motor);
+        void update_motor_efficiency(pros::Motor motor);
+
+    private:
+        capture();
+        std::vector<short unsigned int> motor_monitor_temp;
+        std::vector<short unsigned int> motor_monitor_current;
+        std::vector<short unsigned int> motor_monitor_power;
+        std::vector<short unsigned int> motor_monitor_efficiency;
+        std::vector<short unsigned int> id_motor;
+        logging* Log;
+};
+
+#endif

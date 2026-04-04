@@ -1,4 +1,9 @@
 #include "main.h"
+#include "CLEAR.hpp"
+
+pros::Motor motor1(1);
+pros::Motor motor2(2);
+logging Log;
 
 /**
  * A callback function for LLEMU's center button.
@@ -25,6 +30,7 @@ void on_center_button() {
 void initialize() {
 	pros::lcd::initialize();
 	pros::lcd::set_text(1, "Hello PROS User!");
+	Log.log_start({motor1, motor2});
 
 	pros::lcd::register_btn1_cb(on_center_button);
 }

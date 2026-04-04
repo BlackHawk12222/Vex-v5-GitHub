@@ -49,6 +49,69 @@ void capture::update_motor_temps(pros::Motor motor){
     }
 }
 
+void capture::update_motor_power(pros::Motor motor){
+    unsigned short int power=motor.get_power();
+    for (int i=0; i<id_motor.size(); i++){
+        if (id_motor[i]==motor.get_port()){
+            if (power != motor_monitor_power[i]){
+                if (power>70){
+                    Log->add("ME02", "");
+                }
+                else if (power>50){
+                    Log->add("MW02", "");
+                }
+                else{
+                    Log->add("MD02", "");
+                }
+                motor_monitor_power[i]=power;
+                break;
+            }
+        }
+    }
+}
+
+void capture::update_motor_current(pros::Motor motor){
+    unsigned short int current=motor.get_current_draw();
+    for (int i=0; i<id_motor.size(); i++){
+        if (id_motor[i]==motor.get_port()){
+            if (current != motor_monitor_current[i]){
+                if (current>70){
+                    Log->add("ME03", "");
+                }
+                else if (current>50){
+                    Log->add("MW03", "");
+                }
+                else{
+                    Log->add("MD03", "");
+                }
+                motor_monitor_current[i]=current;
+                break;
+            }
+        }
+    }
+}
+
+void capture::update_motor_efficiency(pros::Motor motor){
+    unsigned short int efficiency=motor.get_efficiency();
+    for (int i=0; i<id_motor.size(); i++){
+        if (id_motor[i]==motor.get_port()){
+            if (efficiency != motor_monitor_efficiency[i]){
+                if (efficiency>70){
+                    Log->add("ME04", "");
+                }
+                else if (efficiency>50){
+                    Log->add("MW04", "");
+                }
+                else{
+                    Log->add("MD04", "");
+                }
+                motor_monitor_efficiency[i]=efficiency;
+                break;
+            }
+        }
+    }
+}
+
 void capture::update_motor_monitor(std::list<pros::Motor> motors){
     for (pros::Motor motor : motors){
         capture::update_motor_current(motor);

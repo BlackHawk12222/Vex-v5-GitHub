@@ -1065,7 +1065,7 @@ class Log():
         self.index:int=0
         self.adding:bool=True  # Used to pause logging.
         self.format:str="utf-8"  # General format for all files in the code.
-        self.cache:str=""
+        self.cache:bytearray=bytearray()
         self.brainscreen:bool=False  # Used to see if need to print to brain screen.
         self.tolrance:int=3  # tolerance for controller stick diffrence when not recording and for general tolrance for sensors.
         self.manual_control:bool=False
@@ -1214,7 +1214,19 @@ class Log():
         adding=self.adding
 
         if not adding:
+            self.cache+= b", %d [%d] %s %s \n" % (index, log_time.time(), codes.get(add_code), add_details)
             return ""
+        else:
+            if self.cache:
+                if self.printing:
+                    print(self.cache.decode(self.format))
+                if self.logging:
+                    uasyncio.create_task(self.append_log(self.cache.decode(self.format)))
+                if brainscreen:
+                    uasyncio.create_task(self.brain_read(self.cache.decode(self.format)))
+                self.cache=bytearray()
+                return ""
+    
         
         entry = ", %d [%d] %s %s \n" % (index, log_time.time(), codes.get(add_code), add_details)
 
@@ -1456,6 +1468,12 @@ class Log():
     
     async def async_sleep(self):
         await uasyncio.sleep(0)
+    
+    async def async_archive_log(self):
+        self.archive.log()
+        self.archive.index_history()
+    
+
 
     async def auto_start_loop(self):
         self.format:str=str(settings.settings.get('format_used '))
@@ -1501,8 +1519,7 @@ class Log():
         if self.brainscreen:
             brain.screen.set_font(FontType.MONO12)
 
-        self.archive.log()
-        self.archive.index_history()
+        uasyncio.create_task(self.async_archive_log())
 
         # Logs system start.
         self.add("DS0", "")

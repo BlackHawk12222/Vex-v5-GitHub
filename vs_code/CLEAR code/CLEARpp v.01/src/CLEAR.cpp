@@ -3,6 +3,14 @@
 #include "CLEAR.hpp"
 #include <unordered_map>
 
+logging::logging(){
+
+}
+
+capture::capture(){
+
+}
+
 void logging::add(const char* Code, const char* Details){
     std::uint32_t time = pros::millis();
     std::string log_message = "[" + std::to_string(time) + "] " + log_codes[Code] + Details;
@@ -29,6 +37,7 @@ void capture::init_motor_monitor(std::list<pros::Motor> motors){
 }
 
 void capture::update_motor_temps(pros::Motor motor){
+    logging* Log;
     unsigned short int temps=motor.get_temperature();
     for (int i=0; i<id_motor.size(); i++){
         if (id_motor[i]==motor.get_port()){
@@ -50,6 +59,7 @@ void capture::update_motor_temps(pros::Motor motor){
 }
 
 void capture::update_motor_power(pros::Motor motor){
+    logging* Log;
     unsigned short int power=motor.get_power();
     for (int i=0; i<id_motor.size(); i++){
         if (id_motor[i]==motor.get_port()){
@@ -71,6 +81,7 @@ void capture::update_motor_power(pros::Motor motor){
 }
 
 void capture::update_motor_current(pros::Motor motor){
+    logging* Log;
     unsigned short int current=motor.get_current_draw();
     for (int i=0; i<id_motor.size(); i++){
         if (id_motor[i]==motor.get_port()){
@@ -92,6 +103,7 @@ void capture::update_motor_current(pros::Motor motor){
 }
 
 void capture::update_motor_efficiency(pros::Motor motor){
+    logging* Log;
     unsigned short int efficiency=motor.get_efficiency();
     for (int i=0; i<id_motor.size(); i++){
         if (id_motor[i]==motor.get_port()){
@@ -122,6 +134,7 @@ void capture::update_motor_monitor(std::list<pros::Motor> motors){
 }
 
 void logging::log_start(std::list<pros::Motor> motors){
+    capture* Capture;
     Capture->init_motor_monitor(motors);
     while (true){
         std::uint32_t time_start = pros::millis();

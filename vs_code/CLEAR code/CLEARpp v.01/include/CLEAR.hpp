@@ -4,11 +4,31 @@
 #include <list>
 #include <unordered_map>
 
+class capture{
+    public:
+        void init_motor_monitor(std::list<pros::Motor> motors);
+        void update_motor_monitor(std::list<pros::Motor> motors);
+        void update_motor_temps(pros::Motor motor);
+        void update_motor_power(pros::Motor motor);
+        void update_motor_current(pros::Motor motor);
+        void update_motor_efficiency(pros::Motor motor);
+        capture();
+    private:
+
+        std::vector<short unsigned int> motor_monitor_temp;
+        std::vector<short unsigned int> motor_monitor_current;
+        std::vector<short unsigned int> motor_monitor_power;
+        std::vector<short unsigned int> motor_monitor_efficiency;
+        std::vector<short unsigned int> id_motor;
+        
+};
+
 class logging{
  public:   
     void add(const char* Code, const char* Details);
     void log_start(std::list<pros::Motor> motors);
     void auto_start();
+    logging();
 
  private:
     long unsigned int index = 0;
@@ -26,27 +46,6 @@ class logging{
         {"ME03", "Motor ERROR: Current Critical. Current: "},
         {"ME04", "Motor ERROR: Efficiency Critical. Efficiency: "},
     };
-    capture* Capture;
-    logging(); 
-};
-
-class capture{
-    public:
-        void init_motor_monitor(std::list<pros::Motor> motors);
-        void update_motor_monitor(std::list<pros::Motor> motors);
-        void update_motor_temps(pros::Motor motor);
-        void update_motor_power(pros::Motor motor);
-        void update_motor_current(pros::Motor motor);
-        void update_motor_efficiency(pros::Motor motor);
-
-    private:
-        capture();
-        std::vector<short unsigned int> motor_monitor_temp;
-        std::vector<short unsigned int> motor_monitor_current;
-        std::vector<short unsigned int> motor_monitor_power;
-        std::vector<short unsigned int> motor_monitor_efficiency;
-        std::vector<short unsigned int> id_motor;
-        logging* Log;
 };
 
 #endif

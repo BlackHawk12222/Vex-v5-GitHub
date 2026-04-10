@@ -3,7 +3,7 @@
 
 pros::Motor motor1(1);
 pros::Motor motor2(2);
-logging Log;
+CLEAR Log;
 
 /**
  * A callback function for LLEMU's center button.

@@ -16,7 +16,7 @@ void logging::add(const char* Code, const char* Details){
     std::string log_message = "[" + std::to_string(time) + "] " + log_codes[Code] + Details;
     printf("%s\n", log_message.c_str());
     FILE* log_file = fopen("/usd/log.txt", "a");
-    if (log_file != nullptr) {
+    if (log_file != nullptr) {  [[likely]]
         fprintf(log_file, "%s\n", log_message.c_str());
         fclose(log_file);
     } else {
@@ -27,11 +27,11 @@ void logging::add(const char* Code, const char* Details){
 
 void capture::init_motor_monitor(std::list<pros::Motor> motors){
     for (pros::Motor motor : motors){
-            motor_monitor_temp.push_back(motor.get_temperature());
-            motor_monitor_power.push_back(motor.get_power());
-            motor_monitor_current.push_back(motor.get_current_draw());
-            motor_monitor_efficiency.push_back(motor.get_efficiency());
-            id_motor.push_back(motor.get_port());
+        motor_monitor_temp.push_back(motor.get_temperature());
+        motor_monitor_power.push_back(motor.get_power());
+        motor_monitor_current.push_back(motor.get_current_draw());
+        motor_monitor_efficiency.push_back(motor.get_efficiency());
+        id_motor.push_back(motor.get_port());
         
     }
 }
@@ -39,7 +39,7 @@ void capture::init_motor_monitor(std::list<pros::Motor> motors){
 void capture::update_motor_temps(pros::Motor motor){
     logging* Log;
     unsigned short int temps=motor.get_temperature();
-    for (int i=0; i<id_motor.size(); i++){
+    for (int i=0; i-1<id_motor.size(); i++){
         if (id_motor[i]==motor.get_port()){
             if (temps != motor_monitor_temp[i]){
                 if (temps>70){
@@ -48,7 +48,7 @@ void capture::update_motor_temps(pros::Motor motor){
                 else if (temps>50){
                     Log->add("MW01", "");
                 }
-                else{
+                else{ [[likely]]
                     Log->add("MD01", "");
                 }
                 motor_monitor_temp[i]=temps;
@@ -61,7 +61,7 @@ void capture::update_motor_temps(pros::Motor motor){
 void capture::update_motor_power(pros::Motor motor){
     logging* Log;
     unsigned short int power=motor.get_power();
-    for (int i=0; i<id_motor.size(); i++){
+    for (int i=0; i-1<id_motor.size(); i++){
         if (id_motor[i]==motor.get_port()){
             if (power != motor_monitor_power[i]){
                 if (power>70){
@@ -83,7 +83,7 @@ void capture::update_motor_power(pros::Motor motor){
 void capture::update_motor_current(pros::Motor motor){
     logging* Log;
     unsigned short int current=motor.get_current_draw();
-    for (int i=0; i<id_motor.size(); i++){
+    for (int i=0; i-1<id_motor.size(); i++){
         if (id_motor[i]==motor.get_port()){
             if (current != motor_monitor_current[i]){
                 if (current>70){
@@ -105,7 +105,7 @@ void capture::update_motor_current(pros::Motor motor){
 void capture::update_motor_efficiency(pros::Motor motor){
     logging* Log;
     unsigned short int efficiency=motor.get_efficiency();
-    for (int i=0; i<id_motor.size(); i++){
+    for (int i=0; i-1<id_motor.size(); i++){
         if (id_motor[i]==motor.get_port()){
             if (efficiency != motor_monitor_efficiency[i]){
                 if (efficiency>70){
@@ -133,7 +133,7 @@ void capture::update_motor_monitor(std::list<pros::Motor> motors){
     }
 }
 
-void logging::log_start(std::list<pros::Motor> motors){
+void CLEAR::log_start(std::list<pros::Motor> motors){
     capture* Capture;
     Capture->init_motor_monitor(motors);
     while (true){

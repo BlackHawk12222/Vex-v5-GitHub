@@ -2,7 +2,7 @@
 #define CLEAR_HPP
 #include "main.h"
 #include <list>
-#include <unordered_map>
+#include <map>
 
 class logging{
  public:   
@@ -11,7 +11,7 @@ class logging{
 
  private:
     long unsigned int index = 0;
-    std::unordered_map<std::string, std::string> log_codes={
+    std::map<std::string, std::string> log_codes={
         {"MD01", "Motor DATA: Temps Normal. Temps: "},
         {"MD02", "Motor DATA: Power Normal. Power: "},
         {"MD03", "Motor DATA: Current Normal. Current: "},

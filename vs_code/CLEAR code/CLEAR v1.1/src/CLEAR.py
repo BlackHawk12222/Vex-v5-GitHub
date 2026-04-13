@@ -1394,7 +1394,7 @@ class Log():
         self.add("DS0", "")
         
         while True:
-            for i in range(20):
+            for _ in range(20):
                 speed2=log_time.time()
 
                 if not recording.record and log_battery:
@@ -1588,6 +1588,12 @@ class Log():
                 log.add_logstart("log.capture.system.control(%s)"%(item.replace("'", "")))
             
             del item_type
+        
+        _exec=exec
+        async_battery=self.async_battery
+        asyncio_sleep=uasyncio.sleep_ms
+        async_memory=self.async_memory
+        async_modules=self.async_modules
 
         del auto_do_variables, auto_do_three_wire, auto_do_control, auto_do_smart_port, auto_do_motors, auto_do_controller
         # Loads extra funtions from file.
@@ -1598,28 +1604,30 @@ class Log():
             addedfuntion=""
             added_bytes=compile("", '<string>' ,'exec', 0,  True, 2)
 
-        timer=log_time
+        timer=log_time.time
 
         while True:
-            for i in range(20):
+            for _ in range(20):
 
-                start:int=timer.time()
+                start:int=timer()
 
-                await self.async_exec(added_bytes)
+                _exec(added_bytes)
 
                 if not recording.record:
                     if log_memory:
-                        await self.async_memory()
+                        await async_memory()
 
                     if log_modules:
-                        await self.async_modules()
+                        await async_modules()
 
                     if log_battery:
-                        await self.async_battery()
+                        await async_battery()
+                    
+                    print(timer()-start)
 
-                    await uasyncio.sleep_ms(wait_time_logging - (timer.time() - start))
+                    await asyncio_sleep(wait_time_logging - (timer() - start))
                 else:
-                    await uasyncio.sleep_ms(wait_time_recording - (timer.time() - start))
+                    await asyncio_sleep(wait_time_recording - (timer() - start))
                 
                 del start
 
@@ -1937,28 +1945,7 @@ class Settings():
                 dict_stuff=line.split(":")
 
                 if len(dict_stuff) >= 2:
-                    self.settings[dict_stuff[0]]=dict_stuff[1]
-
-class interface():
-    continue_=True
-    version_number="v1.1"
-
-    @classmethod
-    def __call__(cls):
-        interface.menu()
-    
-    @classmethod
-    def menu(cls):
-        cls.continue_=True
-        print("CLEAR %s select option")
-
-    @classmethod
-    def change(cls):
-        pass
-    
-    @classmethod
-    def close(cls):
-        cls.continue_=False      
+                    self.settings[dict_stuff[0]]=dict_stuff[1]      
 
 settings=Settings()
 log=Log()

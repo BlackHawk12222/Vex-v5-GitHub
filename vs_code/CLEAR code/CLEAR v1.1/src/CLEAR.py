@@ -702,8 +702,8 @@ class Log():
 
             voltage:int=int(brain.battery.voltage(VoltageUnits.VOLT))
             current:int=int(brain.battery.current(CurrentUnits.AMP))
-            capacity:int=int(brain.battery.capacity())
-            watts:int=int(brain.battery.current(CurrentUnits.AMP) * brain.battery.voltage(VoltageUnits.VOLT))
+            capacity:int=brain.battery.capacity()
+            watts:int=int(brain.battery.current(CurrentUnits.AMP)) * int(brain.battery.voltage(VoltageUnits.VOLT))
 
             # Battery monitoring for voltage, capacity, and current.
             if voltage>=12:
@@ -927,19 +927,19 @@ class Log():
             """
 
             speed=log_time.time()
-            archivelist=""
+            archivelist=bytearray()
             try:
                 log.adding=False
                 reversecodes={value: key for key, value in log.codes.items()}
-                logfile=brain.sdcard.loadfile("Log.csv").decode(log.format)
-                loglist=logfile.split("\n")
+                logfile=brain.sdcard.loadfile("Log.csv")
+                loglist=logfile.split(b"\n")
                 for i in range(len(loglist)):
-                    logline=loglist[i].split(':')
+                    logline=loglist[i].split(b':')
                     print("For code Split took: ", log_time.time()-speed)
                     if len(logline)>=4:
                         loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
-                        archivelist+=str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n'
-                brain.sdcard.appendfile("loghistory.txt", bytearray(archivelist, log.format))
+                        archivelist+=b"%s %s %s \n"%(logline[0], reversecodes.get(loglines), logline[3])
+                brain.sdcard.appendfile("loghistory.txt", archivelist)
                 log.clear()
                 log.adding=True
                 del logfile, reversecodes, loglist, i, logline, archivelist
@@ -1003,8 +1003,8 @@ class Log():
 
             speed=log_time.time()
             index=0
-            with open("loghistory.txt", 'r') as file:
-                for line in file:
+            with open("loghistory.txt", 'rb') as file:
+                for _ in file:
                     index+=1
             brain.sdcard.savefile("index.txt", bytearray(str(index), log.format))
             log.add("DS2", str(log_time.time() - speed) + " MSEC")
@@ -1555,6 +1555,9 @@ class Log():
         else:
             auto_do_controller:bool=False
 
+        motors=[]
+        controllers=[]
+
         for item in globallogging:
 
             item_type=str(type(eval(item)))
@@ -1562,9 +1565,9 @@ class Log():
             if  (item_type == "<class 'int'>" or item_type == "<class 'bool'>" or item_type == "<class 'float'>") and auto_do_variables:
                 log.add_logstart("log.capture.variable('%s', %s)"%(item, item.replace("'", "")))
             elif item_type == "<class 'motor'>" and auto_do_motors:
-                log.add_logstart("log.capture.smartport.motor(%s)"%(item.replace("'", "")))
+                motors+=[eval(item)]
             elif item_type == "<class 'controller'>" and auto_do_controller:
-                log.add_logstart("log.capture.controller(%s)"%(item.replace("'", "")))
+                controllers+=[eval(item)]
             elif item_type == "<class 'inertial'>" and auto_do_smart_port:
                 log.add_logstart("log.capture.smartport.inertial(%s)"%(item.replace("'", "")))
             elif item_type == "<class 'optical'>" and auto_do_smart_port:
@@ -1597,6 +1600,8 @@ class Log():
         async_modules=self.async_modules
         timer =log_time.time
         gc_collect=gc.collect
+        motorcapture=log.capture.smartport.motor
+        controllercapture=log.capture.controller
         local_range=range
 
         # Loads extra funtions from file.
@@ -1611,20 +1616,31 @@ class Log():
             for _ in local_range(20):
 
                 start:int=timer()
+                
+                for controller in controllers:
+                    controllercapture(controller)
 
-                _exec(added_bytes)
+                _exec(added_bytes)  
 
                 if not recording.record:
+                    
+                    for motor in motors:
+                        motorcapture(motor)
+                    #print(timer()-start)
+
+                    
                     if log_memory:
                         await async_memory()
 
+                    
                     if log_modules:
                         await async_modules()
-
+                    
+                    start2=timer()
                     if log_battery:
                         await async_battery()
                     
-                    print(timer()-start)
+                    print(timer()-start2)
 
                     await asyncio_sleep(wait_time_logging - (timer() - start))
                 else:

@@ -927,50 +927,50 @@ class Log():
             """
 
             speed=log_time.time()
-            archivelist=bytearray()
-            try:
-                log.adding=False
-                reversecodes={value: key for key, value in log.codes.items()}
-                logfile=brain.sdcard.loadfile("Log.csv")
-                loglist=logfile.split(b"\n")
+            log.adding=False
+            reversecodes={value: key for key, value in log.codes.items()}
+            if brain.sdcard.filesize("Log.csv") < 300000:
+                archivelist=bytearray()  
+                logfile=brain.sdcard.loadfile("Log.csv").decode(log.format)
+                loglist=logfile.split("\n")
+                del logfile
                 for i in range(len(loglist)):
-                    logline=loglist[i].split(b':')
-                    print("For code Split took: ", log_time.time()-speed)
+                    logline=loglist[i].split(':')
                     if len(logline)>=4:
-                        loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
-                        archivelist+=b"%s %s %s \n"%(logline[0], reversecodes.get(loglines), logline[3])
+                        loglines= ":%s:%s:"%(logline[1], logline[2])
+                        archivelist.extend(b"%s %s %s \n"%(logline[0], reversecodes.get(loglines), logline[3]))
+                    del logline
+            
                 brain.sdcard.appendfile("loghistory.txt", archivelist)
                 log.clear()
                 log.adding=True
-                del logfile, reversecodes, loglist, i, logline, archivelist
-            except MemoryError: # If the log file is too big to load into memory, it will read the file line by line and write to the new file.
-                log.adding=False
-                reversecodes={value: key for key, value in log.codes.items()}
-                with open("Log.csv", 'r') as file:
-                    for line in file:
-                        speed2=log_time.time()
-                        logline=line.split(':')
-                        if len(logline)>=4:
-                            loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
-                            brain.sdcard.appendfile("loghistory.txt", bytearray(str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n', log.format))
-                        print("Archiving took: " + str(log_time.time() - speed2) + " MSEC")
+                
+            else:
+                with open("Log.csv", "r") as file:
+                    chunk_size=10240
+                    archivelist=bytearray()
+                    while True:
+                        chunk=file.read(chunk_size)
+                        if not chunk:
+                            break
+
+                        loglist=chunk.split("\n")
+                        for i in range(len(loglist)):
+                            logline=loglist[i].split(':')
+                            if len(logline)>=4:
+                                loglines= ":%s:%s:"%(logline[1], logline[2])
+                                archivelist.extend(b"%s %s %s \n"%(logline[0], reversecodes.get(loglines), logline[3]))
+                            del logline
+                        brain.sdcard.appendfile("loghistory.txt", archivelist)
+                        archivelist=bytearray()
+                        del chunk
+            
+                brain.sdcard.appendfile("loghistory.txt", archivelist)
                 log.clear()
                 log.adding=True
-                del reversecodes, loglist, i, logline, archivelist
-            except OSError: # If the log file is too big to load into memory, it will read the file line by line and write to the new file.
-                log.adding=False
-                reversecodes={value: key for key, value in log.codes.items()}
-                with open("Log.csv", 'r') as file:
-                    for line in file:
-                        speed2=log_time.time()
-                        logline=line.split(':')
-                        if len(logline)>=4:
-                            loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
-                            brain.sdcard.appendfile("loghistory.txt", bytearray(str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n', log.format))
-                        print("Archiving took: " + str(log_time.time() - speed2) + " MSEC")
-                log.clear()
-                log.adding=True
-                del reversecodes, loglist, i, logline, archivelist
+
+            del archivelist, loglines, loglist, i, reversecodes
+            gc.collect()
             log.add("DS1", str(log_time.time() - speed) + " MSEC")
             del speed
 
@@ -1003,9 +1003,15 @@ class Log():
 
             speed=log_time.time()
             index=0
+            chunk=bytes(2)
+            
             with open("loghistory.txt", 'rb') as file:
-                for _ in file:
-                    index+=1
+                chunk_size = 10240
+                while True:
+                    chunk = file.read(chunk_size)
+                    if not chunk:
+                        break
+                    index += chunk.count(b'\n')
             brain.sdcard.savefile("index.txt", bytearray(str(index), log.format))
             log.add("DS2", str(log_time.time() - speed) + " MSEC")
             del speed, index
@@ -1128,22 +1134,23 @@ class Log():
         if not brain.sdcard.exists("Log.csv"):
             brain.sdcard.savefile("Log.csv", bytearray("log Start: \n", self.format))
         else:
-            try:
+            if brain.sdcard.filesize("Log.csv") < 300000:
                 log_lines=brain.sdcard.loadfile("Log.csv").decode(self.format).split("\n")
-            except MemoryError: # If the log file is too big to load into memory, it will read the file line by line and count the number of lines to set the index.
+                log_number=len(log_lines)
+            else:
                 print("Log.csv cannot be decoded.")
                 log_lines=[]
-                with open("Log.csv", 'r') as log_file:
-                    for line in log_file:
-                        log_number+=1
+                with open("Log.csv", 'rb') as log_file:
+                    chunk_size=10240
+                    while True:
+                        chunk=log_file.read(chunk_size)
+                        if not chunk:
+                            break
+
+                        log_number+=chunk.count(b'\n')
+
                 print("Log done")
-            except OSError: # Same as the memory error but for an os error that works the same way.
-                print("Log.csv cannot be decoded trying step open.")
-                log_lines=[]
-                with open("Log.csv", 'r') as log_file:
-                    for line in log_file:
-                        log_number+=1
-                print("Log done")
+
             if not brain.sdcard.exists("loghistory.txt"):
                 brain.sdcard.savefile("loghistory.txt")
             
@@ -1152,7 +1159,7 @@ class Log():
 
             historyindex=int(brain.sdcard.loadfile("index.txt").decode(self.format))
 
-            self._index=len(log_lines) + log_number + historyindex - 1
+            self._index= log_number + historyindex - 1
 
             # Clears lists to free memory.
             del log_lines, log_number
@@ -1213,7 +1220,7 @@ class Log():
         adding=self.adding
 
         if not adding:
-            self._cache+= b", %d [%d] %s %s \n" % (index, log_time.time(), codes.get(add_code), add_details)
+            self._cache.extend(b", %d [%d] %s %s \n" % (index, log_time.time(), codes.get(add_code), add_details))
             return ""
         else:
             if self._cache:
@@ -1462,18 +1469,10 @@ class Log():
     async def async_modules(self):
         self.capture.system.modules()
     
-    async def async_exec(self, funtion):
-        exec(funtion)
-    
-    async def async_sleep(self):
-        await uasyncio.sleep(0)
-    
     async def async_archive_log(self):
         self.archive.log()
         self.archive.index_history()
     
-
-
     async def auto_start_loop(self):
         self.format:str=str(settings.settings.get('format_used '))
         self.tolrance:int=int(str(settings.settings.get('default_tolrance ')))
@@ -1626,21 +1625,17 @@ class Log():
                     
                     for motor in motors:
                         motorcapture(motor)
-                    #print(timer()-start)
-
-                    
+   
                     if log_memory:
                         await async_memory()
 
-                    
                     if log_modules:
                         await async_modules()
                     
-                    start2=timer()
                     if log_battery:
                         await async_battery()
                     
-                    print(timer()-start2)
+                    print(timer()-start)
 
                     await asyncio_sleep(wait_time_logging - (timer() - start))
                 else:

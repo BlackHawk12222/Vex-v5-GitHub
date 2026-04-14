@@ -83,7 +83,7 @@ void capture::update_motor_power(pros::Motor motor){
 void capture::update_motor_current(pros::Motor motor){
     logging* Log;
     unsigned short int current=motor.get_current_draw();
-    for (int i=0; i-1<id_motor.size(); i++){
+    for (int i=0; i<id_motor.size(); i++){
         if (id_motor[i]==motor.get_port()){
             if (current != motor_monitor_current[i]){
                 if (current>70){
@@ -105,7 +105,7 @@ void capture::update_motor_current(pros::Motor motor){
 void capture::update_motor_efficiency(pros::Motor motor){
     logging* Log;
     unsigned short int efficiency=motor.get_efficiency();
-    for (int i=0; i-1<id_motor.size(); i++){
+    for (int i=0; i<id_motor.size(); i++){
         if (id_motor[i]==motor.get_port()){
             if (efficiency != motor_monitor_efficiency[i]){
                 if (efficiency>70){

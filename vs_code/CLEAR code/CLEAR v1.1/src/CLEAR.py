@@ -702,8 +702,8 @@ class Log():
 
             voltage:int=int(brain.battery.voltage(VoltageUnits.VOLT))
             current:int=int(brain.battery.current(CurrentUnits.AMP))
-            capacity:int=int(brain.battery.capacity())
-            watts:int=int(brain.battery.current(CurrentUnits.AMP) * brain.battery.voltage(VoltageUnits.VOLT))
+            capacity:int=brain.battery.capacity()
+            watts:int=int(brain.battery.current(CurrentUnits.AMP)) * int(brain.battery.voltage(VoltageUnits.VOLT))
 
             # Battery monitoring for voltage, capacity, and current.
             if voltage>=12:
@@ -927,50 +927,50 @@ class Log():
             """
 
             speed=log_time.time()
-            archivelist=""
-            try:
-                log.adding=False
-                reversecodes={value: key for key, value in log.codes.items()}
+            log.adding=False
+            reversecodes={value: key for key, value in log.codes.items()}
+            if brain.sdcard.filesize("Log.csv") < 300000:
+                archivelist=bytearray()  
                 logfile=brain.sdcard.loadfile("Log.csv").decode(log.format)
                 loglist=logfile.split("\n")
+                del logfile
                 for i in range(len(loglist)):
                     logline=loglist[i].split(':')
-                    print("For code Split took: ", log_time.time()-speed)
                     if len(logline)>=4:
-                        loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
-                        archivelist+=str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n'
-                brain.sdcard.appendfile("loghistory.txt", bytearray(archivelist, log.format))
+                        loglines= ":%s:%s:"%(logline[1], logline[2])
+                        archivelist.extend(b"%s %s %s \n"%(logline[0], reversecodes.get(loglines), logline[3]))
+                    del logline
+            
+                brain.sdcard.appendfile("loghistory.txt", archivelist)
                 log.clear()
                 log.adding=True
-                del logfile, reversecodes, loglist, i, logline, archivelist
-            except MemoryError: # If the log file is too big to load into memory, it will read the file line by line and write to the new file.
-                log.adding=False
-                reversecodes={value: key for key, value in log.codes.items()}
-                with open("Log.csv", 'r') as file:
-                    for line in file:
-                        speed2=log_time.time()
-                        logline=line.split(':')
-                        if len(logline)>=4:
-                            loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
-                            brain.sdcard.appendfile("loghistory.txt", bytearray(str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n', log.format))
-                        print("Archiving took: " + str(log_time.time() - speed2) + " MSEC")
+                
+            else:
+                with open("Log.csv", "r") as file:
+                    chunk_size=10240
+                    archivelist=bytearray()
+                    while True:
+                        chunk=file.read(chunk_size)
+                        if not chunk:
+                            break
+
+                        loglist=chunk.split("\n")
+                        for i in range(len(loglist)):
+                            logline=loglist[i].split(':')
+                            if len(logline)>=4:
+                                loglines= ":%s:%s:"%(logline[1], logline[2])
+                                archivelist.extend(b"%s %s %s \n"%(logline[0], reversecodes.get(loglines), logline[3]))
+                            del logline
+                        brain.sdcard.appendfile("loghistory.txt", archivelist)
+                        archivelist=bytearray()
+                        del chunk
+            
+                brain.sdcard.appendfile("loghistory.txt", archivelist)
                 log.clear()
                 log.adding=True
-                del reversecodes, loglist, i, logline, archivelist
-            except OSError: # If the log file is too big to load into memory, it will read the file line by line and write to the new file.
-                log.adding=False
-                reversecodes={value: key for key, value in log.codes.items()}
-                with open("Log.csv", 'r') as file:
-                    for line in file:
-                        speed2=log_time.time()
-                        logline=line.split(':')
-                        if len(logline)>=4:
-                            loglines= ":" + str(logline[1]) + ":" + str(logline[2]) + ": "
-                            brain.sdcard.appendfile("loghistory.txt", bytearray(str(logline[0]) + str(reversecodes.get(loglines)) + str(logline[3]) + '\n', log.format))
-                        print("Archiving took: " + str(log_time.time() - speed2) + " MSEC")
-                log.clear()
-                log.adding=True
-                del reversecodes, loglist, i, logline, archivelist
+
+            del archivelist, loglines, loglist, i, reversecodes
+            gc.collect()
             log.add("DS1", str(log_time.time() - speed) + " MSEC")
             del speed
 
@@ -1003,9 +1003,15 @@ class Log():
 
             speed=log_time.time()
             index=0
-            with open("loghistory.txt", 'r') as file:
-                for line in file:
-                    index+=1
+            chunk=bytes(2)
+            
+            with open("loghistory.txt", 'rb') as file:
+                chunk_size = 10240
+                while True:
+                    chunk = file.read(chunk_size)
+                    if not chunk:
+                        break
+                    index += chunk.count(b'\n')
             brain.sdcard.savefile("index.txt", bytearray(str(index), log.format))
             log.add("DS2", str(log_time.time() - speed) + " MSEC")
             del speed, index
@@ -1062,13 +1068,12 @@ class Log():
     def __init__(self):
         self.capture=self.Capture()
         self.archive=self.Archive()
-        self.index:int=0
+        self._index:int=0
         self.adding:bool=True  # Used to pause logging.
         self.format:str="utf-8"  # General format for all files in the code.
-        self.cache:bytearray=bytearray()
+        self._cache:bytearray=bytearray()
         self.brainscreen:bool=False  # Used to see if need to print to brain screen.
         self.tolrance:int=3  # tolerance for controller stick diffrence when not recording and for general tolrance for sensors.
-        self.manual_control:bool=False
         self.printing:bool=True
         self.logging:bool=True
 
@@ -1129,22 +1134,23 @@ class Log():
         if not brain.sdcard.exists("Log.csv"):
             brain.sdcard.savefile("Log.csv", bytearray("log Start: \n", self.format))
         else:
-            try:
+            if brain.sdcard.filesize("Log.csv") < 300000:
                 log_lines=brain.sdcard.loadfile("Log.csv").decode(self.format).split("\n")
-            except MemoryError: # If the log file is too big to load into memory, it will read the file line by line and count the number of lines to set the index.
+                log_number=len(log_lines)
+            else:
                 print("Log.csv cannot be decoded.")
                 log_lines=[]
-                with open("Log.csv", 'r') as log_file:
-                    for line in log_file:
-                        log_number+=1
+                with open("Log.csv", 'rb') as log_file:
+                    chunk_size=10240
+                    while True:
+                        chunk=log_file.read(chunk_size)
+                        if not chunk:
+                            break
+
+                        log_number+=chunk.count(b'\n')
+
                 print("Log done")
-            except OSError: # Same as the memory error but for an os error that works the same way.
-                print("Log.csv cannot be decoded trying step open.")
-                log_lines=[]
-                with open("Log.csv", 'r') as log_file:
-                    for line in log_file:
-                        log_number+=1
-                print("Log done")
+
             if not brain.sdcard.exists("loghistory.txt"):
                 brain.sdcard.savefile("loghistory.txt")
             
@@ -1153,7 +1159,7 @@ class Log():
 
             historyindex=int(brain.sdcard.loadfile("index.txt").decode(self.format))
 
-            self.index=len(log_lines) + log_number + historyindex - 1
+            self._index= log_number + historyindex - 1
 
             # Clears lists to free memory.
             del log_lines, log_number
@@ -1210,21 +1216,21 @@ class Log():
         codes=self.codes
         brainscreen=self.brainscreen
         record=recording.record
-        index=self.index
+        index=self._index
         adding=self.adding
 
         if not adding:
-            self.cache+= b", %d [%d] %s %s \n" % (index, log_time.time(), codes.get(add_code), add_details)
+            self._cache.extend(b", %d [%d] %s %s \n" % (index, log_time.time(), codes.get(add_code), add_details))
             return ""
         else:
-            if self.cache:
+            if self._cache:
                 if self.printing:
-                    print(self.cache.decode(self.format))
+                    print(self._cache.decode(self.format))
                 if self.logging:
-                    uasyncio.create_task(self.append_log(self.cache.decode(self.format)))
+                    uasyncio.create_task(self.append_log(self._cache.decode(self.format)))
                 if brainscreen:
-                    uasyncio.create_task(self.brain_read(self.cache.decode(self.format)))
-                self.cache=bytearray()
+                    uasyncio.create_task(self.brain_read(self._cache.decode(self.format)))
+                self._cache=bytearray()
                 return ""
     
         
@@ -1242,7 +1248,7 @@ class Log():
         if brainscreen:  # Checks if pinting to brainscreen is enabled.
             uasyncio.create_task(self.brain_read(entry))
 
-        self.index += 1
+        self._index += 1
 
         return entry
         
@@ -1394,7 +1400,7 @@ class Log():
         self.add("DS0", "")
         
         while True:
-            for i in range(20):
+            for _ in range(20):
                 speed2=log_time.time()
 
                 if not recording.record and log_battery:
@@ -1463,18 +1469,10 @@ class Log():
     async def async_modules(self):
         self.capture.system.modules()
     
-    async def async_exec(self, funtion):
-        exec(funtion)
-    
-    async def async_sleep(self):
-        await uasyncio.sleep(0)
-    
     async def async_archive_log(self):
         self.archive.log()
         self.archive.index_history()
     
-
-
     async def auto_start_loop(self):
         self.format:str=str(settings.settings.get('format_used '))
         self.tolrance:int=int(str(settings.settings.get('default_tolrance ')))
@@ -1556,6 +1554,9 @@ class Log():
         else:
             auto_do_controller:bool=False
 
+        motors=[]
+        controllers=[]
+
         for item in globallogging:
 
             item_type=str(type(eval(item)))
@@ -1563,9 +1564,9 @@ class Log():
             if  (item_type == "<class 'int'>" or item_type == "<class 'bool'>" or item_type == "<class 'float'>") and auto_do_variables:
                 log.add_logstart("log.capture.variable('%s', %s)"%(item, item.replace("'", "")))
             elif item_type == "<class 'motor'>" and auto_do_motors:
-                log.add_logstart("log.capture.smartport.motor(%s)"%(item.replace("'", "")))
+                motors+=[eval(item)]
             elif item_type == "<class 'controller'>" and auto_do_controller:
-                log.add_logstart("log.capture.controller(%s)"%(item.replace("'", "")))
+                controllers+=[eval(item)]
             elif item_type == "<class 'inertial'>" and auto_do_smart_port:
                 log.add_logstart("log.capture.smartport.inertial(%s)"%(item.replace("'", "")))
             elif item_type == "<class 'optical'>" and auto_do_smart_port:
@@ -1587,9 +1588,21 @@ class Log():
             elif item_type == "<class 'competition'>" and auto_do_control:
                 log.add_logstart("log.capture.system.control(%s)"%(item.replace("'", "")))
             
-            del item_type
+            del item_type            
 
-        del auto_do_variables, auto_do_three_wire, auto_do_control, auto_do_smart_port, auto_do_motors, auto_do_controller
+        del auto_do_variables, auto_do_three_wire, auto_do_control, auto_do_smart_port, auto_do_motors, auto_do_controller, globallogging
+
+        _exec=exec
+        async_battery=self.async_battery
+        asyncio_sleep=uasyncio.sleep_ms
+        async_memory=self.async_memory
+        async_modules=self.async_modules
+        timer =log_time.time
+        gc_collect=gc.collect
+        motorcapture=log.capture.smartport.motor
+        controllercapture=log.capture.controller
+        local_range=range
+
         # Loads extra funtions from file.
         try:
             addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
@@ -1598,33 +1611,40 @@ class Log():
             addedfuntion=""
             added_bytes=compile("", '<string>' ,'exec', 0,  True, 2)
 
-        timer=log_time
-
         while True:
-            for i in range(20):
+            for _ in local_range(20):
 
-                start:int=timer.time()
+                start:int=timer()
+                
+                for controller in controllers:
+                    controllercapture(controller)
 
-                await self.async_exec(added_bytes)
+                _exec(added_bytes)  
 
                 if not recording.record:
+                    
+                    for motor in motors:
+                        motorcapture(motor)
+   
                     if log_memory:
-                        await self.async_memory()
+                        await async_memory()
 
                     if log_modules:
-                        await self.async_modules()
-
+                        await async_modules()
+                    
                     if log_battery:
-                        await self.async_battery()
+                        await async_battery()
+                    
+                    print(timer()-start)
 
-                    await uasyncio.sleep_ms(wait_time_logging - (timer.time() - start))
+                    await asyncio_sleep(wait_time_logging - (timer() - start))
                 else:
-                    await uasyncio.sleep_ms(wait_time_recording - (timer.time() - start))
+                    await asyncio_sleep(wait_time_recording - (timer() - start))
                 
                 del start
 
             if gc_use:
-                gc.collect()
+                gc_collect()
         
     def auto_start(self):
         """
@@ -1937,29 +1957,30 @@ class Settings():
                 dict_stuff=line.split(":")
 
                 if len(dict_stuff) >= 2:
-                    self.settings[dict_stuff[0]]=dict_stuff[1]
+                    self.settings[dict_stuff[0]]=dict_stuff[1]    
 
-class interface():
-    continue_=True
-    version_number="v1.1"
+class Sync():
+    def __init__(self):
+        self.sync=False
+        self.SyncTimer=Timer()
 
-    @classmethod
-    def __call__(cls):
-        interface.menu()
-    
-    @classmethod
-    def menu(cls):
-        cls.continue_=True
-        print("CLEAR %s select option")
+    def syncronize(self):
+        compared_Volts=brain.battery.voltage(VoltageUnits.MV)
+        start=self.SyncTimer.time()
+        while compared_Volts != brain.battery.voltage(VoltageUnits.MV):
+            wait(1, MSEC)
+        end=self.SyncTimer.time()
+        time=end-start
+        while True:
+            print("Start")
+            self.sync=False
+            wait(20-time, MSEC)
+            self.sync=True
+            print("Update", 20-time)
 
-    @classmethod
-    def change(cls):
-        pass
-    
-    @classmethod
-    def close(cls):
-        cls.continue_=False      
+        
 
 settings=Settings()
 log=Log()
 recording=Recording()
+sync=Sync()

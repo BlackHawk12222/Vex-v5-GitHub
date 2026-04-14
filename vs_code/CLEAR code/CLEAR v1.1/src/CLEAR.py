@@ -1062,13 +1062,12 @@ class Log():
     def __init__(self):
         self.capture=self.Capture()
         self.archive=self.Archive()
-        self.index:int=0
+        self._index:int=0
         self.adding:bool=True  # Used to pause logging.
         self.format:str="utf-8"  # General format for all files in the code.
-        self.cache:bytearray=bytearray()
+        self._cache:bytearray=bytearray()
         self.brainscreen:bool=False  # Used to see if need to print to brain screen.
         self.tolrance:int=3  # tolerance for controller stick diffrence when not recording and for general tolrance for sensors.
-        self.manual_control:bool=False
         self.printing:bool=True
         self.logging:bool=True
 
@@ -1153,7 +1152,7 @@ class Log():
 
             historyindex=int(brain.sdcard.loadfile("index.txt").decode(self.format))
 
-            self.index=len(log_lines) + log_number + historyindex - 1
+            self._index=len(log_lines) + log_number + historyindex - 1
 
             # Clears lists to free memory.
             del log_lines, log_number
@@ -1210,21 +1209,21 @@ class Log():
         codes=self.codes
         brainscreen=self.brainscreen
         record=recording.record
-        index=self.index
+        index=self._index
         adding=self.adding
 
         if not adding:
-            self.cache+= b", %d [%d] %s %s \n" % (index, log_time.time(), codes.get(add_code), add_details)
+            self._cache+= b", %d [%d] %s %s \n" % (index, log_time.time(), codes.get(add_code), add_details)
             return ""
         else:
-            if self.cache:
+            if self._cache:
                 if self.printing:
-                    print(self.cache.decode(self.format))
+                    print(self._cache.decode(self.format))
                 if self.logging:
-                    uasyncio.create_task(self.append_log(self.cache.decode(self.format)))
+                    uasyncio.create_task(self.append_log(self._cache.decode(self.format)))
                 if brainscreen:
-                    uasyncio.create_task(self.brain_read(self.cache.decode(self.format)))
-                self.cache=bytearray()
+                    uasyncio.create_task(self.brain_read(self._cache.decode(self.format)))
+                self._cache=bytearray()
                 return ""
     
         
@@ -1242,7 +1241,7 @@ class Log():
         if brainscreen:  # Checks if pinting to brainscreen is enabled.
             uasyncio.create_task(self.brain_read(entry))
 
-        self.index += 1
+        self._index += 1
 
         return entry
         
@@ -1587,15 +1586,19 @@ class Log():
             elif item_type == "<class 'competition'>" and auto_do_control:
                 log.add_logstart("log.capture.system.control(%s)"%(item.replace("'", "")))
             
-            del item_type
-        
+            del item_type            
+
+        del auto_do_variables, auto_do_three_wire, auto_do_control, auto_do_smart_port, auto_do_motors, auto_do_controller, globallogging
+
         _exec=exec
         async_battery=self.async_battery
         asyncio_sleep=uasyncio.sleep_ms
         async_memory=self.async_memory
         async_modules=self.async_modules
+        timer =log_time.time
+        gc_collect=gc.collect
+        local_range=range
 
-        del auto_do_variables, auto_do_three_wire, auto_do_control, auto_do_smart_port, auto_do_motors, auto_do_controller
         # Loads extra funtions from file.
         try:
             addedfuntion=brain.sdcard.loadfile("Logstart.txt").decode(self.format)
@@ -1604,10 +1607,8 @@ class Log():
             addedfuntion=""
             added_bytes=compile("", '<string>' ,'exec', 0,  True, 2)
 
-        timer=log_time.time
-
         while True:
-            for _ in range(20):
+            for _ in local_range(20):
 
                 start:int=timer()
 
@@ -1632,7 +1633,7 @@ class Log():
                 del start
 
             if gc_use:
-                gc.collect()
+                gc_collect()
         
     def auto_start(self):
         """
@@ -1945,8 +1946,30 @@ class Settings():
                 dict_stuff=line.split(":")
 
                 if len(dict_stuff) >= 2:
-                    self.settings[dict_stuff[0]]=dict_stuff[1]      
+                    self.settings[dict_stuff[0]]=dict_stuff[1]    
+
+class Sync():
+    def __init__(self):
+        self.sync=False
+        self.SyncTimer=Timer()
+
+    def syncronize(self):
+        compared_Volts=brain.battery.voltage(VoltageUnits.MV)
+        start=self.SyncTimer.time()
+        while compared_Volts != brain.battery.voltage(VoltageUnits.MV):
+            wait(1, MSEC)
+        end=self.SyncTimer.time()
+        time=end-start
+        while True:
+            print("Start")
+            self.sync=False
+            wait(20-time, MSEC)
+            self.sync=True
+            print("Update", 20-time)
+
+        
 
 settings=Settings()
 log=Log()
 recording=Recording()
+sync=Sync()

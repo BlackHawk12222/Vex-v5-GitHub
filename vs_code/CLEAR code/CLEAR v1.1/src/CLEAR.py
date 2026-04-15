@@ -987,9 +987,20 @@ class Log():
             filename=str(recordingname).replace(".txt", "_archived.txt")
             brain.sdcard.savefile(filename)
             with open(recordingname, 'r') as recording:
-                for line in recording:
-                    prelist=line.split(' ')
-                    brain.sdcard.appendfile(filename, bytearray("%s %s %s %s \n" %(prelist[2], prelist[9], prelist[10], prelist[11]), log.format))
+                chunk_size=10240
+                buffer=bytearray()
+                while True:
+                    chunk=recording.read(chunk_size)
+                    if not chunk:
+                        break
+                    
+                    list=chunk.split("\n")
+                    for line in list:
+                        prelist=line.split(' ')
+                        buffer.extend(b"%s %s %s %s \n" %(prelist[2], prelist[9], prelist[10], prelist[11]))
+                    brain.sdcard.appendfile(filename, buffer)
+
+                
             brain.sdcard.savefile(recordingname)
             log.add("DS3", recordingname)
 
@@ -1076,6 +1087,7 @@ class Log():
         self.tolrance:int=3  # tolerance for controller stick diffrence when not recording and for general tolrance for sensors.
         self.printing:bool=True
         self.logging:bool=True
+        self.buffer=bytearray(500)
 
         brain.sdcard.savefile("Logstart.txt")  # Clears Logstart file for refresh of instructions in it.
 
@@ -1233,7 +1245,6 @@ class Log():
                 self._cache=bytearray()
                 return ""
     
-        
         entry = ", %d [%d] %s %s \n" % (index, log_time.time(), codes.get(add_code), add_details)
 
         if self.printing:
@@ -1459,7 +1470,6 @@ class Log():
 
         brain.sdcard.appendfile("Logstart.txt" , bytearray(funtion + ", ", self.format))
     
-
     async def async_battery(self):
         self.capture.battery()
     
@@ -1597,7 +1607,7 @@ class Log():
         asyncio_sleep=uasyncio.sleep_ms
         async_memory=self.async_memory
         async_modules=self.async_modules
-        timer =log_time.time
+        timer=log_time.time
         gc_collect=gc.collect
         motorcapture=log.capture.smartport.motor
         controllercapture=log.capture.controller
@@ -1610,6 +1620,8 @@ class Log():
         except AttributeError:
             addedfuntion=""
             added_bytes=compile("", '<string>' ,'exec', 0,  True, 2)
+        
+        gc_collect()
 
         while True:
             for _ in local_range(20):
@@ -1764,9 +1776,11 @@ class Recording:
         other5stop=str(other5stop).split(' ')
         other6stop=str(other6stop).split(' ')
 
-        try:
+        if brain.sdcard.filesize(Aton + "_pre.txt") < 300000:
             preatonfile=brain.sdcard.loadfile(Aton + "_pre.txt")
             preatonlist=preatonfile.decode(log.format).split("\n")
+            del preatonfile
+
             for i in range(len(preatonlist)):
                 prelist=str(preatonlist[i]).split(',')
                 try:
@@ -1822,7 +1836,7 @@ class Recording:
                         if len(prelist2) >= 3:
                             brain.sdcard.appendfile(filename, bytearray("wait(" + str(abs(int(prelist[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')) - int(prelist2[3].replace("[", '').replace("]", '').replace("'", '').replace("'", '')))) + ", MSEC), ", log.format))
         
-        except MemoryError: # If the preatonfile is too big to load into memory, it will read the file line by line and write to the new file.
+        else:
             preatonlist=[]
             with open(Aton + "_pre.txt", 'r') as f:
                 for line in f:
@@ -1896,17 +1910,18 @@ class Recording:
         """
 
         log.add("DA3", Aton + ".txt")
-        try:
+        if brain.sdcard.filesize(Aton+ ".txt") < 200000:
             Atonfile=brain.sdcard.loadfile(Aton + ".txt")
             exec(Atonfile.decode(log.format))
-        except MemoryError:
-            with open(Aton + ".txt", 'r') as f:
-                for line in f:
-                    for item in line.split(','):
-                        item = item.strip()
-                        if item:
-                            exec(item)
+        else:
+            with open(Aton + ".txt") as Atonfile:
+                chunk_size=20480
+                while True:
+                    chunk=Atonfile.read(chunk_size)
+                    if not chunk:
+                        break
 
+                    exec(chunk)
 class Settings():
     """Used to congigure the log in a more permenet way using the Sd card"""
 
@@ -1924,7 +1939,7 @@ class Settings():
             "log_modules": True,
             "log_battery": True,
             "logging_loop_wait": 200,
-            "recording_loop_wait": 0,
+            "recording_loop_wait": 20,
             "format_used": "utf-8",
             "auto_do_motors": True,
             "auto_do_variables": True,
@@ -1937,7 +1952,6 @@ class Settings():
             "distance_tolrance_MM": 100,
             "inertial_gyro_tolrance_DEGREES": 5,
             "inertial_axis_tolrance_Gs": 0.5,
-
         }
         if brain.sdcard.is_inserted() and not brain.sdcard.exists("settings.txt"):
             setting=""
@@ -1957,7 +1971,7 @@ class Settings():
                 dict_stuff=line.split(":")
 
                 if len(dict_stuff) >= 2:
-                    self.settings[dict_stuff[0]]=dict_stuff[1]    
+                    self.settings[dict_stuff[0]]=dict_stuff[1]   
 
 class Sync():
     def __init__(self):
@@ -1977,8 +1991,6 @@ class Sync():
             wait(20-time, MSEC)
             self.sync=True
             print("Update", 20-time)
-
-        
 
 settings=Settings()
 log=Log()

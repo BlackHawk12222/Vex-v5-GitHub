@@ -613,7 +613,7 @@ class Log():
             """
 
             self.voltage:int=int(brain.battery.voltage(VoltageUnits.VOLT))
-            self.current:int=int(brain.battery.current(CurrentUnits.AMP))
+            self.current:int=brain.battery.current(CurrentUnits.AMP)
             self.capacity:int=brain.battery.capacity()
             self.watts:int=int(brain.battery.current(CurrentUnits.AMP)) * int(brain.battery.voltage(VoltageUnits.VOLT))
 
@@ -644,15 +644,15 @@ class Log():
                     log.add("EB1", "%s"%(self.capacity))
                     self.battery_capacity_monitoring=self.capacity
             
-            if self.current<=5:
+            if self.current<=10:
                 if self.battery_current_monitoring==1 or self.battery_current_monitoring==2:
-                    log.add("DB1","%s"%(self.current))
+                    log.add("DB1", "%s"%(self.current))
                     self.battery_current_monitoring=0
-            elif self.current>13:
+            elif self.current>10:
                 if self.battery_current_monitoring==0 or self.battery_current_monitoring==1:
                     log.add("WB2", "%s"%(self.current))
                     self.battery_current_monitoring=2
-            elif self.current>18:
+            elif self.current>15:
                 if self.battery_current_monitoring==0 or self.battery_current_monitoring==2:
                     log.add("EB2", "%s"%(self.current))
                     self.battery_current_monitoring=1
@@ -961,8 +961,10 @@ class Log():
         self.tolrance:int=3  # tolerance for controller stick diffrence when not recording and for general tolrance for sensors.
         self.printing:bool=True
         self.logging:bool=True
-        self.buffer=bytearray(200)
+        self.buffer=bytearray(10240)
         self._bufferSize=0
+        self._buffer_offset=0
+        self._last_write=0
         self.speed=0
         self.Motors=[]
 
@@ -1071,8 +1073,12 @@ class Log():
         Args:
         entry= String
         """
-
-        brain.sdcard.appendfile("Log.csv", self.buffer[0:self._bufferSize])
+        if log_time.time()-self._last_write>3000 and self._bufferSize !=0: 
+            brain.sdcard.appendfile("Log.csv", self.buffer[0:self._buffer_offset])
+            print("saved.")
+            self._buffer_offset=0
+            self._last_write=log_time.time()
+            self._bufferSize=0
     
     def brain_read(self) -> None:
         """
@@ -1120,7 +1126,8 @@ class Log():
         self.entry=b", %d [%d] %s %s \n" %(self._index, log_time.time(), self.codes.get(add_code), add_details)
         self._bufferSize=len(self.entry)
 
-        ustruct.pack_into("=%ds"%(self._bufferSize), self.buffer, 0, self.entry)
+        ustruct.pack_into("=%ds"%(self._bufferSize), self.buffer, self._buffer_offset, self.entry)
+        self._buffer_offset+=self._bufferSize
 
         if self.logging:
             if recording.record:
@@ -1330,6 +1337,7 @@ class Log():
         gc_collect=gc.collect
         motorcapture=log.capture.smartport.motor
         controllercapture=log.capture.controller
+        log_check=log.append_log
         local_range=range
 
         # Loads extra funtions from file.
@@ -1345,8 +1353,8 @@ class Log():
 
         if log_modules:
             capture_modules()
-
-        self.archive.log()
+        if brain.sdcard.filesize("Log.csv") > 100000:
+            self.archive.log()
         self.archive.index_history()
         
         gc_collect()
@@ -1361,6 +1369,8 @@ class Log():
                         controllercapture(controller)
 
                 if not recording.record:
+                    log.append_log()
+
                     if addedfuntion:
                         _exec(added_bytes)
                     

@@ -934,15 +934,20 @@ class Log():
                 filelist=file.split(',')
                 for i in range(len(filelist)):
                     prelist=filelist[i].split(' ')
+                    print(prelist)
                     if len(prelist) >= 5:
-                        brain.sdcard.appendfile(filename, bytearray(str(prelist[0]) + " " + str(prelist[1]) + " " + str(prelist[2]) + " " + str(log.codes.get(prelist[3])) + str(prelist[4 : len(prelist)-1]) + "\n", log.format))
+                        detailslist=[item + " " for item in prelist[5 : len(prelist)-1]]
+                        details="".join(detailslist)
+                        brain.sdcard.appendfile(filename, bytearray(", %s %s %s %s \n"%(prelist[1], prelist[2], log.codes.get(prelist[4]), details), log.format))
                 print("Recall done.")
             except MemoryError: # Same thing as the last three exceptions.
                 with open("loghistory.txt", 'r') as file:
                     for line in file:
                         prelist=line.split(' ')
                         if len(prelist) >= 5:
-                            brain.sdcard.appendfile(filename, bytearray(str(prelist[0]) + " " + str(prelist[1]) + " " + str(prelist[2]) + " " + str(log.codes.get(prelist[3])) + str(prelist[4 : len(prelist)-1]) + "\n", log.format))
+                            detailslist=[item + " " for item in prelist[5 : len(prelist)-1]]
+                        details="".join(detailslist)
+                        brain.sdcard.appendfile(filename, bytearray(", %s %s %s %s \n"%(prelist[1], prelist[2], log.codes.get(prelist[4]), details), log.format))
                 print("Recall done.")
         
         def recall_recording(self, name: str) -> None:
@@ -1398,11 +1403,11 @@ class Log():
                     if log_battery:
                         capture_battery()
                     
-                    print(timer()-start)
+                    #print(timer()-start)
 
                     lwait(wait_time_logging - (timer() - start))
                 else:
-                    print(timer()-start)
+                    #print(timer()-start)
                     lwait(wait_time_recording - (timer() - start))
 
             if gc_use:

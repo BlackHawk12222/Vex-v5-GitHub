@@ -976,7 +976,7 @@ class Log():
         self.tolrance:int=3  # tolerance for controller stick diffrence when not recording and for general tolrance for sensors.
         self.printing:bool=True
         self.logging:bool=True
-        self.buffer=bytearray(10240)
+        self.buffer=bytearray(20480)
         self._bufferSize=0
         self._buffer_offset=0
         self._last_write=0
@@ -1086,7 +1086,7 @@ class Log():
         Args:
         entry= String
         """
-        if log_time.time()-self._last_write>3000 and self._bufferSize !=0: 
+        if (log_time.time()-self._last_write>3000 and self._bufferSize !=0) or self._buffer_offset > 1100: 
             brain.sdcard.appendfile("Log.csv", self.buffer[0:self._buffer_offset])
             print("saved.")
             self._buffer_offset=0

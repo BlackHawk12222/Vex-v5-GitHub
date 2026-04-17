@@ -121,7 +121,7 @@ class Log():
             def motor(self, motor: Motor|None=None) -> None:
                 """Capture for any general smart motor. Enter motor you wish to log as input. (Can take motor groups as well.)"""
 
-                if motor!=None:
+                if motor!=None and motor not in log.Motors:
                     log.Motors.append(motor)
 
                 for motor_ in log.Motors:
@@ -563,6 +563,7 @@ class Log():
             self.battery_capacity_monitoring=0
             self.battery_current_monitoring=0
             self.battery_watt_monitoring=0
+            self.battery_temp_monitoring=0
             self.voltage:int=0
             self.current:int=0
             self.capacity:int=0
@@ -616,6 +617,7 @@ class Log():
             self.current:int=brain.battery.current(CurrentUnits.AMP)
             self.capacity:int=brain.battery.capacity()
             self.watts:int=int(brain.battery.current(CurrentUnits.AMP)) * int(brain.battery.voltage(VoltageUnits.VOLT))
+            self.temps:int=int(brain.battery.temperature(PERCENT))
 
             # Battery monitoring for voltage, capacity, and current.
             if self.voltage>=12:
@@ -668,7 +670,20 @@ class Log():
             elif self.watts>200:
                 if self.battery_watt_monitoring==0 or self.battery_watt_monitoring==3:
                     log.add("EB3", "%s"%(self.watts))
-                    self.battery_watt_monitoring=1     
+                    self.battery_watt_monitoring=1  
+
+            if self.temps<=30:
+                if self.battery_temp_monitoring==1 or self.battery_temp_monitoring==2:
+                    log.add("DB4", "%s"%(self.temps))
+                    self.battery_temp_monitoring=0
+            elif self.temps>30:
+                if self.battery_temp_monitoring==0 or self.battery_temp_monitoring==1:
+                    log.add("WB4", "%s"%(self.temps))
+                    self.battery_temp_monitoring=2
+            elif self.temps>50:
+                if self.battery_watt_monitoring==0 or self.battery_temp_monitoring==3:
+                    log.add("EB4", "%s"%(self.temps))
+                    self.battery_temp_monitoring=1  
 
         def controller(self, controller: Controller) -> None:
             """
@@ -987,14 +1002,17 @@ class Log():
                 "EB1": ":Battery ERROR: Critically Low Battery. Capacity: ",
                 "EB2": ":Battery ERROR: Critically High Current. Current: ",
                 "EB3": ":Battery ERROR: Critically High Wattage. Wattage: ",
+                "EB4": ":Battery ERROR: Critically High Temps. Temps: ",
                 "WB0": ":Battery WARNING: Low Voltage. Voltage: ",
                 "WB1": ":Battery WARNING: Low Battery. capacity: ",
                 "WB2": ":Battery WARNING: High Current. Current: ",
                 "WB3": ":Battery WARNING: High Wattage. Wattage: ",
+                "WB4": ":Battery WARNING: High Temps. Temps: ",
                 "DB0": ":Battery DATA: Voltage Back To Normal. Voltage: ",
                 "DB1": ":Battery DATA: Current Back To Normal. Current: ",
                 "DB2": ":Battery DATA: Wattage Back To Normal. Wattage: ",
                 "DB3": ":Battery DATA: Capacity Changed. Capacity: ",
+                "DB4": ":Battery DATA: Temps Back To Normal. Temps: ",
                 "DA0": ":Aton DATA: Recording Started.: ",
                 "DA1": ":Aton DATA: Recording Stopped.: ",
                 "DA2": ":Aton DATA: Recording Saved.: ",
@@ -1345,11 +1363,11 @@ class Log():
         if addedfuntion:
             _exec(added_bytes)
 
+        self.archive.index_history()
         if log_modules:
             capture_modules()
         if brain.sdcard.filesize("Log.csv") > 100000:
             self.archive.log()
-        self.archive.index_history()
         
         gc_collect()
 
@@ -1380,17 +1398,15 @@ class Log():
                     if log_battery:
                         capture_battery()
                     
-                    #print(timer()-start)
+                    print(timer()-start)
 
                     lwait(wait_time_logging - (timer() - start))
                 else:
+                    print(timer()-start)
                     lwait(wait_time_recording - (timer() - start))
 
             if gc_use:
-                gc_collect() 
-    
-    def __call__(self) -> None:
-        logging=Thread(self.auto_start)
+                gc_collect()
 
 class Recording:
     """
@@ -1662,7 +1678,7 @@ class Settings():
             "log_modules": True,
             "log_battery": True,
             "logging_loop_wait": 200,
-            "recording_loop_wait": 20,
+            "recording_loop_wait": 1,
             "format_used": "utf-8",
             "auto_do_motors": True,
             "auto_do_variables": True,

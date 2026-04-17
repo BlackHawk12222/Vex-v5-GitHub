@@ -899,7 +899,7 @@ class Log():
                     if not chunk:
                         break
                     index += chunk.count(b'\n')
-            brain.sdcard.savefile("index.txt", bytearray(str(index), log.format))
+            log._index+=index
             log.add("DS2", str(log_time.time() - speed) + " MSEC")
             del speed, index
 
@@ -1020,17 +1020,17 @@ class Log():
                 }
         
         # Setting up Log Files if they dont exist and setting index.
-        log_lines=[]
         log_number=0
         if not brain.sdcard.exists("Log.csv"):
             brain.sdcard.savefile("Log.csv", bytearray("log Start: \n", self.format))
         else:
             if brain.sdcard.filesize("Log.csv") < 300000:
+                log_lines=[]
                 log_lines=brain.sdcard.loadfile("Log.csv").decode(self.format).split("\n")
                 log_number=len(log_lines)
+                del log_lines
             else:
                 print("Log.csv cannot be decoded.")
-                log_lines=[]
                 with open("Log.csv", 'rb') as log_file:
                     chunk_size=10240
                     while True:
@@ -1044,16 +1044,11 @@ class Log():
 
             if not brain.sdcard.exists("loghistory.txt"):
                 brain.sdcard.savefile("loghistory.txt")
-            
-            if not brain.sdcard.exists("index.txt"):
-                brain.sdcard.savefile("index.txt", bytearray("0", self.format))
 
-            historyindex=int(brain.sdcard.loadfile("index.txt").decode(self.format))
-
-            self._index= log_number + historyindex - 1
+            self._index= log_number - 1
 
             # Clears lists to free memory.
-            del log_lines, log_number
+            del log_number
 
     async def append_recording(self) -> None: # This is only ment for the recording.
         """
@@ -1259,8 +1254,6 @@ class Log():
         # Logs system start.
         self.add("DS0", "")
         
-        globallogging= dir()
-
         if "True" in str(settings.settings.get('auto_do_variables ')):
             auto_do_variables:bool=True
         else:
@@ -1292,6 +1285,7 @@ class Log():
             auto_do_controller:bool=False
 
         controllers=[]
+        globallogging= dir()
 
         for item in globallogging:
 
@@ -1369,7 +1363,7 @@ class Log():
                         controllercapture(controller)
 
                 if not recording.record:
-                    log.append_log()
+                    log_check()
 
                     if addedfuntion:
                         _exec(added_bytes)

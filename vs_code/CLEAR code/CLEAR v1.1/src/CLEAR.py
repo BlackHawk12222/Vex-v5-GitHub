@@ -121,7 +121,7 @@ class Log():
             def motor(self, motor: Motor|None=None) -> None:
                 """Capture for any general smart motor. Enter motor you wish to log as input. (Can take motor groups as well.)"""
 
-                if motor!=None:
+                if motor!=None and motor not in log.Motors:
                     log.Motors.append(motor)
 
                 for motor_ in log.Motors:
@@ -563,6 +563,7 @@ class Log():
             self.battery_capacity_monitoring=0
             self.battery_current_monitoring=0
             self.battery_watt_monitoring=0
+            self.battery_temp_monitoring=0
             self.voltage:int=0
             self.current:int=0
             self.capacity:int=0
@@ -616,6 +617,7 @@ class Log():
             self.current:int=brain.battery.current(CurrentUnits.AMP)
             self.capacity:int=brain.battery.capacity()
             self.watts:int=int(brain.battery.current(CurrentUnits.AMP)) * int(brain.battery.voltage(VoltageUnits.VOLT))
+            self.temps:int=int(brain.battery.temperature(PERCENT))
 
             # Battery monitoring for voltage, capacity, and current.
             if self.voltage>=12:
@@ -668,7 +670,20 @@ class Log():
             elif self.watts>200:
                 if self.battery_watt_monitoring==0 or self.battery_watt_monitoring==3:
                     log.add("EB3", "%s"%(self.watts))
-                    self.battery_watt_monitoring=1     
+                    self.battery_watt_monitoring=1  
+
+            if self.temps<=30:
+                if self.battery_temp_monitoring==1 or self.battery_temp_monitoring==2:
+                    log.add("DB4", "%s"%(self.temps))
+                    self.battery_temp_monitoring=0
+            elif self.temps>30:
+                if self.battery_temp_monitoring==0 or self.battery_temp_monitoring==1:
+                    log.add("WB4", "%s"%(self.temps))
+                    self.battery_temp_monitoring=2
+            elif self.temps>50:
+                if self.battery_watt_monitoring==0 or self.battery_temp_monitoring==3:
+                    log.add("EB4", "%s"%(self.temps))
+                    self.battery_temp_monitoring=1  
 
         def controller(self, controller: Controller) -> None:
             """
@@ -899,7 +914,7 @@ class Log():
                     if not chunk:
                         break
                     index += chunk.count(b'\n')
-            brain.sdcard.savefile("index.txt", bytearray(str(index), log.format))
+            log._index+=index
             log.add("DS2", str(log_time.time() - speed) + " MSEC")
             del speed, index
 
@@ -919,15 +934,20 @@ class Log():
                 filelist=file.split(',')
                 for i in range(len(filelist)):
                     prelist=filelist[i].split(' ')
+                    print(prelist)
                     if len(prelist) >= 5:
-                        brain.sdcard.appendfile(filename, bytearray(str(prelist[0]) + " " + str(prelist[1]) + " " + str(prelist[2]) + " " + str(log.codes.get(prelist[3])) + str(prelist[4 : len(prelist)-1]) + "\n", log.format))
+                        detailslist=[item + " " for item in prelist[5 : len(prelist)-1]]
+                        details="".join(detailslist)
+                        brain.sdcard.appendfile(filename, bytearray(", %s %s %s %s \n"%(prelist[1], prelist[2], log.codes.get(prelist[4]), details), log.format))
                 print("Recall done.")
             except MemoryError: # Same thing as the last three exceptions.
                 with open("loghistory.txt", 'r') as file:
                     for line in file:
                         prelist=line.split(' ')
                         if len(prelist) >= 5:
-                            brain.sdcard.appendfile(filename, bytearray(str(prelist[0]) + " " + str(prelist[1]) + " " + str(prelist[2]) + " " + str(log.codes.get(prelist[3])) + str(prelist[4 : len(prelist)-1]) + "\n", log.format))
+                            detailslist=[item + " " for item in prelist[5 : len(prelist)-1]]
+                        details="".join(detailslist)
+                        brain.sdcard.appendfile(filename, bytearray(", %s %s %s %s \n"%(prelist[1], prelist[2], log.codes.get(prelist[4]), details), log.format))
                 print("Recall done.")
         
         def recall_recording(self, name: str) -> None:
@@ -961,7 +981,7 @@ class Log():
         self.tolrance:int=3  # tolerance for controller stick diffrence when not recording and for general tolrance for sensors.
         self.printing:bool=True
         self.logging:bool=True
-        self.buffer=bytearray(10240)
+        self.buffer=bytearray(20480)
         self._bufferSize=0
         self._buffer_offset=0
         self._last_write=0
@@ -987,14 +1007,17 @@ class Log():
                 "EB1": ":Battery ERROR: Critically Low Battery. Capacity: ",
                 "EB2": ":Battery ERROR: Critically High Current. Current: ",
                 "EB3": ":Battery ERROR: Critically High Wattage. Wattage: ",
+                "EB4": ":Battery ERROR: Critically High Temps. Temps: ",
                 "WB0": ":Battery WARNING: Low Voltage. Voltage: ",
                 "WB1": ":Battery WARNING: Low Battery. capacity: ",
                 "WB2": ":Battery WARNING: High Current. Current: ",
                 "WB3": ":Battery WARNING: High Wattage. Wattage: ",
+                "WB4": ":Battery WARNING: High Temps. Temps: ",
                 "DB0": ":Battery DATA: Voltage Back To Normal. Voltage: ",
                 "DB1": ":Battery DATA: Current Back To Normal. Current: ",
                 "DB2": ":Battery DATA: Wattage Back To Normal. Wattage: ",
                 "DB3": ":Battery DATA: Capacity Changed. Capacity: ",
+                "DB4": ":Battery DATA: Temps Back To Normal. Temps: ",
                 "DA0": ":Aton DATA: Recording Started.: ",
                 "DA1": ":Aton DATA: Recording Stopped.: ",
                 "DA2": ":Aton DATA: Recording Saved.: ",
@@ -1020,17 +1043,17 @@ class Log():
                 }
         
         # Setting up Log Files if they dont exist and setting index.
-        log_lines=[]
         log_number=0
         if not brain.sdcard.exists("Log.csv"):
             brain.sdcard.savefile("Log.csv", bytearray("log Start: \n", self.format))
         else:
             if brain.sdcard.filesize("Log.csv") < 300000:
+                log_lines=[]
                 log_lines=brain.sdcard.loadfile("Log.csv").decode(self.format).split("\n")
                 log_number=len(log_lines)
+                del log_lines
             else:
                 print("Log.csv cannot be decoded.")
-                log_lines=[]
                 with open("Log.csv", 'rb') as log_file:
                     chunk_size=10240
                     while True:
@@ -1044,16 +1067,11 @@ class Log():
 
             if not brain.sdcard.exists("loghistory.txt"):
                 brain.sdcard.savefile("loghistory.txt")
-            
-            if not brain.sdcard.exists("index.txt"):
-                brain.sdcard.savefile("index.txt", bytearray("0", self.format))
 
-            historyindex=int(brain.sdcard.loadfile("index.txt").decode(self.format))
-
-            self._index= log_number + historyindex - 1
+            self._index= log_number - 1
 
             # Clears lists to free memory.
-            del log_lines, log_number
+            del log_number
 
     async def append_recording(self) -> None: # This is only ment for the recording.
         """
@@ -1073,7 +1091,7 @@ class Log():
         Args:
         entry= String
         """
-        if log_time.time()-self._last_write>3000 and self._bufferSize !=0: 
+        if (log_time.time()-self._last_write>3000 and self._bufferSize !=0) or self._buffer_offset > 1100: 
             brain.sdcard.appendfile("Log.csv", self.buffer[0:self._buffer_offset])
             print("saved.")
             self._buffer_offset=0
@@ -1259,8 +1277,6 @@ class Log():
         # Logs system start.
         self.add("DS0", "")
         
-        globallogging= dir()
-
         if "True" in str(settings.settings.get('auto_do_variables ')):
             auto_do_variables:bool=True
         else:
@@ -1292,6 +1308,7 @@ class Log():
             auto_do_controller:bool=False
 
         controllers=[]
+        globallogging= dir()
 
         for item in globallogging:
 
@@ -1351,11 +1368,11 @@ class Log():
         if addedfuntion:
             _exec(added_bytes)
 
+        self.archive.index_history()
         if log_modules:
             capture_modules()
         if brain.sdcard.filesize("Log.csv") > 100000:
             self.archive.log()
-        self.archive.index_history()
         
         gc_collect()
 
@@ -1369,7 +1386,7 @@ class Log():
                         controllercapture(controller)
 
                 if not recording.record:
-                    log.append_log()
+                    log_check()
 
                     if addedfuntion:
                         _exec(added_bytes)
@@ -1390,13 +1407,11 @@ class Log():
 
                     lwait(wait_time_logging - (timer() - start))
                 else:
+                    #print(timer()-start)
                     lwait(wait_time_recording - (timer() - start))
 
             if gc_use:
-                gc_collect() 
-    
-    def __call__(self) -> None:
-        logging=Thread(self.auto_start)
+                gc_collect()
 
 class Recording:
     """
@@ -1668,7 +1683,7 @@ class Settings():
             "log_modules": True,
             "log_battery": True,
             "logging_loop_wait": 200,
-            "recording_loop_wait": 20,
+            "recording_loop_wait": 1,
             "format_used": "utf-8",
             "auto_do_motors": True,
             "auto_do_variables": True,

@@ -82,25 +82,6 @@ def rightmove(rightspeed):
 if brain.sdcard.is_inserted() and brain.sdcard.exists("CLEAR.py"):
     import CLEAR
     Thread(CLEAR.log.auto_start)
-
-    def recordright():
-        global recording_state
-        if recording_state == 0:
-            CLEAR.recording.start("Right")
-            controller_1.screen.clear_line(3)
-            controller_1.screen.set_cursor(3,1)
-            controller_1.screen.print("Right recording.")
-            recording_state=1
-        elif recording_state == 1:
-            CLEAR.recording.stop("Right")
-            controller_1.screen.clear_line(3)
-            controller_1.screen.set_cursor(3,1)
-            controller_1.screen.print("Right Stopped.")
-            CLEAR.recording.encode("Right", rightmove, leftmove)
-            controller_1.screen.clear_line(3)
-            controller_1.screen.set_cursor(3,1)
-            controller_1.screen.print("Right Encoded.")
-            recording_state=0
     
     def recallhistory():
         CLEAR.log.archive.recall_log()
@@ -109,16 +90,7 @@ if brain.sdcard.is_inserted() and brain.sdcard.exists("CLEAR.py"):
         CLEAR.log.archive.recall_recording("Right_pre_archived.txt")
 
     controller_1.buttonLeft.pressed(archiveright)
-    controller_1.buttonRight.pressed(recordright)
     controller_1.buttonUp.pressed(recallhistory)
-
-    def aton():
-        CLEAR.recording.run("Right")
-
-    def driver():
-        pass
-    
-    comp=Competition(driver, aton)
     
     
 

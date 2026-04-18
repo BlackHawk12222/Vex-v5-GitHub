@@ -11,16 +11,8 @@ def none():
 controller_1 = Controller(PRIMARY)
 Right1 = Motor(Ports.PORT11, GearSetting.RATIO_6_1, False)
 Right2 = Motor(Ports.PORT13, GearSetting.RATIO_6_1, False)
-Right3 = Motor(Ports.PORT12, GearSetting.RATIO_6_1, True)
 left1 = Motor(Ports.PORT20, GearSetting.RATIO_6_1, True)
-left3 = Motor(Ports.PORT18, GearSetting.RATIO_6_1, False)
-colorsorting = Motor(Ports.PORT15, GearSetting.RATIO_18_1, True)
 left2 = Motor(Ports.PORT19, GearSetting.RATIO_6_1, True)
-TopMotor = Motor(Ports.PORT1, GearSetting.RATIO_18_1, True)
-frontPiston = DigitalOut(brain.three_wire_port.a)
-inertial_for_auton = Inertial(Ports.PORT6)
-DeScorer = DigitalOut(brain.three_wire_port.b)
-Intake = Motor(Ports.PORT14, GearSetting.RATIO_6_1, True)
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
@@ -55,10 +47,8 @@ pushing=False
 
 Right1.set_stopping(HOLD)
 Right2.set_stopping(HOLD)
-Right3.set_stopping(HOLD)
 left1.set_stopping(HOLD)
 left2.set_stopping(HOLD)
-left3.set_stopping(HOLD)
 
 # Driver Control Functions
 
@@ -66,63 +56,11 @@ def rightside():
     rightspeed = controller_1.axis2.position() / 8.33
     Right1.spin(FORWARD, rightspeed, VOLT)
     Right2.spin(FORWARD, rightspeed, VOLT)
-    Right3.spin(FORWARD, rightspeed, VOLT)
 
 def leftside():
     leftspeed = controller_1.axis3.position() / 8.33
     left1.spin(FORWARD, leftspeed, VOLT)
     left2.spin(FORWARD, leftspeed, VOLT)
-    left3.spin(FORWARD, leftspeed, VOLT)
-
-def intakeup():
-    Intake.spin(FORWARD, 12, VOLT)
-    while controller_1.buttonR1.pressing():
-        wait(5, MSEC)
-    Intake.stop()
-
-def intakedown():
-    Intake.spin(REVERSE, 12, VOLT)
-    while controller_1.buttonR2.pressing():
-        wait(5, MSEC)
-    Intake.stop()
-
-def scoreup():
-    TopMotor.spin(FORWARD, 12, VOLT)
-    Intake.spin(FORWARD, 12, VOLT)
-    while controller_1.buttonL1.pressing():
-        wait(5,MSEC)
-    TopMotor.stop()
-    Intake.stop()
-
-def scoredown():
-    TopMotor.spin(FORWARD, 12, VOLT)
-    Intake.spin(REVERSE, 12, VOLT)
-    while controller_1.buttonL2.pressing():
-        wait(5, MSEC)
-    TopMotor.stop()
-    Intake.stop()
-
-# Mixed functions
-
-def pushertoggle():
-    global pusher_state, Pusher
-    if not pusher_state:
-        DeScorer.set(True)
-        pusher_state=1
-        Pusher=True
-    else:
-        DeScorer.set(False)
-        pusher_state=0
-        Pusher=False
-
-def loadertoggle():
-    global loader_state
-    if not loader_state:
-        frontPiston.set(True)
-        loader_state=True
-    else:
-        frontPiston.set(False)
-        loader_state=False
 
 # Aton Functions
 
@@ -132,7 +70,6 @@ def leftmove(leftspeed):
         leftspeed=leftspeed/8.33
     left1.spin(FORWARD, leftspeed, VOLT)
     left2.spin(FORWARD, leftspeed, VOLT)
-    left3.spin(FORWARD, leftspeed, VOLT)
 
 def rightmove(rightspeed):
     print("Right: ", rightspeed)
@@ -140,36 +77,6 @@ def rightmove(rightspeed):
         rightspeed=rightspeed/8.33
     Right1.spin(FORWARD, rightspeed, VOLT)
     Right2.spin(FORWARD, rightspeed, VOLT)
-    Right3.spin(FORWARD, rightspeed, VOLT)
-
-def intakeupstart():
-    print("Intake up")
-    Intake.spin(FORWARD)
-
-def intakedownstart():
-    print("Intake down")
-    Intake.spin(REVERSE)
-
-def intakestop():
-    print("Intake stop")
-    Intake.stop()
-
-def scoreupstart():
-    print("Score up")
-    Intake.spin(FORWARD)
-    TopMotor.spin(FORWARD)
-
-def scoredownstart():
-    print("Score down")
-    Intake.spin(REVERSE)
-    TopMotor.spin(FORWARD)
-
-def scorestop():
-    print("Score stop")
-    Intake.stop()
-    TopMotor.stop()
-
-
 
 # Recording Functions
 if brain.sdcard.is_inserted() and brain.sdcard.exists("CLEAR.py"):
@@ -189,7 +96,7 @@ if brain.sdcard.is_inserted() and brain.sdcard.exists("CLEAR.py"):
             controller_1.screen.clear_line(3)
             controller_1.screen.set_cursor(3,1)
             controller_1.screen.print("Right Stopped.")
-            CLEAR.recording.encode("Right", rightmove, leftmove, intakeupstart, intakestop, "R1", intakedownstart, intakestop, "R2", scoreupstart, scorestop, "L1", scoredownstart, scorestop, "L2", loadertoggle, none, "B", pushertoggle, none, "DOWN")
+            CLEAR.recording.encode("Right", rightmove, leftmove)
             controller_1.screen.clear_line(3)
             controller_1.screen.set_cursor(3,1)
             controller_1.screen.print("Right Encoded.")
@@ -216,15 +123,5 @@ if brain.sdcard.is_inserted() and brain.sdcard.exists("CLEAR.py"):
     
 
 # Event setup
-Intake.set_velocity(100, PERCENT)
-TopMotor.set_velocity(100, PERCENT)
 controller_1.axis2.changed(rightside)
 controller_1.axis3.changed(leftside)
-controller_1.buttonR1.pressed(intakeup)
-controller_1.buttonR2.pressed(intakedown)
-controller_1.buttonL1.pressed(scoreup)
-controller_1.buttonL2.pressed(scoredown)
-controller_1.buttonDown.pressed(pushertoggle)
-controller_1.buttonB.pressed(loadertoggle)
-
-inertial_for_auton.calibrate()

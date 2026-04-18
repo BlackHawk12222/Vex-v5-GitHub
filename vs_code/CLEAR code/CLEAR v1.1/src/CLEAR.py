@@ -826,7 +826,7 @@ class Log():
             speed=log_time.time()
             log.adding=False
             reversecodes={value: key for key, value in log.codes.items()}
-            if brain.sdcard.filesize("Log.csv") < 300000:
+            if brain.sdcard.filesize("Log.csv") < 250000:
                 archivelist=bytearray()  
                 logfile=brain.sdcard.loadfile("Log.csv").decode(log.format)
                 loglist=logfile.split("\n")
@@ -1091,7 +1091,7 @@ class Log():
         Args:
         entry= String
         """
-        if (log_time.time()-self._last_write>3000 and self._bufferSize !=0) or self._buffer_offset > 1100: 
+        if (log_time.time()-self._last_write>3000 and self._bufferSize !=0) or self._buffer_offset > 2300: 
             brain.sdcard.appendfile("Log.csv", self.buffer[0:self._buffer_offset])
             print("saved.")
             self._buffer_offset=0

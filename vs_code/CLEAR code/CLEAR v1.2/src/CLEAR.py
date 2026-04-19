@@ -8,8 +8,8 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 from vex import *
-    
-import gc, sys, ustruct  # type: ignore
+from gc import collect, mem_alloc# type: ignore 
+from ustruct import pack_into
 
 brain=Brain()
 log_time= Timer() # Main timer used.
@@ -39,7 +39,7 @@ class Log():
                 self.field=False
 
             def memoryuse(self) -> None:
-                self.currentMemory=gc.mem_alloc()/1000  # type: ignore
+                self.currentMemory=mem_alloc()/1000  # type: ignore
                 if not (self.memory >= self.currentMemory - self.memory_tolrance and self.memory <= self.currentMemory + self.memory_tolrance):
                     if "DSM0" not in log.codes:
                         log.add_codes("DSM0", ":Memory DATA: Memory Useage Changed. Memory Used: ")
@@ -898,7 +898,7 @@ class Log():
                             #archivelist.extend(b"%b %s %b \n"%(logline[0], reversecodes.get(loglines, ":Archive ERROR: No Key Matches Input. Input: %s"%(loglines)), logline[3]))
                             entry=b"%b %s %b \n"%(logline[0], reversecodes.get(loglines, "ERROR No Key Input: %s"%(loglines)), logline[3])
                             bufferSize=len(entry)
-                            ustruct.pack_into("=%ds"%(bufferSize), archivelist, archivelist_offset, entry)
+                            pack_into("=%ds"%(bufferSize), archivelist, archivelist_offset, entry)
                             archivelist_offset+=bufferSize
                         else:
                             print(logline)
@@ -911,7 +911,7 @@ class Log():
             log.clear()
             log.adding=True
 
-            gc.collect()
+            collect()
             log.add("DS1", str(log_time.time() - speed) + " MSEC")
             del speed
 
@@ -1187,7 +1187,7 @@ class Log():
         self.entry=b", %d [%d] %s %s \n" %(self._index, log_time.time(), self.codes.get(add_code), add_details)
         self._bufferSize=len(self.entry)
 
-        ustruct.pack_into("=%ds"%(self._bufferSize), self.buffer, self._buffer_offset, self.entry)
+        pack_into("=%ds"%(self._bufferSize), self.buffer, self._buffer_offset, self.entry)
         self._buffer_offset+=self._bufferSize
 
         if self.logging:
@@ -1396,7 +1396,7 @@ class Log():
         capture_modules=self.capture.system.modules
         capture_battery=log.capture.battery
         timer=log_time.time
-        gc_collect=gc.collect
+        gc_collect=collect
         motorcapture=log.capture.smartport.motor
         controllercapture=log.capture.controller
         log_check=log.append_log

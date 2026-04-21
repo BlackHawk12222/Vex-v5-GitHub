@@ -1450,6 +1450,12 @@ class Recording:
     Main class for recording.
     """
 
+    def __init__(self):
+        pass
+
+    def start(self, filename):
+        pass
+
 class Settings():
     """Used to congigure the log in a more permenet way using the Sd card"""
 

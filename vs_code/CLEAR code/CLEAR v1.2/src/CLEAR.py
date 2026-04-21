@@ -10,6 +10,7 @@
 from vex import *
 from gc import collect, mem_alloc# type: ignore 
 from ustruct import pack_into
+import sys
 
 brain=Brain()
 log_time= Timer() # Main timer used.
@@ -808,6 +809,7 @@ class Log():
 
             speed=log_time.time()
             log.adding=False
+
             log.add_codes("DPW0", ":Pwm DATA: Value Changed. Value: ")
             log.add_codes("DP0", ":Potentiometer DATA: Value Changed. Value: ")
             log.add_codes("DLS1", ":Limit DATA: Released.: ")
@@ -890,13 +892,12 @@ class Log():
                     if not chunk:
                         break
                     
-                    loglist=chunk_buffer.split(b"\n")
+                    loglist=chunk_buffer.decode(log.format).split("\n")
                     for i in range(len(loglist)):
-                        logline=loglist[i].split(b':')
+                        logline=loglist[i].split(':')
                         if len(logline)>=4:
-                            loglines= ":%b: %b: "%(logline[1], logline[2].strip())
-                            #archivelist.extend(b"%b %s %b \n"%(logline[0], reversecodes.get(loglines, ":Archive ERROR: No Key Matches Input. Input: %s"%(loglines)), logline[3]))
-                            entry=b"%b %s %b \n"%(logline[0], reversecodes.get(loglines, "ERROR No Key Input: %s"%(loglines)), logline[3])
+                            loglines= ":%s: %s: "%(logline[1], logline[2].strip())
+                            entry=b"%s %s %s \n"%(logline[0], reversecodes.get(loglines, loglines), logline[3])
                             bufferSize=len(entry)
                             pack_into("=%ds"%(bufferSize), archivelist, archivelist_offset, entry)
                             archivelist_offset+=bufferSize
@@ -905,7 +906,7 @@ class Log():
                         del logline
                     brain.sdcard.appendfile("loghistory.txt", archivelist[0:archivelist_offset])
                     archivelist_offset=0
-                    del chunk
+                    print("done loop")
             
             brain.sdcard.appendfile("loghistory.txt", archivelist)
             log.clear()
@@ -954,20 +955,15 @@ class Log():
 
             speed=log_time.time()
             index=0
-            chunk=bytes(2)
+            chunk=0
             
             with open("loghistory.txt", 'rb') as file:
                 chunk_buffer=bytearray(10240)
-                len_chunk_buffer=len(chunk_buffer)
                 while True:
                     chunk = file.readinto(chunk_buffer)
                     if not chunk:
                         break
-
-                    if chunk != len_chunk_buffer:
-                        index += chunk_buffer[0: chunk].count(b'\n')
-                    else:
-                        index += chunk_buffer.count(b'\n')
+                    index += bytes(chunk_buffer[0: chunk]).count(b'\n')
             log._index+=index
             log.add("DS2", str(log_time.time() - speed) + " MSEC")
             del speed, index
@@ -1153,7 +1149,7 @@ class Log():
             brain.screen.clear_screen()
             brain.screen.set_cursor(1,1)
 
-        brain.screen.print(self.entry)
+        brain.screen.print(self.entry.decode(log.format))
         brain.screen.new_line()
     
     def add(self, add_code: str, add_details: Any) -> None:
@@ -1454,6 +1450,12 @@ class Recording:
         pass
 
     def start(self, filename):
+        pass
+
+    def stop(self):
+        pass
+
+    def store(self, filename):
         pass
 
 class Settings():

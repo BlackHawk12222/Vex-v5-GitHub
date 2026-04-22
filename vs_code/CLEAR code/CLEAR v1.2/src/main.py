@@ -13,6 +13,7 @@ Right1 = Motor(Ports.PORT11, GearSetting.RATIO_6_1, False)
 Right2 = Motor(Ports.PORT13, GearSetting.RATIO_6_1, False)
 left1 = Motor(Ports.PORT20, GearSetting.RATIO_6_1, True)
 left2 = Motor(Ports.PORT19, GearSetting.RATIO_6_1, True)
+rotation= Rotation(Ports.PORT9)
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)

@@ -13,6 +13,7 @@ Right1 = Motor(Ports.PORT11, GearSetting.RATIO_6_1, False)
 Right2 = Motor(Ports.PORT13, GearSetting.RATIO_6_1, False)
 left1 = Motor(Ports.PORT20, GearSetting.RATIO_6_1, True)
 left2 = Motor(Ports.PORT19, GearSetting.RATIO_6_1, True)
+rotation= Rotation(Ports.PORT9)
 
 # wait for rotation sensor to fully initialize
 wait(30, MSEC)
@@ -107,10 +108,6 @@ if brain.sdcard.is_inserted() and brain.sdcard.exists("CLEAR.py"):
 
     def archiveright():
         CLEAR.log.archive.recall_recording("Right_pre_archived.txt")
-
-    controller_1.buttonLeft.pressed(archiveright)
-    controller_1.buttonRight.pressed(recordright)
-    controller_1.buttonUp.pressed(recallhistory)
 
     def aton():
         CLEAR.recording.run("Right")

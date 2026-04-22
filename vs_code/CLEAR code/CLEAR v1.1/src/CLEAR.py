@@ -1110,7 +1110,7 @@ class Log():
             brain.screen.clear_screen()
             brain.screen.set_cursor(1,1)
 
-        brain.screen.print(self.entry)
+        brain.screen.print(self.entry.decode("utf-8"))
         brain.screen.new_line()
     
     def add(self, add_code: str, add_details: Any) -> None:

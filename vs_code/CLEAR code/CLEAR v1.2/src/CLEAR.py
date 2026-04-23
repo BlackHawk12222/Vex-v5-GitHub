@@ -7,12 +7,14 @@
     # 	Description:  Capture, Logging, Encoding, Archiving, Recording.            #
     #                                                                              #
     # ---------------------------------------------------------------------------- #
+_errorcreated=False
+import sys
+
 try:
     from vex import *
     from gc import collect, mem_alloc# type: ignore 
     from ustruct import pack_into
-    import sys
-
+    
     brain=Brain()
     log_time= Timer() # Main timer used.
     log_link=MessageLink(Ports.PORT21, "CLEAR32449", VexlinkType.MANAGER)
@@ -20,7 +22,7 @@ try:
     def none():
         pass
 
-    class Log():
+    class Log:
         """Main object for the CLEAR import. \n To start logging use the "logstart()" function in this object to do the main logging if you need help with its inputs use help() over the "logstart()" function."""
 
         
@@ -1280,7 +1282,6 @@ try:
             self.format:str=str(settings.settings.get('format_used '))
             self.tolrance:int=int(str(settings.settings.get('default_tolrance ')))
             wait_time_logging:int=int(str(settings.settings.get('logging_loop_wait ')))
-            wait_time_recording:int=int(str(settings.settings.get('recording_loop_wait ')))
 
             if "True" in str(settings.settings.get('gc_use ')):
                 gc_use:bool=True
@@ -1401,7 +1402,6 @@ try:
             motorcapture=log.capture.smartport.motor
             controllercapture=log.capture.controller
             log_check=log.append_log
-            local_range=range
 
             # Loads extra funtions from file.
             try:
@@ -1414,7 +1414,7 @@ try:
             gc_collect()
 
             while True:
-                for _ in local_range(20):
+                for _ in range(20):
 
                     start:int=timer()
 
@@ -1446,24 +1446,83 @@ try:
                 if gc_use:
                     gc_collect()
 
+        def __enter__(self) -> None:
+            self.Thread=Thread(log.auto_start)
+
+        def __exit__(self) -> None:
+            self.Thread.stop()
+
     class Recording:
         """
         Main class for recording.
         """
 
         def __init__(self):
-            pass
+            self.record=False
 
-        def start(self, filename):
-            pass
+        def start(self, controller:Controller):
+            brain.sdcard.savefile("RecordingData.csv")
+            self.record=True
+            self._record_loop(controller)
 
         def stop(self):
+            self.record=False
+
+        def _record_loop(self, controller: Controller):
+            while self.record:
+                self.axis2=controller.axis2.position()
+                self.axis3=controller.axis3.position()
+                self.time_stamp=log_time.time()
+                self.buttonspressed=bytearray()
+
+                if controller.buttonA.pressing():
+                    self.buttonspressed.extend(b"A, ")
+
+                if controller.buttonB.pressing():
+                    self.buttonspressed.extend(b"B, ")
+
+                if controller.buttonX.pressing():
+                    self.buttonspressed.extend(b"X, ")
+
+                if controller.buttonY.pressing():
+                    self.buttonspressed.extend(b"Y, ")
+
+                if controller.buttonUp.pressing():
+                    self.buttonspressed.extend(b"Up, ")
+
+                if controller.buttonDown.pressing():
+                    self.buttonspressed.extend(b"Down, ")
+
+                if controller.buttonLeft.pressing():
+                    self.buttonspressed.extend(b"Left, ")
+
+                if controller.buttonRight.pressing():
+                    self.buttonspressed.extend(b"Right, ")
+
+                if controller.buttonR1.pressing():
+                    self.buttonspressed.extend(b"R1, ")
+
+                if controller.buttonR2.pressing():
+                    self.buttonspressed.extend(b"R2, ")
+
+                if controller.buttonL1.pressing():
+                    self.buttonspressed.extend(b"L1, ")
+
+                if controller.buttonL2.pressing():
+                    self.buttonspressed.extend(b"L2, ")
+
+                brain.sdcard.appendfile("RecordingData.csv", bytearray(b"%d, %d, %d, %b"%(self.axis2 , self.axis3, self.time_stamp , self.buttonspressed)))
+                
+                wait(20, MSEC)
+
+    class Encode:
+        def __init__(self):
             pass
 
-        def store(self, filename):
+        def encode(self):
             pass
 
-    class Settings():
+    class Settings:
         """Used to congigure the log in a more permenet way using the Sd card"""
 
         def __init__(self):
@@ -1480,7 +1539,7 @@ try:
                 "log_modules": True,
                 "log_battery": True,
                 "logging_loop_wait": 200,
-                "recording_loop_wait": 1,
+                "recording_loop_wait": -1,
                 "format_used": "utf-8",
                 "auto_do_motors": True,
                 "auto_do_variables": True,
@@ -1513,29 +1572,23 @@ try:
                     dict_stuff=line.split(":")
 
                     if len(dict_stuff) >= 2:
-                        self.settings[dict_stuff[0]]=dict_stuff[1]   
-
+                        self.settings[dict_stuff[0]]=dict_stuff[1]
+    
+    class inerface():
+        def __init__(self):
+            pass
+    
     settings=Settings()
     log=Log()
     recording=Recording()
-    sys.atexit(print("exiting..."))  # type: ignore
-except SyntaxError as e:
-    import uio
 
-    exeption_string=uio.StringIO("")
-    sys.print_exception(e, file=exeption_string)  # type: ignore
-    print(exeption_string.getvalue())
-    brain.sdcard.appendfile("Log.csv", bytearray(b":System ERROR: Syntax Error.: %s "%(exeption_string.getvalue())))  
-    del exeption_string
-
-    raise e
 except Exception as e:
     import uio
-
-    exeption_string=uio.StringIO("")
-    sys.print_exception(e, file=exeption_string)  # type: ignore
+    if not _errorcreated:
+        brain.sdcard.savefile("Error.txt")
+    exeption_string=uio.StringIO(500)
+    sys.print_exception(e, exeption_string)  # type: ignore
     print(exeption_string.getvalue())
-    brain.sdcard.appendfile("Log.csv", bytearray(b":System ERROR: Runtime Error.: %s "%(exeption_string.getvalue()))) 
+    brain.sdcard.appendfile("Error.txt", bytearray(b":System ERROR: Runtime Error.: \n %s "%(exeption_string.getvalue()))) 
     
-    del exeption_string
-    raise e
+    del exeption_string, uio

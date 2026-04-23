@@ -82,18 +82,6 @@ def rightmove(rightspeed):
 # Recording Functions
 if brain.sdcard.is_inserted() and brain.sdcard.exists("CLEAR.py"):
     import CLEAR
-    Thread(CLEAR.log.auto_start)
-    
-    def recallhistory():
-        CLEAR.log.archive.recall_log()
-
-    def archiveright():
-        CLEAR.log.archive.recall_recording("Right_pre_archived.txt")
-
-    controller_1.buttonLeft.pressed(archiveright)
-    controller_1.buttonUp.pressed(recallhistory)
-    
-    
 
 # Event setup
 controller_1.axis2.changed(rightside)

@@ -1040,7 +1040,8 @@ try:
             self._buffer_offset=0
             self._last_write=0
             self.speed=0
-            self.Motors=[]
+            self.Motors: list[Motor]=[]
+            self.robot_active=False
 
             brain.sdcard.savefile("Logstart.txt")  # Clears Logstart file for refresh of instructions in it.
 
@@ -1134,12 +1135,13 @@ try:
             Args:
             entry= String
             """
-            if (log_time.time()-self._last_write>3000 and self._bufferSize !=0) or self._buffer_offset > 2200: 
+            if ((log_time.time()-self._last_write>3000 and self._bufferSize !=0) and self.robot_active) or self._buffer_offset > 2200: 
                 brain.sdcard.appendfile("Log.csv", self.buffer[0:self._buffer_offset])
                 print("saved.")
                 self._buffer_offset=0
                 self._last_write=log_time.time()
                 self._bufferSize=0
+                self.robot_active=False
         
         def brain_read(self) -> None:
             """
@@ -1415,6 +1417,11 @@ try:
 
             while True:
                 for _ in range(20):
+                    if not self.robot_active:
+                        for motor in self.Motors:
+                            if motor.velocity!=0:
+                                self.robot_active=True
+                                break
 
                     start:int=timer()
 

@@ -1466,17 +1466,23 @@ try:
 
         def __init__(self):
             self.record=False
+            self.right_position=0
+            self.left_position=0
 
-        def start(self, controller:Controller):
+        def start(self, controller:Controller, Rightdrivetrain: list[Motor], Leftdrivetrain: list[Motor]):
             brain.sdcard.savefile("RecordingData.csv")
             self.record=True
-            self._record_loop(controller)
+            self._record_loop(controller, Rightdrivetrain, Leftdrivetrain)
 
         def stop(self):
             self.record=False
 
-        def _record_loop(self, controller: Controller):
-            while self.record:
+        def _record_loop(self, controller: Controller, Rightdrivetrain: list[Motor], Leftdrivetrain: list[Motor]):
+            while True:
+                
+                if not self.record:
+                    break
+
                 self.axis2=controller.axis2.position()
                 self.axis3=controller.axis3.position()
                 self.time_stamp=log_time.time()
@@ -1518,8 +1524,19 @@ try:
                 if controller.buttonL2.pressing():
                     self.buttonspressed.extend(b"L2, ")
 
-                brain.sdcard.appendfile("RecordingData.csv", bytearray(b"%d, %d, %d, %b"%(self.axis2 , self.axis3, self.time_stamp , self.buttonspressed)))
-                
+                for motor in Rightdrivetrain:
+                    self.right_position+=motor.position()
+                self.right_position=self.right_position/len(Rightdrivetrain)
+                for motor in Leftdrivetrain:
+                    self.left_position+=motor.position()
+                self.left_position=self.left_position/len(Leftdrivetrain)
+                self.left_position=abs(self.left_position)
+
+                brain.sdcard.appendfile("RecordingData.csv", bytearray(b"%d, %d, %d, %s, %f, %f \n"%(self.axis2 , self.axis3, self.time_stamp , self.buttonspressed.decode("utf-8"), self.right_position, self.left_position)))
+
+                self.right_position=0
+                self.left_position=0
+
                 wait(20, MSEC)
 
     class Encode:

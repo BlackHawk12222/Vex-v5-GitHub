@@ -83,6 +83,19 @@ def rightmove(rightspeed):
 if brain.sdcard.is_inserted() and brain.sdcard.exists("CLEAR.py"):
     import CLEAR
 
+    Thread(CLEAR.log.auto_start)
+    def toggle_recording():
+        global recording_state
+        if recording_state == 0:
+            recording_state = 1
+            Thread(lambda: CLEAR.recording.start(controller_1, [Right1, Right2], [left1, left2]))
+            print("Recording Started")
+        else:
+            recording_state = 0
+            CLEAR.recording.stop()
+            print("Recording Stopped")
+    controller_1.buttonA.pressed(toggle_recording)
+
 # Event setup
 controller_1.axis2.changed(rightside)
 controller_1.axis3.changed(leftside)

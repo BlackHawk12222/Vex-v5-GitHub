@@ -21,15 +21,9 @@ try:
 
     def none():
         pass
-
-    class Log:
-        """Main object for the CLEAR import. \n To start logging use the "logstart()" function in this object to do the main logging if you need help with its inputs use help() over the "logstart()" function."""
-
-        
-
-        class Capture:
+    
+    class Capture:
             """Main object for capturing data of the robot and seeing if it needs to be logged."""
-
             class System:
                 """Main object" for general program data like memory use ."""
 
@@ -797,236 +791,12 @@ try:
                 if value != self.variables[self.valueid]:
                     log.add("DV0", "Variable %s Value %s"%(name, value))
                     self.variables[self.valueid] = value
-
-        class Archive:
-            """
-            Main object for archiving files made by CLEAR.
-            """
-            
-            def log(self) -> None:
-                """
-                Archives the Log.txt file.
-                
-                Args:
-                None
-                """
-
-                speed=log_time.time()
-                log.adding=False
-
-                log.add_codes("DPW0", ":Pwm DATA: Value Changed. Value: ")
-                log.add_codes("DP0", ":Potentiometer DATA: Value Changed. Value: ")
-                log.add_codes("DLS1", ":Limit DATA: Released.: ")
-                log.add_codes("DLS0", ":Limit DATA: Pressed.: ")
-                log.add_codes("DO3", ":Optical DATA: Optical Installed: ")
-                log.add_codes("EO0", ":Optical ERROR: Optical Disconnected: ")
-                log.add_codes("DO1", ":Optical DATA: Optical Detected Object.: ")
-                log.add_codes("DO0", ":Optical DATA: Color Changed. Color: ")
-                log.add_codes("DO2", ":Optical DATA: Optical Lost Object.: ")
-                log.add_codes("DI7", ":Inertial DATA: Inertial Installed: ")
-                log.add_codes("DI2", ":Inertial DATA: Calibrating.: ")
-                log.add_codes("DI3", ":Inertial DATA: Calibration Complete.: ")
-                log.add_codes("DI0", ":Inertial DATA: Rotation Changed. Rotation: ")
-                log.add_codes("DI9", ":Inertial DATA: Roll Changed. Roll: ")
-                log.add_codes("DI8", ":Inertial DATA: Pitch Changed. Pitch: ")
-                log.add_codes("DI1", ":Inertial DATA: Heading Changed. Heading: ")
-                log.add_codes("DI4", ":Inertial DATA: X Axis Changed. Acceleration: ")
-                log.add_codes("DI5", ":Inertial DATA: Y Axis Changed. Acceleration: ")
-                log.add_codes("DI6", ":Inertial DATA: Z Axis Changed. Acceleration: ")
-                log.add_codes("EI0", ":Inertial ERROR: Inertial Disconnected.: ")
-                log.add_codes("DDS3", ":Distance DATA: Distance Installed.: ")
-                log.add_codes("EDS0", ":Distance ERROR: Distance Disconnected.: ")
-                log.add_codes("DDS0", ":Distance DATA: Distance Detected Object.: ")
-                log.add_codes("DDS1", ":Distance DATA: Distance Changed. Distance: ")
-                log.add_codes("DDS4", ":Distance DATA: Distance Lost Object.: ")
-                log.add_codes("DR0", ":Rotation DATA: Rotation Installed.: ")
-                log.add_codes("ER0", ":Rotation ERROR: Rotation Disconnected.: ")
-                log.add_codes("DR1", ":Rotation DATA: Angle Changed. Angle: ")
-                log.add_codes("DR2", ":Rotation DATA: Position Changed. Position: ")
-                log.add_codes("DDI0", ":Digital DATA: Value High.: ")
-                log.add_codes("DDI1", ":Digital DATA: Value Low.: ")
-                log.add_codes("DAI0", ":Analog DATA: Value Changed. Value: ")
-                log.add_codes("DBS0", ":Bumper DATA: Pressed.: ")
-                log.add_codes("DBS1", ":Bumper DATA: Released.: ")
-
-                reversecodes={value: key for key, value in log.codes.items()}
-
-                log.remove_codes("DPW0")
-                log.remove_codes("DP0")
-                log.remove_codes("DLS1")
-                log.remove_codes("DLS0")
-                log.remove_codes("DO3")
-                log.remove_codes("EO0")
-                log.remove_codes("DO1")
-                log.remove_codes("DO0")
-                log.remove_codes("DO2")
-                log.remove_codes("DI7")
-                log.remove_codes("DI2")
-                log.remove_codes("DI3")
-                log.remove_codes("DI0")
-                log.remove_codes("DI9")
-                log.remove_codes("DI8")
-                log.remove_codes("DI1")
-                log.remove_codes("DI4")
-                log.remove_codes("DI5")
-                log.remove_codes("DI6")
-                log.remove_codes("EI0")
-                log.remove_codes("DDS3")
-                log.remove_codes("EDS0")
-                log.remove_codes("DDS0")
-                log.remove_codes("DDS1")
-                log.remove_codes("DDS4")
-                log.remove_codes("DR0")
-                log.remove_codes("ER0")
-                log.remove_codes("DR1")
-                log.remove_codes("DR2")
-                log.remove_codes("DDI0")
-                log.remove_codes("DDI1")
-                log.remove_codes("DAI0")
-                log.remove_codes("DBS0")
-                log.remove_codes("DBS1")
-                
-                with open("Log.csv", "rb") as file:
-                    chunk_buffer=bytearray(20480)
-                    archivelist=bytearray(20480)
-                    archivelist_offset=0
-                    
-                    while True:
-                        chunk=file.readinto(chunk_buffer)
-                        if not chunk:
-                            break
-                        
-                        loglist=chunk_buffer.decode(log.format).split("\n")
-                        for i in range(len(loglist)):
-                            logline=loglist[i].split(':')
-                            if len(logline)>=4:
-                                loglines= ":%s: %s: "%(logline[1], logline[2].strip())
-                                entry=b"%s %s %s \n"%(logline[0], reversecodes.get(loglines, loglines), logline[3])
-                                bufferSize=len(entry)
-                                pack_into("=%ds"%(bufferSize), archivelist, archivelist_offset, entry)
-                                archivelist_offset+=bufferSize
-                            else:
-                                print(logline)
-                            del logline
-                        brain.sdcard.appendfile("loghistory.txt", archivelist[0:archivelist_offset])
-                        archivelist_offset=0
-                        print("done loop")
-                
-                brain.sdcard.appendfile("loghistory.txt", archivelist)
-                log.clear()
-                log.adding=True
-
-                collect()
-                log.add("DS1", str(log_time.time() - speed) + " MSEC")
-                del speed
-
-            def recording(self, recordingname: str) -> None:
-                """
-                Archives recording file. 
-                Enter full name of file.
-
-                Args:
-                recordingname= String
-                """
-
-                print("Archiving...")
-                filename=str(recordingname).replace(".txt", "_archived.txt")
-                brain.sdcard.savefile(filename)
-                with open(recordingname, 'rb') as recording:
-                    chunk_buffer=bytearray(10240)
-                    buffer=bytearray()
-                    while True:
-                        chunk=recording.readinto(chunk_buffer)
-                        if not chunk:
-                            break
-                        
-                        list=chunk_buffer.split(b"\n")
-                        for line in list:
-                            prelist=line.split(b' ')
-                            buffer.extend(b"%b %b %b %b \n" %(prelist[2], prelist[9], prelist[10], prelist[11]))
-                        brain.sdcard.appendfile(filename, buffer)
-    
-                brain.sdcard.savefile(recordingname)
-                log.add("DS3", recordingname)
-
-            def index_history(self) -> None:
-                """
-                Gets lines of loghistory puts number in file.
-                
-                Args:
-                None
-                """
-
-                speed=log_time.time()
-                index=0
-                chunk=0
-                
-                with open("loghistory.txt", 'rb') as file:
-                    chunk_buffer=bytearray(10240)
-                    while True:
-                        chunk = file.readinto(chunk_buffer)
-                        if not chunk:
-                            break
-                        index += bytes(chunk_buffer[0: chunk]).count(b'\n')
-                log._index+=index
-                log.add("DS2", str(log_time.time() - speed) + " MSEC")
-                del speed, index
-
-            def recall_log(self) -> None:
-                """
-                Unarchives The log.
-
-                Args:
-                None
-                """
-
-                filename=("logrecalled.txt")
-                print("recalling...")
-                try:
-                    file=brain.sdcard.loadfile("loghistory.txt").decode(log.format)
-                    brain.sdcard.savefile(filename)
-                    filelist=file.split(',')
-                    for i in range(len(filelist)):
-                        prelist=filelist[i].split(' ')
-                        print(prelist)
-                        if len(prelist) >= 5:
-                            detailslist=[item + " " for item in prelist[5 : len(prelist)-1]]
-                            details="".join(detailslist)
-                            brain.sdcard.appendfile(filename, bytearray(", %s %s %s %s \n"%(prelist[1], prelist[2], log.codes.get(prelist[4]), details), log.format))
-                    print("Recall done.")
-                except MemoryError: # Same thing as the last three exceptions.
-                    with open("loghistory.txt", 'r') as file:
-                        for line in file:
-                            prelist=line.split(' ')
-                            if len(prelist) >= 5:
-                                detailslist=[item + " " for item in prelist[5 : len(prelist)-1]]
-                            details="".join(detailslist)
-                            brain.sdcard.appendfile(filename, bytearray(", %s %s %s %s \n"%(prelist[1], prelist[2], log.codes.get(prelist[4]), details), log.format))
-                    print("Recall done.")
-            
-            def recall_recording(self, name: str) -> None:
-                """
-                Restores recording file to an uncompressed state. 
-                Enter full name of the archived file.
-
-                Args:
-                name=String, full name of file
-                """
-
-                recording=brain.sdcard.loadfile(name).decode(log.format).split('\n')
-                filename=name.replace("_archived.txt", ".txt")
-                brain.sdcard.savefile(filename)
-                for item in recording:
-                    prelist=item.split(' ')
-                    if "Moved" in item:
-                        brain.sdcard.appendfile(filename, bytearray("[',', '0', %s ':Controller', 'DATA:', 'Axis', 'Changed.', 'Axis:', '', %s %s 'Moved', '0', 'Degrees', ''] \n"%(prelist[0], prelist[1], prelist[2]), log.format))
-                    elif "Pressed" in item or "Released" in item:
-                        brain.sdcard.appendfile(filename, bytearray("[',', '0', %s ':Controller', 'DATA:', 'Button', 'Changed.', 'Button:', '', %s %s %s ''] \n"%(prelist[0], prelist[1], prelist[2], prelist[3]), log.format))
-                log.add("DS5", name)
+    class Log:
+        """Main object for the CLEAR import. \n To start logging use the "logstart()" function in this object to do the main logging if you need help with its inputs use help() over the "logstart()" function."""
                     
         def __init__(self):
-            self.capture=self.Capture()
-            self.archive=self.Archive()
+            self.capture=Capture()
+            self.archive=Archive()
             self._index:int=0
             self.adding:bool=True  # Used to pause logging.
             self.format:str="utf-8"  # General format for all files in the code.
@@ -1453,12 +1223,245 @@ try:
                 if gc_use:
                     gc_collect()
 
-        def __enter__(self) -> None:
+        def __enter__(self) -> Thread:
             self.Thread=Thread(log.auto_start)
+            return self.Thread
 
         def __exit__(self) -> None:
             self.Thread.stop()
 
+    class Encode:
+        def __init__(self):
+            pass
+
+        def encode(self):
+            pass
+    
+    class Archive:
+            """
+            Main object for archiving files made by CLEAR.
+            """
+            
+            def log(self) -> None:
+                """
+                Archives the Log.txt file.
+                
+                Args:
+                None
+                """
+
+                speed=log_time.time()
+                log.adding=False
+
+                log.add_codes("DPW0", ":Pwm DATA: Value Changed. Value: ")
+                log.add_codes("DP0", ":Potentiometer DATA: Value Changed. Value: ")
+                log.add_codes("DLS1", ":Limit DATA: Released.: ")
+                log.add_codes("DLS0", ":Limit DATA: Pressed.: ")
+                log.add_codes("DO3", ":Optical DATA: Optical Installed: ")
+                log.add_codes("EO0", ":Optical ERROR: Optical Disconnected: ")
+                log.add_codes("DO1", ":Optical DATA: Optical Detected Object.: ")
+                log.add_codes("DO0", ":Optical DATA: Color Changed. Color: ")
+                log.add_codes("DO2", ":Optical DATA: Optical Lost Object.: ")
+                log.add_codes("DI7", ":Inertial DATA: Inertial Installed: ")
+                log.add_codes("DI2", ":Inertial DATA: Calibrating.: ")
+                log.add_codes("DI3", ":Inertial DATA: Calibration Complete.: ")
+                log.add_codes("DI0", ":Inertial DATA: Rotation Changed. Rotation: ")
+                log.add_codes("DI9", ":Inertial DATA: Roll Changed. Roll: ")
+                log.add_codes("DI8", ":Inertial DATA: Pitch Changed. Pitch: ")
+                log.add_codes("DI1", ":Inertial DATA: Heading Changed. Heading: ")
+                log.add_codes("DI4", ":Inertial DATA: X Axis Changed. Acceleration: ")
+                log.add_codes("DI5", ":Inertial DATA: Y Axis Changed. Acceleration: ")
+                log.add_codes("DI6", ":Inertial DATA: Z Axis Changed. Acceleration: ")
+                log.add_codes("EI0", ":Inertial ERROR: Inertial Disconnected.: ")
+                log.add_codes("DDS3", ":Distance DATA: Distance Installed.: ")
+                log.add_codes("EDS0", ":Distance ERROR: Distance Disconnected.: ")
+                log.add_codes("DDS0", ":Distance DATA: Distance Detected Object.: ")
+                log.add_codes("DDS1", ":Distance DATA: Distance Changed. Distance: ")
+                log.add_codes("DDS4", ":Distance DATA: Distance Lost Object.: ")
+                log.add_codes("DR0", ":Rotation DATA: Rotation Installed.: ")
+                log.add_codes("ER0", ":Rotation ERROR: Rotation Disconnected.: ")
+                log.add_codes("DR1", ":Rotation DATA: Angle Changed. Angle: ")
+                log.add_codes("DR2", ":Rotation DATA: Position Changed. Position: ")
+                log.add_codes("DDI0", ":Digital DATA: Value High.: ")
+                log.add_codes("DDI1", ":Digital DATA: Value Low.: ")
+                log.add_codes("DAI0", ":Analog DATA: Value Changed. Value: ")
+                log.add_codes("DBS0", ":Bumper DATA: Pressed.: ")
+                log.add_codes("DBS1", ":Bumper DATA: Released.: ")
+
+                reversecodes={value: key for key, value in log.codes.items()}
+
+                log.remove_codes("DPW0")
+                log.remove_codes("DP0")
+                log.remove_codes("DLS1")
+                log.remove_codes("DLS0")
+                log.remove_codes("DO3")
+                log.remove_codes("EO0")
+                log.remove_codes("DO1")
+                log.remove_codes("DO0")
+                log.remove_codes("DO2")
+                log.remove_codes("DI7")
+                log.remove_codes("DI2")
+                log.remove_codes("DI3")
+                log.remove_codes("DI0")
+                log.remove_codes("DI9")
+                log.remove_codes("DI8")
+                log.remove_codes("DI1")
+                log.remove_codes("DI4")
+                log.remove_codes("DI5")
+                log.remove_codes("DI6")
+                log.remove_codes("EI0")
+                log.remove_codes("DDS3")
+                log.remove_codes("EDS0")
+                log.remove_codes("DDS0")
+                log.remove_codes("DDS1")
+                log.remove_codes("DDS4")
+                log.remove_codes("DR0")
+                log.remove_codes("ER0")
+                log.remove_codes("DR1")
+                log.remove_codes("DR2")
+                log.remove_codes("DDI0")
+                log.remove_codes("DDI1")
+                log.remove_codes("DAI0")
+                log.remove_codes("DBS0")
+                log.remove_codes("DBS1")
+                
+                with open("Log.csv", "rb") as file:
+                    chunk_buffer=bytearray(20480)
+                    archivelist=bytearray(20480)
+                    archivelist_offset=0
+                    
+                    while True:
+                        chunk=file.readinto(chunk_buffer)
+                        if not chunk:
+                            break
+                        
+                        loglist=chunk_buffer.decode(log.format).split("\n")
+                        for i in range(len(loglist)):
+                            logline=loglist[i].split(':')
+                            if len(logline)>=4:
+                                loglines= ":%s: %s: "%(logline[1], logline[2].strip())
+                                entry=b"%s %s %s \n"%(logline[0], reversecodes.get(loglines, loglines), logline[3])
+                                bufferSize=len(entry)
+                                pack_into("=%ds"%(bufferSize), archivelist, archivelist_offset, entry)
+                                archivelist_offset+=bufferSize
+                            else:
+                                print(logline)
+                            del logline
+                        brain.sdcard.appendfile("loghistory.txt", archivelist[0:archivelist_offset])
+                        archivelist_offset=0
+                        print("done loop")
+                
+                brain.sdcard.appendfile("loghistory.txt", archivelist)
+                log.clear()
+                log.adding=True
+
+                collect()
+                log.add("DS1", str(log_time.time() - speed) + " MSEC")
+                del speed
+
+            def recording(self, recordingname: str) -> None:
+                """
+                Archives recording file. 
+                Enter full name of file.
+
+                Args:
+                recordingname= String
+                """
+
+                print("Archiving...")
+                filename=str(recordingname).replace(".txt", "_archived.txt")
+                brain.sdcard.savefile(filename)
+                with open(recordingname, 'rb') as recording:
+                    chunk_buffer=bytearray(10240)
+                    buffer=bytearray()
+                    while True:
+                        chunk=recording.readinto(chunk_buffer)
+                        if not chunk:
+                            break
+                        
+                        list=chunk_buffer.split(b"\n")
+                        for line in list:
+                            prelist=line.split(b' ')
+                            buffer.extend(b"%b %b %b %b \n" %(prelist[2], prelist[9], prelist[10], prelist[11]))
+                        brain.sdcard.appendfile(filename, buffer)
+    
+                brain.sdcard.savefile(recordingname)
+                log.add("DS3", recordingname)
+
+            def index_history(self) -> None:
+                """
+                Gets lines of loghistory puts number in file.
+                
+                Args:
+                None
+                """
+
+                speed=log_time.time()
+                index=0
+                chunk=0
+                
+                with open("loghistory.txt", 'rb') as file:
+                    chunk_buffer=bytearray(10240)
+                    while True:
+                        chunk = file.readinto(chunk_buffer)
+                        if not chunk:
+                            break
+                        index += bytes(chunk_buffer[0: chunk]).count(b'\n')
+                log._index+=index
+                log.add("DS2", str(log_time.time() - speed) + " MSEC")
+                del speed, index
+
+            def recall_log(self) -> None:
+                """
+                Unarchives The log.
+
+                Args:
+                None
+                """
+
+                filename=("logrecalled.txt")
+                print("recalling...")
+                try:
+                    file=brain.sdcard.loadfile("loghistory.txt").decode(log.format)
+                    brain.sdcard.savefile(filename)
+                    filelist=file.split(',')
+                    for i in range(len(filelist)):
+                        prelist=filelist[i].split(' ')
+                        print(prelist)
+                        if len(prelist) >= 5:
+                            detailslist=[item + " " for item in prelist[5 : len(prelist)-1]]
+                            details="".join(detailslist)
+                            brain.sdcard.appendfile(filename, bytearray(", %s %s %s %s \n"%(prelist[1], prelist[2], log.codes.get(prelist[4]), details), log.format))
+                    print("Recall done.")
+                except MemoryError: # Same thing as the last three exceptions.
+                    with open("loghistory.txt", 'r') as file:
+                        for line in file:
+                            prelist=line.split(' ')
+                            if len(prelist) >= 5:
+                                detailslist=[item + " " for item in prelist[5 : len(prelist)-1]]
+                            details="".join(detailslist)
+                            brain.sdcard.appendfile(filename, bytearray(", %s %s %s %s \n"%(prelist[1], prelist[2], log.codes.get(prelist[4]), details), log.format))
+                    print("Recall done.")
+            
+            def recall_recording(self, name: str) -> None:
+                """
+                Restores recording file to an uncompressed state. 
+                Enter full name of the archived file.
+
+                Args:
+                name=String, full name of file
+                """
+
+                recording=brain.sdcard.loadfile(name).decode(log.format).split('\n')
+                filename=name.replace("_archived.txt", ".txt")
+                brain.sdcard.savefile(filename)
+                for item in recording:
+                    prelist=item.split(' ')
+                    if "Moved" in item:
+                        brain.sdcard.appendfile(filename, bytearray("[',', '0', %s ':Controller', 'DATA:', 'Axis', 'Changed.', 'Axis:', '', %s %s 'Moved', '0', 'Degrees', ''] \n"%(prelist[0], prelist[1], prelist[2]), log.format))
+                    elif "Pressed" in item or "Released" in item:
+                        brain.sdcard.appendfile(filename, bytearray("[',', '0', %s ':Controller', 'DATA:', 'Button', 'Changed.', 'Button:', '', %s %s %s ''] \n"%(prelist[0], prelist[1], prelist[2], prelist[3]), log.format))
+                log.add("DS5", name)
     class Recording:
         """
         Main class for recording.
@@ -1466,18 +1469,17 @@ try:
 
         def __init__(self):
             self.record=False
-            self.right_position=0
-            self.left_position=0
 
-        def start(self, controller:Controller, Rightdrivetrain: list[Motor], Leftdrivetrain: list[Motor]):
+        def start(self, controller:Controller, Right: Motor, Left: Motor):
             brain.sdcard.savefile("RecordingData.csv")
             self.record=True
-            self._record_loop(controller, Rightdrivetrain, Leftdrivetrain)
+            self._record_loop(controller, Right, Left)
 
         def stop(self):
             self.record=False
+            encode.encode()
 
-        def _record_loop(self, controller: Controller, Rightdrivetrain: list[Motor], Leftdrivetrain: list[Motor]):
+        def _record_loop(self, controller: Controller, Right: Motor, Left: Motor):
             while True:
                 
                 if not self.record:
@@ -1489,63 +1491,44 @@ try:
                 self.buttonspressed=bytearray()
 
                 if controller.buttonA.pressing():
-                    self.buttonspressed.extend(b"A, ")
+                    self.buttonspressed.extend(b"A: ")
 
                 if controller.buttonB.pressing():
-                    self.buttonspressed.extend(b"B, ")
+                    self.buttonspressed.extend(b"B: ")
 
                 if controller.buttonX.pressing():
-                    self.buttonspressed.extend(b"X, ")
+                    self.buttonspressed.extend(b"X: ")
 
                 if controller.buttonY.pressing():
-                    self.buttonspressed.extend(b"Y, ")
+                    self.buttonspressed.extend(b"Y: ")
 
                 if controller.buttonUp.pressing():
-                    self.buttonspressed.extend(b"Up, ")
+                    self.buttonspressed.extend(b"Up: ")
 
                 if controller.buttonDown.pressing():
-                    self.buttonspressed.extend(b"Down, ")
+                    self.buttonspressed.extend(b"Down: ")
 
                 if controller.buttonLeft.pressing():
-                    self.buttonspressed.extend(b"Left, ")
+                    self.buttonspressed.extend(b"Left: ")
 
                 if controller.buttonRight.pressing():
-                    self.buttonspressed.extend(b"Right, ")
+                    self.buttonspressed.extend(b"Right: ")
 
                 if controller.buttonR1.pressing():
-                    self.buttonspressed.extend(b"R1, ")
+                    self.buttonspressed.extend(b"R1: ")
 
                 if controller.buttonR2.pressing():
-                    self.buttonspressed.extend(b"R2, ")
+                    self.buttonspressed.extend(b"R2: ")
 
                 if controller.buttonL1.pressing():
-                    self.buttonspressed.extend(b"L1, ")
+                    self.buttonspressed.extend(b"L1: ")
 
                 if controller.buttonL2.pressing():
-                    self.buttonspressed.extend(b"L2, ")
+                    self.buttonspressed.extend(b"L2: ")
 
-                for motor in Rightdrivetrain:
-                    self.right_position+=motor.position()
-                self.right_position=self.right_position/len(Rightdrivetrain)
-                for motor in Leftdrivetrain:
-                    self.left_position+=motor.position()
-                self.left_position=self.left_position/len(Leftdrivetrain)
-                self.left_position=abs(self.left_position)
-
-                brain.sdcard.appendfile("RecordingData.csv", bytearray(b"%d, %d, %d, %s, %f, %f \n"%(self.axis2 , self.axis3, self.time_stamp , self.buttonspressed.decode("utf-8"), self.right_position, self.left_position)))
-
-                self.right_position=0
-                self.left_position=0
+                brain.sdcard.appendfile("RecordingData.csv", bytearray(b"%d A2, %d A3, %d T, %s BP, %d RP, %d LP \n"%(self.axis2 , self.axis3, self.time_stamp , self.buttonspressed.decode("utf-8"), Right.position(DEGREES), Left.position(DEGREES))))
 
                 wait(20, MSEC)
-
-    class Encode:
-        def __init__(self):
-            pass
-
-        def encode(self):
-            pass
-
     class Settings:
         """Used to congigure the log in a more permenet way using the Sd card"""
 
@@ -1598,12 +1581,9 @@ try:
                     if len(dict_stuff) >= 2:
                         self.settings[dict_stuff[0]]=dict_stuff[1]
     
-    class inerface():
-        def __init__(self):
-            pass
-    
     settings=Settings()
     log=Log()
+    encode=Encode()
     recording=Recording()
 
 except Exception as e:

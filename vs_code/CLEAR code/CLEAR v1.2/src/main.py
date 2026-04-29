@@ -88,11 +88,13 @@ if brain.sdcard.is_inserted() and brain.sdcard.exists("CLEAR.py"):
         global recording_state
         if recording_state == 0:
             recording_state = 1
-            Thread(lambda: CLEAR.recording.start(controller_1, [Right1, Right2], [left1, left2]))
+            Thread(lambda: CLEAR.recording.start(controller_1, Right1, left1))
+            controller_1.rumble("-")
             print("Recording Started")
         else:
             recording_state = 0
             CLEAR.recording.stop()
+            controller_1.rumble("--")
             print("Recording Stopped")
     controller_1.buttonA.pressed(toggle_recording)
 
